@@ -6,10 +6,10 @@ var ENDOFTAG8=10;
 var STARTOFTAG9VAL=ENDOFTAG8+2;
 var SIZEOFTAG10=8;
 
-var server = tcp.createServer(function (socket) {
+var server = tcp.createServer(function (stream) {
 
-	socket.setEncoding("utf8");
-	socket.setTimeout(1000);
+	stream.setEncoding("utf8");
+	stream.setTimeout(1000);
 	
 	var headers = ["8","9","35","49","56","115?","128?","90?","91?","34","50?","142?","57?","143?","116?","144?","129?","145?","43?","97?","52","122?","212?","347?","369?","370?"];
 	var trailers = ["39?","89?","10"];
@@ -27,11 +27,11 @@ var server = tcp.createServer(function (socket) {
 	var timeOfLastIncoming = 0;
 	var timeOfLastOutgoing = 0;
 	
-	socket.addListener("connect", function () {
-		sys.log("New connection from "+ socket.remoteAddress);
+	stream.addListener("connect", function () {
+		sys.log("New connection from "+ stream.remoteAddress);
 	});
 
-	socket.addListener("data", function (data) {
+	stream.addListener("data", function (data) {
 
 		//Add data to the buffer (to avoid processing fragmented TCP packets)		
 		databuffer += data;
@@ -89,7 +89,7 @@ var server = tcp.createServer(function (socket) {
 					sys.log("[ERROR] tag "+tag+" is required but missing in incoming message: "+msg);
 					if(loggedIn){ send({"35":"3", "45":fix["34"], "58":"MissingTags"});/*send session reject*/}
 					else{ 
-						socket.end();
+						stream.end();
 						return;
 					}
 				}
@@ -101,7 +101,7 @@ var server = tcp.createServer(function (socket) {
 					sys.log("[ERROR] tag "+tag+" is required but missing in incoming message: "+msg);
 					if(loggedIn){send({"35":"3", "45":fix["34"], "58":"MissingTags"});/*send session reject*/}
 					else{ 
-						socket.end();
+						stream.end();
 						return;
 					}
 				}
@@ -111,7 +111,7 @@ var server = tcp.createServer(function (socket) {
 			var msgType = fix["35"];
 			if(!loggedIn && msgType != "A"){
 				sys.log("[ERROR] Logon message expected, received message of type " + msgType);
-				socket.end();
+				stream.end();
 				return;
 			}
 			
@@ -122,7 +122,7 @@ var server = tcp.createServer(function (socket) {
 			}
 			else if(loggedIn && _seqNum < incomingSeqNum){
 				sys.log("[ERROR] Incoming sequence number lower than expected. No way to recover.");
-				socket.end();
+				stream.end();
 				return;
 			}
 			else if(loggedIn && _seqNum > incomingSeqNum){
@@ -174,9 +174,9 @@ var server = tcp.createServer(function (socket) {
 
 	});
 
-	socket.addListener("end", function () {
-		//socket.write("Connection ended for "+ socket.remoteAddress +"\r\n");
-		socket.end();
+	stream.addListener("end", function () {
+		//stream.write("Connection ended for "+ stream.remoteAddress +"\r\n");
+		stream.end();
 		return;
 	});
 	
@@ -195,7 +195,7 @@ var server = tcp.createServer(function (socket) {
 		
 		if(timeOfLastIncoming - currentTime > heartbeatDuration * 3){
 			sys.log("[ERROR] No message received from counterparty and no response to test request.");
-			socket.end();
+			stream.end();
 			return;
 		}
 	};
@@ -277,7 +277,7 @@ var server = tcp.createServer(function (socket) {
 		outmsg += "10=" + checksumstr + SOHCHAR;
 		
 		sys.log("FIX out:" + outmsg);
-		socket.write(outmsg);
+		stream.write(outmsg);
 	};
 });
 
