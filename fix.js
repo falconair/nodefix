@@ -191,6 +191,9 @@ var server = tcp.createServer(function (stream) {
 					loggedIn = true;
 					var intervalID = setInterval(heartbeatCallback, heartbeatDuration);
 					intervalIDs.push(intervalID);
+					
+					sys.log(fix["49"] +" logged on from " + stream.remoteAddress);
+					
 					send({"35":"A", "108":fix["108"]});/*send logon ack*/
 					break;
 				default: 
