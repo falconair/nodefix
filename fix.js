@@ -1,6 +1,8 @@
 var sys = require('sys');
 var tcp = require('net');
 
+var _connections = 0;
+
 var SOHCHAR = String.fromCharCode(1);
 var ENDOFTAG8=10;
 var STARTOFTAG9VAL=ENDOFTAG8+2;
@@ -27,8 +29,12 @@ var server = tcp.createServer(function (stream) {
 	var timeOfLastIncoming = 0;
 	var timeOfLastOutgoing = 0;
 	
+	var intervalIDs = [];
+	
+	
 	stream.addListener("connect", function () {
-		sys.log("New connection from "+ stream.remoteAddress);
+		_connections++;
+		sys.log("New connection from "+ stream.remoteAddress + " [Active connections: " + _connections + "]");
 	});
 
 	stream.addListener("data", function (data) {
@@ -45,14 +51,32 @@ var server = tcp.createServer(function (stream) {
 			if(databuffer.length <= ENDOFTAG8){ return; }
 
 			var _idxOfEndOfTag9Str = databuffer.substring(ENDOFTAG8).indexOf(SOHCHAR);
-			var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str) + ENDOFTAG8;
+			var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str,10) + ENDOFTAG8 ;
+			
+			if(isNaN(idxOfEndOfTag9)){
+				sys.log("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed");
+				stream.end();
+			}
+			
+
+			//If we don't have enough data to stop extracting body length AND we have received a lot of data
+			//then perhaps there is a problem with how the message is formatted and the session should be killed
+			if(idxOfEndOfTag9 < 0 && databuffer.length > 100){
+				sys.log("[ERROR] Over 100 character received but body length still not extractable.  Message probably misformed.");
+				stream.end();
+			}
 
 	
 			//If we don't have enough data to stop extracting body length, wait for more data	
 			if(idxOfEndOfTag9 < 0){ return; }
 
 			var _bodyLengthStr = databuffer.substring(STARTOFTAG9VAL,idxOfEndOfTag9);
-			var bodyLength = parseInt(_bodyLengthStr);
+			var bodyLength = parseInt(_bodyLengthStr,10);			
+			if(isNaN(bodyLength)){
+				sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed");
+				stream.end();
+			}
+			
 			var msgLength = bodyLength + idxOfEndOfTag9 + SIZEOFTAG10;
 
 			//If we don't have enough data for the whole message, wait for more data
@@ -60,6 +84,7 @@ var server = tcp.createServer(function (stream) {
 
 			var msg = databuffer.substring(0, msgLength);
 			databuffer = databuffer.substring(msgLength);
+
 			sys.log("FIX in: "+msg);
 
 			//====Step 2: Validate message====
@@ -116,7 +141,7 @@ var server = tcp.createServer(function (stream) {
 			}
 			
 			//====Step 6: Confirm incoming sequence number====
-			var _seqNum = parseInt(fix["34"]);
+			var _seqNum = parseInt(fix["34"],10);
 			if(loggedIn && _seqNum == incomingSeqNum){
 				incomingSeqNum++;
 			}
@@ -162,9 +187,10 @@ var server = tcp.createServer(function (stream) {
 					fixVersion = fix["8"];
 					senderCompID = fix["56"];
 					targetCompID = fix["49"];
-					heartbeatDuration = parseInt(fix["108"]) * 1000; 
+					heartbeatDuration = parseInt(fix["108"],10) * 1000; 
 					loggedIn = true;
-					setInterval(heartbeatCallback, heartbeatDuration);
+					var intervalID = setInterval(heartbeatCallback, heartbeatDuration);
+					intervalIDs.push(intervalID);
 					send({"35":"A", "108":fix["108"]});/*send logon ack*/
 					break;
 				default: 
@@ -175,7 +201,11 @@ var server = tcp.createServer(function (stream) {
 	});
 
 	stream.addListener("end", function () {
-		//stream.write("Connection ended for "+ stream.remoteAddress +"\r\n");
+		for(var intervalID in intervalIDs){
+			clearInterval(intervalIDs[intervalID]);
+		}
+		_connections--;
+		sys.log("Connection ended for "+ stream.remoteAddress+ " [Active connections: " + _connections + "]");
 		stream.end();
 		return;
 	});
@@ -185,15 +215,15 @@ var server = tcp.createServer(function (stream) {
 	var heartbeatCallback =  function () {
 		var currentTime = new Date().getTime();
 		
-		if(timeOfLastOutgoing - currentTime > heartbeatDuration){
-			/*send heartbeat*/
+		if(currentTime - timeOfLastOutgoing > heartbeatDuration){
+			send({"35":"0"});/*send heartbeat*/
 		}
 		
-		if(timeOfLastIncoming - currentTime > heartbeatDuration * 1.5){
-			/*send testrequest*/
+		if(currentTime - timeOfLastIncoming > heartbeatDuration * 1.5){
+			send({"35":"1", "112":outgoingSeqNum+""});/*send testrequest*/
 		}
 		
-		if(timeOfLastIncoming - currentTime > heartbeatDuration * 3){
+		if(currentTime - timeOfLastIncoming > heartbeatDuration * 3){
 			sys.log("[ERROR] No message received from counterparty and no response to test request.");
 			stream.end();
 			return;
@@ -234,7 +264,7 @@ var server = tcp.createServer(function (stream) {
 		headermsg += "52=" + timestamp.getUTCFullYear() + timestamp.getUTCMonth() + timestamp.getUTCDay() + "-" + timestamp.getUTCHours() + ":" + timestamp.getUTCMinutes() + ":" + timestamp.getUTCSeconds() + "." + timestamp.getUTCMilliseconds() + SOHCHAR;
 		headermsg += "56=" + senderCompID + SOHCHAR;
 		headermsg += "49=" + targetCompID + SOHCHAR;
-		headermsg += "34=" + outgoingSeqNum++ + SOHCHAR;
+		headermsg += "34=" + (outgoingSeqNum++) + SOHCHAR;
 		
 		var trailermsg = "";
 		for(var f in trailers){
@@ -277,6 +307,7 @@ var server = tcp.createServer(function (stream) {
 		outmsg += "10=" + checksumstr + SOHCHAR;
 		
 		sys.log("FIX out:" + outmsg);
+		timeOfLastOutgoing = new Date().getTime();
 		stream.write(outmsg);
 	};
 });
