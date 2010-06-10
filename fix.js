@@ -1,43 +1,67 @@
 var sys = require('sys');
+var events = require('events');
 var tcp = require('net');
 
-var _connections = 0;
+//static vars
+const SOHCHAR = String.fromCharCode(1);
+const ENDOFTAG8=10;
+const STARTOFTAG9VAL=ENDOFTAG8+2;
+const SIZEOFTAG10=8;
 
-var SOHCHAR = String.fromCharCode(1);
-var ENDOFTAG8=10;
-var STARTOFTAG9VAL=ENDOFTAG8+2;
-var SIZEOFTAG10=8;
+function Server(compID){
+	events.EventEmitter.call(this);
+	this.clients = new Array();
+	this.compID = compID;
+	this.addClientSession = function(stream) { this.clients.push(stream);};
+	this.removeClientSession = function(stream) { /*TODO*/;};
+}
 
-var server = tcp.createServer(function (stream) {
 
-	stream.setEncoding("utf8");
-	stream.setTimeout(1000);
-	
-	var headers = ["8","9","35","49","56","115?","128?","90?","91?","34","50?","142?","57?","143?","116?","144?","129?","145?","43?","97?","52","122?","212?","347?","369?","370?"];
-	var trailers = ["39?","89?","10"];
-	var databuffer = "";
-	var charlen = 0;
-	
-	var senderCompID = "";
-	var targetCompID = "";
-	var fixVersion = "";
-	var heartbeatDuration = 0;
+sys.inherits(Server, events.EventEmitter);
 
-	var loggedIn = false;
-	var incomingSeqNum = 1;
-	var outgoingSeqNum = 1;
-	var timeOfLastIncoming = 0;
-	var timeOfLastOutgoing = 0;
-	
-	var intervalIDs = [];
-	
-	
-	stream.addListener("connect", function () {
-		_connections++;
-		sys.log("New connection from "+ stream.remoteAddress + " [Active connections: " + _connections + "]");
-	});
+exports.createServer = function(compID, opt){
 
-	stream.addListener("data", function (data) {
+	var server = new Server(compID);
+
+	server.socket = tcp.createServer(function(stream){
+
+		stream.setEncoding("utf8");
+		stream.setTimeout(1000);
+
+		const fixVersion = opt.version;
+		const headers = opt.headers;
+		const trailers = opt.trailers;
+			
+		//session vars
+		var senderCompID = "";
+		var targetCompID = "";
+		var heartbeatDuration = 0;
+
+		var databuffer = "";
+		var charlen = 0;
+	
+		var loggedIn = false;
+		var incomingSeqNum = 1;
+		var outgoingSeqNum = 1;
+		var timeOfLastIncoming = 0;
+		var timeOfLastOutgoing = 0;
+		
+		var intervalIDs = [];
+
+		stream.addListener('connect', function(){
+			server.addClientSession(stream);
+		});
+
+		stream.addListener('end', function(){
+			for(var intervalID in intervalIDs){
+				clearInterval(intervalIDs[intervalID]);
+			}
+			server.removeClientSession(stream);
+			sys.log("Connection ended for "+ stream.remoteAddress+ " [Active connections: " + server.clients.length + "]");
+			stream.end();
+		});
+
+		stream.addListener("data", function (data) {
 
 		//Add data to the buffer (to avoid processing fragmented TCP packets)		
 		databuffer += data;
@@ -202,19 +226,7 @@ var server = tcp.createServer(function (stream) {
 		
 
 	});
-
-	stream.addListener("end", function () {
-		for(var intervalID in intervalIDs){
-			clearInterval(intervalIDs[intervalID]);
-		}
-		_connections--;
-		sys.log("Connection ended for "+ stream.remoteAddress+ " [Active connections: " + _connections + "]");
-		stream.end();
-		return;
-	});
 	
-	
-
 	var heartbeatCallback =  function () {
 		var currentTime = new Date().getTime();
 		
@@ -313,6 +325,11 @@ var server = tcp.createServer(function (stream) {
 		timeOfLastOutgoing = new Date().getTime();
 		stream.write(outmsg);
 	};
-});
 
-server.listen(7000, "localhost");
+	});
+	return server;
+}
+
+Server.prototype.listen = function(port){ this.socket.listen(port); }
+
+
