@@ -46,15 +46,15 @@ exports.createServer = function(compID, opt){
 		var timeOfLastIncoming = 0;
 		var timeOfLastOutgoing = 0;
 		
-		var intervalIDs = [];
+		var heartbeatIntervalIDs = [];
 
 		stream.addListener('connect', function(){
 			server.addClientSession(stream);
 		});
 
 		stream.addListener('end', function(){
-			for(var intervalID in intervalIDs){
-				clearInterval(intervalIDs[intervalID]);
+			for(var intervalID in heartbeatIntervalIDs){
+				clearInterval(heartbeatIntervalIDs[intervalID]);
 			}
 			server.removeClientSession(stream);
 			sys.log("Connection ended for "+ stream.remoteAddress+ " [Active connections: " + server.clients.length + "]");
@@ -214,7 +214,7 @@ exports.createServer = function(compID, opt){
 					heartbeatDuration = parseInt(fix["108"],10) * 1000; 
 					loggedIn = true;
 					var intervalID = setInterval(heartbeatCallback, heartbeatDuration);
-					intervalIDs.push(intervalID);
+					heartbeatIntervalIDs.push(intervalID);
 					
 					sys.log(fix["49"] +" logged on from " + stream.remoteAddress);
 					
