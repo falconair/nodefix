@@ -1,6 +1,6 @@
-var sys = require('sys');
-var events = require('events');
-var tcp = require('net');
+var net = require("net");
+var events = require("events");
+var sys = require("sys");
 
 //static vars
 const SOHCHAR = String.fromCharCode(1);
@@ -8,65 +8,71 @@ const ENDOFTAG8=10;
 const STARTOFTAG9VAL=ENDOFTAG8+2;
 const SIZEOFTAG10=8;
 
-function Server(compID){
+
+function Server(){
 	events.EventEmitter.call(this);
-	this.clients = new Array();
-	this.compID = compID;
-	this.addClientSession = function(stream) { this.clients.push(stream);};
-	this.removeClientSession = function(stream) { /*TODO*/;};
-}
+	this.clients = {};
 
+	this.addListener("logon", function(senderCompID, stream){ 
+		this.clients[senderCompID] = stream; 
+	}); 
 
-sys.inherits(Server, events.EventEmitter);
-
-exports.createServer = function(compID, opt){
-
-	var server = new Server(compID);
-
-	server.socket = tcp.createServer(function(stream){
-
-		stream.setEncoding("utf8");
-		stream.setTimeout(1000);
-
-		const fixVersion = opt.version;
-		const headers = opt.headers;
-		const trailers = opt.trailers;
-			
-		//session vars
-		var senderCompID = "";
-		var targetCompID = "";
-		var heartbeatDuration = 0;
-
-		var databuffer = "";
-		var charlen = 0;
+	this.addListener("end", function(senderCompID){ 
+		delete this.clients[senderCompID]; 
+	}); 
 	
-		var loggedIn = false;
-		var incomingSeqNum = 1;
-		var outgoingSeqNum = 1;
-		var timeOfLastIncoming = 0;
-		var timeOfLastOutgoing = 0;
-		
-		var heartbeatIntervalIDs = [];
+}
+sys.inherits(Server, events.EventEmitter);
+Server.prototype.listen = function(port){ this.socket.listen(port);};
+//Server.prototype.disconnect = function(client){ this.socket.listen(port);};
 
-		stream.addListener('connect', function(){
-			server.addClientSession(stream);
-		});
 
-		stream.addListener('end', function(){
-			for(var intervalID in heartbeatIntervalIDs){
-				clearInterval(heartbeatIntervalIDs[intervalID]);
-			}
-			server.removeClientSession(stream);
-			sys.log("Connection ended for "+ stream.remoteAddress+ " [Active connections: " + server.clients.length + "]");
-			stream.end();
-		});
+function Client(){
+	events.EventEmitter.call(this);
 
-		stream.addListener("data", function (data) {
+}
+sys.inherits(Client, events.EventEmitter);
+Client.prototype.disconnect = function(){ this.socket.end();};
 
-		//Add data to the buffer (to avoid processing fragmented TCP packets)		
+
+function Session(stream,server, opt){
+	events.EventEmitter.call(this);
+	var self = this;
+	
+        stream.setEncoding("utf8");
+	stream.setTimeout(1000);
+
+	
+	const fixVersion = opt.version;
+	const headers = opt.headers;
+	const trailers = opt.trailers;
+
+	//session vars
+	var senderCompID = "";//senderCompID || "";
+	var targetCompID = "";//targetCompID || "";
+	var heartbeatDuration = 0;
+
+	var databuffer = "";
+	var charlen = 0;
+
+	var loggedIn = false;
+	var incomingSeqNum = 1;
+	var outgoingSeqNum = 1;
+	var timeOfLastIncoming = 0;
+	var timeOfLastOutgoing = 0;
+
+	var heartbeatIntervalIDs = [];
+	
+	this.addListener("end", function(){ server.emit("end", senderCompID); });
+	this.addListener("logon", function(fix){ server.emit("end", senderCompID, stream); });
+	
+	//Used for parsing incoming data -------------------------------
+	this.handle = function() { return function (data) {
+
+		//Add data to the buffer (to avoid processing fragmented TCP packets)
 		databuffer += data;
 		timeOfLastIncoming = new Date().getTime();
-		
+
 		while(true){
 
 			//====Step 1: Extract complete FIX message====
@@ -76,12 +82,12 @@ exports.createServer = function(compID, opt){
 
 			var _idxOfEndOfTag9Str = databuffer.substring(ENDOFTAG8).indexOf(SOHCHAR);
 			var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str,10) + ENDOFTAG8 ;
-			
+
 			if(isNaN(idxOfEndOfTag9)){
 				sys.log("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed");
 				stream.end();
 			}
-			
+
 
 			//If we don't have enough data to stop extracting body length AND we have received a lot of data
 			//then perhaps there is a problem with how the message is formatted and the session should be killed
@@ -90,17 +96,17 @@ exports.createServer = function(compID, opt){
 				stream.end();
 			}
 
-	
-			//If we don't have enough data to stop extracting body length, wait for more data	
+
+			//If we don't have enough data to stop extracting body length, wait for more data
 			if(idxOfEndOfTag9 < 0){ return; }
 
 			var _bodyLengthStr = databuffer.substring(STARTOFTAG9VAL,idxOfEndOfTag9);
-			var bodyLength = parseInt(_bodyLengthStr,10);			
+			var bodyLength = parseInt(_bodyLengthStr,10);
 			if(isNaN(bodyLength)){
 				sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed");
 				stream.end();
 			}
-			
+
 			var msgLength = bodyLength + idxOfEndOfTag9 + SIZEOFTAG10;
 
 			//If we don't have enough data for the whole message, wait for more data
@@ -116,7 +122,7 @@ exports.createServer = function(compID, opt){
 				sys.log("[WARNING] Discarding message because according to body length, checksum is not at expected location: "+msg);
 				continue;
 			}
-			
+
 			//====Step 3: Convert to map====
 			var keyvals = msg.split(SOHCHAR);
 			//sys.debug("keyvals:"+keyvals);
@@ -126,36 +132,36 @@ exports.createServer = function(compID, opt){
 				var kvpair = keyvals[kv].split("=");
 				fix[kvpair[0]] = kvpair[1];
 			}
-			
+
 			//var dbg = "{";
 			//for( var x in fix){ dbg += ","+x+":"+fix[x]+"";}
 			//sys.debug(dbg+"}");
-			
+
 			//====Step 4: Confirm all required fields are available====
 			for(var f in headers){
 				var tag = headers[f];
 				if(tag.charAt(tag.length-1) != "?" && fix[tag]==null){//If tag is required, but missing
 					sys.log("[ERROR] tag "+tag+" is required but missing in incoming message: "+msg);
-					if(loggedIn){ send({"35":"3", "45":fix["34"], "58":"MissingTags"});/*send session reject*/}
-					else{ 
+					if(loggedIn){ writefix({"35":"3", "45":fix["34"], "58":"MissingTags"});/*write session reject*/}
+					else{
 						stream.end();
 						return;
 					}
 				}
 			}
-			
+
 			for(var f in trailers){
-				var tag = headers[f];
+				var tag = trailers[f];
 				if(tag.charAt(tag.length-1) != "?" && fix[tag]==null){//If tag is required, but missing
 					sys.log("[ERROR] tag "+tag+" is required but missing in incoming message: "+msg);
-					if(loggedIn){send({"35":"3", "45":fix["34"], "58":"MissingTags"});/*send session reject*/}
-					else{ 
+					if(loggedIn){writefix({"35":"3", "45":fix["34"], "58":"MissingTags"});/*write session reject*/}
+					else{
 						stream.end();
 						return;
 					}
 				}
 			}
-			
+
 			//====Step 5: Confirm first message is a logon message
 			var msgType = fix["35"];
 			if(!loggedIn && msgType != "A"){
@@ -163,7 +169,7 @@ exports.createServer = function(compID, opt){
 				stream.end();
 				return;
 			}
-			
+
 			//====Step 6: Confirm incoming sequence number====
 			var _seqNum = parseInt(fix["34"],10);
 			if(loggedIn && _seqNum == incomingSeqNum){
@@ -175,80 +181,82 @@ exports.createServer = function(compID, opt){
 				return;
 			}
 			else if(loggedIn && _seqNum > incomingSeqNum){
-				//Missing messages, send resend request and don't process any more messages
-				//until the resend request is processed
-				//set flag saying "waiting for resend"
-			}
-			
-			//====Step 7: Confirm compids and fix version match what was in the logon msg
-			var incomingFixVersion = fix["8"];
-			var incomingSenderCompID = fix["56"];
-			var incomingTargetCompID = fix["49"];
-			
-			if(loggedIn && (fixVersion != incomingFixVersion || senderCompID != incomingSenderCompID || targetCompID != incomingTargetCompID)){
-				sys.log("[WARNING] Incoming fix version ("+incomingFixVersion+"), sender compid ("+incomingSenderCompID+") or target compid ("+incomingTargetCompID+") did not match expected values ("+fixVersion+","+senderCompID+","+targetCompID+")");
-				/*send session reject*/
+				//Missing messages, write rewrite request and don't process any more messages
+				//until the rewrite request is processed
+				//set flag saying "waiting for rewrite"
 			}
 
-			
+			//====Step 7: Confirm compids and fix version match what was in the logon msg
+			var incomingFixVersion = fix["8"];
+			var incomingsenderCompID = fix["56"];
+			var incomingTargetCompID = fix["49"];
+
+			if(loggedIn && (fixVersion != incomingFixVersion || senderCompID != incomingsenderCompID || targetCompID != incomingTargetCompID)){
+				sys.log("[WARNING] Incoming fix version ("+incomingFixVersion+"), sender compid ("+incomingsenderCompID+") or target compid ("+incomingTargetCompID+") did not match expected values ("+fixVersion+","+senderCompID+","+targetCompID+")");
+				/*write session reject*/
+			}
+
+
 			//====Step 8: Messages
 			switch( msgType ){
 				case "0": //handle heartbeat; break;
 					break;
 				case "1": //handle testrequest; break;
 					var testReqID = fix["112"];
-					send({"35":"0", "112":testReqID});/*send heartbeat*/
+					writefix({"35":"0", "112":testReqID});/*write heartbeat*/
 					break;
-				case "2": //handle resendrequest; break;
+				case "2": //handle rewriterequest; break;
 					break;
 				case "3": //handle sessionreject; break;
 					break;
 				case "4": //handle seqreset; break;
 				case "5": //handle logout; break;
-					send({"35":"5"});/*send a logout ack right back*/
+					writefix({"35":"5"});/*write a logout ack right back*/
 					break;
 				case "A": //handle logon; break;
 					fixVersion = fix["8"];
 					senderCompID = fix["56"];
 					targetCompID = fix["49"];
-					heartbeatDuration = parseInt(fix["108"],10) * 1000; 
+					heartbeatDuration = parseInt(fix["108"],10) * 1000;
 					loggedIn = true;
 					var intervalID = setInterval(heartbeatCallback, heartbeatDuration);
-					heartbeatIntervalIDs.push(intervalID);
-					
+					// TODO: heartbeatIntervalIDs.push(intervalID);
+
+					this.emit("logon", fix);
 					sys.log(fix["49"] +" logged on from " + stream.remoteAddress);
-					
-					send({"35":"A", "108":fix["108"]});/*send logon ack*/
+					writefix({"35":"A", "108":fix["108"]});/*write logon ack*/
 					break;
-				default: 
+				default:
 			}
+			
+			this.emit("data",fix);
 		}
 		
-
-	});
-	
-	var heartbeatCallback =  function () {
+		var heartbeatCallback =  function () {
 		var currentTime = new Date().getTime();
 		
 		if(currentTime - timeOfLastOutgoing > heartbeatDuration){
-			send({"35":"0"});/*send heartbeat*/
+			writefix({"35":"0"});/*write heartbeat*/
 		}
 		
 		if(currentTime - timeOfLastIncoming > heartbeatDuration * 1.5){
-			send({"35":"1", "112":outgoingSeqNum+""});/*send testrequest*/
+			writefix({"35":"1", "112":outgoingSeqNum+""});/*write testrequest*/
 		}
 		
 		if(currentTime - timeOfLastIncoming > heartbeatDuration * 3){
 			sys.log("[ERROR] No message received from counterparty and no response to test request.");
 			stream.end();
 			return;
-		}
+		};
 	};
-	
-	var send = function(msg){
 
+
+	}};
 	
-		delete msg["9"]; //bodylength
+	
+	//Used for parsing outgoing data -------------------------------	
+	var writefix = function(msg){
+	delete msg["9"]; //bodylength
 		delete msg["10"]; //checksum
 		delete msg["52"]; //timestamp
 		delete msg["8"]; //fixversion
@@ -324,12 +332,51 @@ exports.createServer = function(compID, opt){
 		sys.log("FIX out:" + outmsg);
 		timeOfLastOutgoing = new Date().getTime();
 		stream.write(outmsg);
-	};
+};
 
+}
+sys.inherits(Session, events.EventEmitter);
+
+
+//events: connect, end, data, logon
+exports.createServer = function(opt, func){
+
+	var server = new Server();
+	
+	server.socket = net.createServer(function(stream){
+		var session = new Session(stream,server, opt);
+		func(session);
+		
+		stream.addListener("connect", function(){
+			session.emit("connect");
+		});
+
+		stream.addListener("end", function(){ 
+			stream.end();
+			session.emit("end");
+		});
+		stream.addListener("data",session.handle());
 	});
+	
 	return server;
 }
 
-Server.prototype.listen = function(port){ this.socket.listen(port); }
+exports.createConnection(senderCompID, targetCompID, opt, port, host){
 
+	var client = new Client();
+	
+	client.socket = net.createConnection(port, host);
+
+	client.socket.addListener("connect", function(){client.emit("connect");});
+	client.socket.addListener("end", function(){client.emit("end");});
+	client.socket.addListener("data", function(data){client.emit("data", data);});
+	
+	return client;
+}
+
+
+
+//Copyright 2010 Shahbaz Chaudhary (shahbazc@gmail.com)
+//Not for public release
+//Not publicly lisenced
 

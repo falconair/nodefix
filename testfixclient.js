@@ -1,4 +1,5 @@
-var fix = require('./fix');
+var fix = require("./fix");
+var sys = require("sys");
 
 const FIX40 = {version: "FIX.4.0",
 		headers:["8","9","35","49","56","115?","128?","90?","91?","34","50?","142?","57?","143?","116?","144?","129?","145?","43?","97?","52","122?","212?","347?","369?","370?"],
@@ -17,4 +18,5 @@ const FIX44 = {version: "FIX.4.4",
 		trailers:["39?","89?","10"]};
 
 
-fix.createServer("myserver", FIX42).listen(1234);
+fix.createConnection("sender, "target", FIX40, 1234, "localhost");
+
