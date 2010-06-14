@@ -11,15 +11,6 @@ const SIZEOFTAG10=8;
 
 function Server(){
 	events.EventEmitter.call(this);
-	this.clients = {};
-
-	this.addListener("logon", function(senderCompID, stream){ 
-		this.clients[senderCompID] = stream; 
-	}); 
-
-	this.addListener("end", function(senderCompID){ 
-		delete this.clients[senderCompID]; 
-	}); 
 	
 }
 sys.inherits(Server, events.EventEmitter);
@@ -27,15 +18,59 @@ Server.prototype.listen = function(port){ this.socket.listen(port);};
 //Server.prototype.disconnect = function(client){ this.socket.listen(port);};
 
 
-function Client(){
+function Client(senderCompID, targetCompID, opt){
 	events.EventEmitter.call(this);
 
 }
 sys.inherits(Client, events.EventEmitter);
-Client.prototype.disconnect = function(){ this.socket.end();};
+Client.prototype.end = function(){ this.socket.end();};
 
 
-function Session(stream,server, opt){
+//events: connect, end, data, logon
+exports.createServer = function(opt, func){
+
+	var server = new Server();
+	
+	server.socket = net.createServer(function(stream){
+		var session = new Session(stream, opt);
+		func(session);
+		
+		stream.addListener("connect", function(){
+			session.emit("connect");
+		});
+
+		stream.addListener("end", function(){ 
+			stream.end();
+			session.emit("end");
+		});
+		stream.addListener("data",session.handle());
+
+	});
+	
+	return server;
+}
+
+exports.createConnection = function(senderCompID, targetCompID, heartbeatseconds, opt, port, host){
+
+	var client = new Client(senderCompID, targetCompID, opt);
+	
+	var stream = net.createConnection(port, host);
+
+	var session = new Session(stream, opt);
+
+	client.stream = stream;
+	stream.addListener("connect", function(){
+		session.emit("connect");
+		session.write({"35":"A", "49":senderCompID, "56":targetCompID, "108":heartbeatseconds, "98":0});
+	});
+	stream.addListener("end", function(){session.emit("end");});
+	stream.addListener("data", function(data){session.handle()});
+	
+	return session;
+}
+
+
+function Session(stream, opt){
 	events.EventEmitter.call(this);
 	var self = this;
 	
@@ -63,8 +98,6 @@ function Session(stream,server, opt){
 
 	var heartbeatIntervalIDs = [];
 	
-	this.addListener("end", function(){ server.emit("end", senderCompID); });
-	this.addListener("logon", function(fix){ server.emit("end", senderCompID, stream); });
 	
 	//Used for parsing incoming data -------------------------------
 	this.handle = function() { return function (data) {
@@ -73,7 +106,7 @@ function Session(stream,server, opt){
 		databuffer += data;
 		timeOfLastIncoming = new Date().getTime();
 
-		while(true){
+		while(databuffer.length > 0){
 
 			//====Step 1: Extract complete FIX message====
 
@@ -84,16 +117,18 @@ function Session(stream,server, opt){
 			var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str,10) + ENDOFTAG8 ;
 
 			if(isNaN(idxOfEndOfTag9)){
-				sys.log("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed");
+				sys.log("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: "+databuffer.toString());
 				stream.end();
+				return;
 			}
 
 
 			//If we don't have enough data to stop extracting body length AND we have received a lot of data
 			//then perhaps there is a problem with how the message is formatted and the session should be killed
 			if(idxOfEndOfTag9 < 0 && databuffer.length > 100){
-				sys.log("[ERROR] Over 100 character received but body length still not extractable.  Message probably misformed.");
+				sys.log("[ERROR] Over 100 character received but body length still not extractable.  Message probably misformed: "+databuffer.toString());
 				stream.end();
+				return;
 			}
 
 
@@ -103,8 +138,9 @@ function Session(stream,server, opt){
 			var _bodyLengthStr = databuffer.substring(STARTOFTAG9VAL,idxOfEndOfTag9);
 			var bodyLength = parseInt(_bodyLengthStr,10);
 			if(isNaN(bodyLength)){
-				sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed");
+				sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed: "+databuffer.toString());
 				stream.end();
+				return;
 			}
 
 			var msgLength = bodyLength + idxOfEndOfTag9 + SIZEOFTAG10;
@@ -114,6 +150,7 @@ function Session(stream,server, opt){
 
 			var msg = databuffer.substring(0, msgLength);
 			databuffer = databuffer.substring(msgLength);
+			sys.log("[DEBUG] remaining databuffer size: "+databuffer.length);
 
 			sys.log("FIX in: "+msg);
 
@@ -162,13 +199,20 @@ function Session(stream,server, opt){
 				}
 			}
 
-			//====Step 5: Confirm first message is a logon message
+			//====Step 5: Confirm first message is a logon message and it has a heartbeat
 			var msgType = fix["35"];
 			if(!loggedIn && msgType != "A"){
 				sys.log("[ERROR] Logon message expected, received message of type " + msgType);
 				stream.end();
 				return;
 			}
+			
+			if(fix["108"]==undefined){
+				sys.log("[ERROR] Logon does not have tag 108 (heartbeat) ");
+				stream.end();
+				return;			
+			}
+
 
 			//====Step 6: Confirm incoming sequence number====
 			var _seqNum = parseInt(fix["34"],10);
@@ -254,9 +298,14 @@ function Session(stream,server, opt){
 	}};
 	
 	
-	//Used for parsing outgoing data -------------------------------	
+	//Used for parsing outgoing data -------------------------------
+	this.write = function(msg){ writefix(msg);}	
 	var writefix = function(msg){
-	delete msg["9"]; //bodylength
+	
+		var senderCompIDExtracted = msg["56"];
+		var targetCompIDExtracted = msg["49"];
+
+		delete msg["9"]; //bodylength
 		delete msg["10"]; //checksum
 		delete msg["52"]; //timestamp
 		delete msg["8"]; //fixversion
@@ -285,8 +334,8 @@ function Session(stream,server, opt){
 		
 		var timestamp = new Date();
 		headermsg += "52=" + timestamp.getUTCFullYear() + timestamp.getUTCMonth() + timestamp.getUTCDay() + "-" + timestamp.getUTCHours() + ":" + timestamp.getUTCMinutes() + ":" + timestamp.getUTCSeconds() + "." + timestamp.getUTCMilliseconds() + SOHCHAR;
-		headermsg += "56=" + senderCompID + SOHCHAR;
-		headermsg += "49=" + targetCompID + SOHCHAR;
+		headermsg += "56=" + (senderCompIDExtracted || senderCompID) + SOHCHAR;
+		headermsg += "49=" + (targetCompIDExtracted || targetCompID) + SOHCHAR;
 		headermsg += "34=" + (outgoingSeqNum++) + SOHCHAR;
 		
 		var trailermsg = "";
@@ -336,45 +385,6 @@ function Session(stream,server, opt){
 
 }
 sys.inherits(Session, events.EventEmitter);
-
-
-//events: connect, end, data, logon
-exports.createServer = function(opt, func){
-
-	var server = new Server();
-	
-	server.socket = net.createServer(function(stream){
-		var session = new Session(stream,server, opt);
-		func(session);
-		
-		stream.addListener("connect", function(){
-			session.emit("connect");
-		});
-
-		stream.addListener("end", function(){ 
-			stream.end();
-			session.emit("end");
-		});
-		stream.addListener("data",session.handle());
-	});
-	
-	return server;
-}
-
-exports.createConnection(senderCompID, targetCompID, opt, port, host){
-
-	var client = new Client();
-	var session = new Session();
-	
-	client.socket = net.createConnection(port, host);
-
-	client.socket.addListener("connect", function(){client.emit("connect");});
-	client.socket.addListener("end", function(){client.emit("end");});
-	client.socket.addListener("data", function(data){client.emit("data", data);});
-	
-	return client;
-}
-
 
 
 //Copyright 2010 Shahbaz Chaudhary (shahbazc@gmail.com)

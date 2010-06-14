@@ -18,5 +18,5 @@ const FIX44 = {version: "FIX.4.4",
 		trailers:["39?","89?","10"]};
 
 
-fix.createConnection("sender, "target", FIX40, 1234, "localhost");
+fix.createConnection("sender", "target", 3, FIX40, 1234, "localhost");
 
