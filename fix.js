@@ -364,6 +364,7 @@ exports.createServer = function(opt, func){
 exports.createConnection(senderCompID, targetCompID, opt, port, host){
 
 	var client = new Client();
+	var session = new Session();
 	
 	client.socket = net.createConnection(port, host);
 
