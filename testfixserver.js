@@ -20,7 +20,7 @@ const FIX44 = {version: "FIX.4.4",
 
 fix.createServer(FIX40, function(session){
 	//session.addListener("connect", function(){ sys.puts("Connected"); });
-	session.addListener("data",function(data){ 
-		sys.puts(fix.clients.length); 
-	});
+	//session.addListener("data",function(data){ 
+		//sys.puts(fix.clients.length); 
+	//});
 }).listen(1234);
