@@ -2,6 +2,29 @@ var net = require("net");
 var events = require("events");
 var sys = require("sys");
 
+//Utility methods
+function checksum(str){
+    var chksm = 0;
+    for(var i=0; i<str.length; i++){
+        chksm += str.charCodeAt(i);
+    }
+    
+    chksm = chksm % 256;
+    
+    var checksumstr = "";
+    if (chksm < 10) {
+        checksumstr = "00" + chksm;
+    }
+    else if (chksm >= 10 && chksm < 100) {
+        checksumstr = "0" + chksm;
+    }
+    else {
+        checksumstr = "" + chksm;
+    }
+    
+    return checksumstr;
+}
+
 //static vars
 var SOHCHAR = String.fromCharCode(1);
 var ENDOFTAG8 = 10;
@@ -10,7 +33,7 @@ var SIZEOFTAG10 = 8;
 
 
 
-function Session(stream, opt) {
+function Session(stream, isInitiator,  opt) {
     events.EventEmitter.call(this);
     var self = this;
 
@@ -37,15 +60,17 @@ function Session(stream, opt) {
     var timeOfLastIncoming = 0;
     var timeOfLastOutgoing = 0;
 
-    var heartbeatIntervalIDs = [];
+    //var heartbeatIntervalIDs = [];
+    var heartbeatIntervalID ;
     
 
     /*this.addListener("connect", function () {
         sys.log("New session started");
-    });
-    this.addListener("end", function () {
-        sys.log("Session ended");
     });*/
+    this.addListener("end", function () {
+        //sys.log("Session ended");
+        clearInterval(heartbeatIntervalID);
+    });
     
 
     var heartbeatCallback = function () {
@@ -151,7 +176,7 @@ function Session(stream, opt) {
         outmsg += bodymsg;
         outmsg += trailermsg;
 
-        var checksum = 0;
+        /*var checksum = 0;
         for (var x in outmsg) {
             if (outmsg.hasOwnProperty(x)) {
                 checksum += outmsg.charCodeAt(x);
@@ -168,16 +193,18 @@ function Session(stream, opt) {
         }
         else {
             checksumstr = "" + checksum;
-        }
+        }*/
 
-        outmsg += "10=" + checksumstr + SOHCHAR;
+        outmsg += "10=" + checksum(outmsg) + SOHCHAR;
 
         sys.log("FIX out:" + outmsg);
         timeOfLastOutgoing = new Date().getTime();
-        this.stream.write(outmsg);
+        //this.stream.write(outmsg);
+        stream.write(outmsg);
     }
 
     this.write = writefix;
+    //this.writeTest = function(){ return writefix;};
 
 
     //Used for parsing incoming data -------------------------------
@@ -185,7 +212,7 @@ function Session(stream, opt) {
     //var handle = function (data) {
     function handlefix(data){
     
-        sys.log("data received: " + data);
+        //sys.log("++++++++data received: " + data);
 
         //Add data to the buffer (to avoid processing fragmented TCP packets)
         //var databuffer = this.databufferx + data;
@@ -193,7 +220,7 @@ function Session(stream, opt) {
         timeOfLastIncoming = new Date().getTime();
 
         while (databuffer.length > 0) {
-            sys.log("NEW LOOP:" + databuffer.length + ":" + databuffer);
+            //sys.log("-------NEW LOOP:" + databuffer.length + ":" + databuffer);
 
             //====Step 1: Extract complete FIX message====
             //If we don't have enough data to start extracting body length, wait for more data
@@ -246,15 +273,21 @@ function Session(stream, opt) {
             }
             else {
                 var debugstr = databuffer.substring(msgLength);
-                sys.log("[DEBUG] debugstr:" + debugstr);
+                //sys.log("[DEBUG] debugstr:" + debugstr);
                 databuffer = debugstr;
             }
 
             sys.log("FIX in: " + msg);
 
             //====Step 2: Validate message====
-            if (msg.substr(-1 * (SIZEOFTAG10 - 1), 3) != "10=") {
-                sys.log("[WARNING] Discarding message because according to body length, checksum is not at expected location: " + msg);
+            var calculatedChecksum = "10=" + checksum(msg.substr(0,msg.length - 7)) + "|";
+            var extractedChecksum = msg.substr((msg.length - 7));
+            
+            //sys.log("calculatedChecksum:" + calculatedChecksum + ":");
+            //sys.log("extractedChecksum :" + extractedChecksum + ":");
+            
+            if (calculatedChecksum !== extractedChecksum) {
+                sys.log("[WARNING] Discarding message because body length or checksum are wrong (expected checksum: "+calculatedChecksum+"): " + msg);
                 continue;
             }
 
@@ -389,24 +422,29 @@ function Session(stream, opt) {
                 targetCompID = fix["49"];
                 heartbeatDuration = parseInt(fix["108"], 10) * 1000;
                 loggedIn = true;
-                var intervalID = setInterval(heartbeatCallback, heartbeatDuration);
-                // TODO: heartbeatIntervalIDs.push(intervalID);
+                heartbeatIntervalID = setInterval(heartbeatCallback, heartbeatDuration);
+                //heartbeatIntervalIDs.push(intervalID);
                 this.emit("logon", fix);
                 sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
-                writefix({
-                    "35": "A",
-                    "108": fix["108"]
-                }); /*write logon ack*/
+                
+                if(isInitiator === true){
+                    writefix({
+                        "35": "A",
+                        "108": fix["108"]
+                    }); /*write logon ack*/
+                }
                 break;
             default:
             }
-            sys.log("[DEBUG] databuffer.length: " + databuffer.length + "; databuffer: " + databuffer);
+            //sys.log("[DEBUG] databuffer.length: " + databuffer.length + "; databuffer: " + databuffer);
             this.emit("data", fix);
         }
 
     }
     
     this.handle = handlefix;
+    //this.handleTest = function(){ return handlefix;};
+
     //this.addListener("data", handlefix);
 
 
@@ -441,7 +479,7 @@ exports.createServer = function (opt, func) {
     var server = new Server();
 
     server.socket = net.createServer(function (stream) {
-        var session = new Session(stream, opt);
+        var session = new Session(stream, true, opt);
         func(session);
 
         stream.addListener("connect", function () {
@@ -453,7 +491,8 @@ exports.createServer = function (opt, func) {
             session.emit("end");
         });
 
-        stream.addListener("data",session.handle());
+        stream.addListener("data", function(data){session.handle(data);});
+        //stream.addListener("data",session.handle());
         //stream.addListener("data", function (data) { session.emit("data"); });
 
     });
@@ -467,7 +506,7 @@ exports.createConnection = function (senderCompID, targetCompID, heartbeatsecond
 
     var stream = net.createConnection(port, host);
 
-    var session = new Session(stream, opt);
+    var session = new Session(stream, false, opt);
 
     client.stream = stream;
     stream.addListener("connect", function () {
@@ -484,11 +523,14 @@ exports.createConnection = function (senderCompID, targetCompID, heartbeatsecond
         session.emit("end");
     });
 
-    stream.addListener("data",session.handle());
+    stream.addListener("data", function(data){session.handle(data);});
+    //stream.addListener("data",session.handle());
     //stream.addListener("data", function (data) { session.emit("data"); });
 
     return session;
 };
+
+
 
 
 //Copyright 2010 Shahbaz Chaudhary (shahbazc@gmail.com)
