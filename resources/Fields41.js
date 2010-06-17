@@ -1,4 +1,4 @@
-{
+exports = {
 "1":"Account",
 "2":"AdvId",
 "3":"AdvRefID",

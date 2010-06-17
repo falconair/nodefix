@@ -1,13 +1,23 @@
-//TODO
+//TODO:
 //Server should keep track of who is logged on
 //Allow server to send messages to individual connections
 //Check duplicate senderCompIDs
+//Grouped fields
+//Drop copy
 
+//DOING:
+//Pretty print fix messages
+//keys(object) doesn't work
 
 var net = require("net");
 var events = require("events");
 var sys = require("sys");
 var logger = require('../node-logger/logger').createLogger();
+var fix40 = require('./resources/Fields40');
+var fix41 = require('./resources/Fields41');
+var fix42 = require('./resources/Fields42');
+var fix43 = require('./resources/Fields43');
+var fix44 = require('./resources/Fields44');
 
 //Message container
 //{targetCompiD:{incoming:[], outgoing:[]}}
@@ -71,6 +81,17 @@ function getOutMessages(target, beginSeqNo, endSeqNo){
 
 //Utility methods
 
+function tag2txtCreator(version){
+    switch(version){
+        case "FIX.4.0" : return function(msg){ return keys(msg).map(function(key){fix40[key]+msg[key];});}; break;
+        case "FIX.4.1" : return function(msg){ return keys(msg).map(function(key){fix41[key]+msg[key];});}; break;
+        case "FIX.4.2" : return function(msg){ return keys(msg).map(function(key){fix42[key]+msg[key];});}; break;
+        case "FIX.4.3" : return function(msg){ return keys(msg).map(function(key){fix43[key]+msg[key];});}; break;
+        case "FIX.4.4" : return function(msg){ return keys(msg).map(function(key){fix44[key]+msg[key];});}; break;
+        default : return function(tag){ return tag;}; break;
+    }
+}
+
 logger.format = function(level, timestamp, message) {
   return ["[", timestamp.getUTCFullYear() ,"/", timestamp.getUTCMonth() ,"/", timestamp.getUTCDay() , "-" , timestamp.getUTCHours() , ":" , timestamp.getUTCMinutes() , ":" , timestamp.getUTCSeconds() , "." , timestamp.getUTCMilliseconds() , "] " , message].join("");
 };
@@ -117,6 +138,8 @@ function Session(stream, isInitiator,  opt) {
     var fixVersion = opt.version;
     var headers = opt.headers;
     var trailers = opt.trailers;
+    
+    var tag2txt = tag2txtCreator(fixVersion);
 
     //session vars
     var senderCompID = ""; //senderCompID || "";
@@ -442,6 +465,8 @@ function Session(stream, isInitiator,  opt) {
             
             //===Step 8: Record incoming message -- might be needed during resync
             addInMsg(targetCompID, fix);
+            logger.info("FIXMAP in: " + tag2txt(fix));
+            
 
 
             //====Step 9: Messages
