@@ -1,0 +1,3130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataroot xmlns:od="urn:schemas-microsoft-com:officedata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:noNamespaceSchemaLocation="Fields.xsd" generated="2004-09-03T09:43:25">
+<Fields>
+<Tag>1</Tag>
+<FieldName>Account</FieldName>
+<Type>String</Type>
+<Desc>Account mnemonic as agreed between broker and institution.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>2</Tag>
+<FieldName>AdvId</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier of advertisement message.  (Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>3</Tag>
+<FieldName>AdvRefID</FieldName>
+<Type>String</Type>
+<Desc>Reference identifier used with CANCEL and REPLACE transaction types.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>4</Tag>
+<FieldName>AdvSide</FieldName>
+<Type>Char</Type>
+<Desc>Broker&apos;s side of advertised tradeValid values: B = Buy S = SellX = CrossT = Trade</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>5</Tag>
+<FieldName>AdvTransType</FieldName>
+<Type>String</Type>
+<Desc>Identifies advertisement message transaction typeValid values:  N = NewC = CancelR = Replace </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>6</Tag>
+<FieldName>AvgPx</FieldName>
+<Type>Price</Type>
+<Desc>Calculated average price of all fills on this order. </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>7</Tag>
+<FieldName>BeginSeqNo</FieldName>
+<Type>int</Type>
+<Desc>Message sequence number of first message in range to be resent</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>8</Tag>
+<FieldName>BeginString</FieldName>
+<Type>String</Type>
+<Desc>Identifies beginning of new message and protocol version.  ALWAYS FIRST FIELD IN MESSAGE. (Always unencrypted)Valid values:	FIX.4.2</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>9</Tag>
+<FieldName>BodyLength</FieldName>
+<Type>int</Type>
+<Desc>Message length, in bytes, forward to the CheckSum field.  ALWAYS SECOND FIELD IN MESSAGE. (Always unencrypted)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>10</Tag>
+<FieldName>CheckSum</FieldName>
+<Type>String</Type>
+<Desc>Three byte, simple checksum  (see Appendix B: CheckSum Calculation for description).  ALWAYS LAST FIELD IN MESSAGE; i.e. serves, with the trailing &lt;SOH&gt;, as the end-of-message delimiter.  Always defined as three characters. (Always unencrypted)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>11</Tag>
+<FieldName>ClOrdID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for Order as assigned by institution (identified by SenderCompID or OnBehalfOfCompID as appropriate).  Uniqueness must be guaranteed within a single trading day.  Firms, particularly those  which electronically submit multi-day orders, trade globally or throughout market close periods,should ensure  uniqueness across days, for example by embedding a date within the ClOrdID field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>12</Tag>
+<FieldName>Commission</FieldName>
+<Type>Amt</Type>
+<Desc>Commission.  Note if CommType is percentage, Commission of 5% should be represented as .05.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>13</Tag>
+<FieldName>CommType</FieldName>
+<Type>char</Type>
+<Desc>Commission typeValid values:1	=	per share2 = percentage3 = absolute</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>14</Tag>
+<FieldName>CumQty</FieldName>
+<Type>Qty</Type>
+<Desc>Total number of shares filled.(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>15</Tag>
+<FieldName>Currency</FieldName>
+<Type>Currency</Type>
+<Desc>Identifies currency used for price. Absence of this field is interpreted as the default for the security.  It is recommended that systems provide the currency value whenever possible.  See Appendix A: Valid Currency Codes for information on obtaining valid values. </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>16</Tag>
+<FieldName>EndSeqNo</FieldName>
+<Type>int</Type>
+<Desc>Message sequence number of last message in range to be resent.  If request is for a single message BeginSeqNo = EndSeqNo.  If request is for all messages subsequent to a particular message, EndSeqNo = “0” (representing infinity). </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>17</Tag>
+<FieldName>ExecID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier of execution message as assigned by broker (will be 0 (zero) for ExecTransType=3 (Status)).  Uniqueness must be guaranteed within a single trading day or the life of a multi-day order.  Firms which accept multi-day orders should consider embedding a date within the ExecID field to assure uniqueness across days.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>18</Tag>
+<FieldName>ExecInst</FieldName>
+<Type>MultipleValueString</Type>
+<Desc>Instructions for order handling on exchange trading floor.  If more than one instruction is applicable to an order, this field can contain multiple instructions separated by space.Valid values:1 = Not held2 = Work3 = Go along4 = Over the day5 = Held6 = Participate don&apos;t initiate7 = Strict scale8 = Try to scale9 = Stay on bidside0 = Stay on offersideA = No cross (cross is forbidden)B = OK to crossC = Call firstD = Percent of volume “(indicates that the sender does not want to be all of the volume on the floor vs. a specific percentage)”E = Do not increase - DNIF = Do not reduce - DNRG = All or none - AONI = Institutions onlyL = Last peg (last sale)M = Mid-price peg (midprice of inside quote)N = Non-negotiableO = Opening peg
+P = Market pegR = Primary peg (primary market - buy at bid/sell at offer)S = SuspendT = Fixed Peg to Local best bid or offer at time of orderU = Customer Display Instruction (Rule11Ac1-1/4)V = Netting (for Forex)W = Peg to VWAP</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>19</Tag>
+<FieldName>ExecRefID</FieldName>
+<Type>String</Type>
+<Desc>Reference identifier used with Cancel and Correct transaction types.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>20</Tag>
+<FieldName>ExecTransType</FieldName>
+<Type>char</Type>
+<Desc>Identifies transaction typeValid values:  0 = New 1 = Cancel2 = Correct3 = Status</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>21</Tag>
+<FieldName>HandlInst</FieldName>
+<Type>char</Type>
+<Desc>Instructions for order handling on Broker trading floorValid values:1 = Automated execution order, private, no Broker intervention2 = Automated execution order, public, Broker intervention OK3 = Manual order, best execution</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>22</Tag>
+<FieldName>IDSource</FieldName>
+<Type>String</Type>
+<Desc>Identifies class of alternative SecurityIDValid values:1 = CUSIP2 = SEDOL3 = QUIK4 = ISIN number5 = RIC code6 = ISO Currency Code7 = ISO Country Code8 = Exchange Symbol9 = Consolidated Tape Association (CTA) Symbol (SIAC CTS/CQS line format)100+ are reserved for private security identifications</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>23</Tag>
+<FieldName>IOIid</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier of IOI message.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>24</Tag>
+<FieldName>IOIOthSvc   (no longer used)</FieldName>
+<Type>char</Type>
+<Desc>No longer used as of FIX 4.2.  Included here for reference to prior versions.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>25</Tag>
+<FieldName>IOIQltyInd</FieldName>
+<Type>char</Type>
+<Desc>Relative quality of indicationValid values:L	=	LowM = MediumH	=	High</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>26</Tag>
+<FieldName>IOIRefID</FieldName>
+<Type>String</Type>
+<Desc>Reference identifier used with CANCEL and REPLACE, transaction types.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>27</Tag>
+<FieldName>IOIShares</FieldName>
+<Type>String</Type>
+<Desc>Number of shares in numeric or relative size.Valid values:0 - 1000000000S	=	SmallM = MediumL = Large</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>28</Tag>
+<FieldName>IOITransType</FieldName>
+<Type>char</Type>
+<Desc>Identifies IOI message transaction typeValid values:  N = NewC = CancelR = Replace </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>29</Tag>
+<FieldName>LastCapacity</FieldName>
+<Type>char</Type>
+<Desc>Broker capacity in order executionValid values:  1 = Agent2 = Cross as agent3 = Cross as principal4 = Principal</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>30</Tag>
+<FieldName>LastMkt</FieldName>
+<Type>Exchange</Type>
+<Desc>Market of execution for last fill  Valid values:  See Appendix C</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>31</Tag>
+<FieldName>LastPx</FieldName>
+<Type>Price</Type>
+<Desc>Price of this (last) fill.  Field not required for ExecTransType = 3 (Status)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>32</Tag>
+<FieldName>LastShares</FieldName>
+<Type>Qty</Type>
+<Desc>Quantity of shares bought/sold on this (last) fill. Field not required for ExecTransType = 3 (Status) (Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>33</Tag>
+<FieldName>LinesOfText</FieldName>
+<Type>int</Type>
+<Desc>Identifies number of lines of text body</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>34</Tag>
+<FieldName>MsgSeqNum</FieldName>
+<Type>int</Type>
+<Desc>Integer message sequence number.   </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>35</Tag>
+<FieldName>MsgType</FieldName>
+<Type>String</Type>
+<Desc>Defines message type.    ALWAYS THIRD FIELD IN MESSAGE. (Always unencrypted)Note: A &quot;U&quot; as the first character in the MsgType field (i.e. U1, U2, etc) indicates that the  message format is privately defined between the sender and receiver.Valid values:  *** Note the use of lower case letters ***0	=	Heartbeat1	=	Test Request2	=	Resend Request3	=	Reject4	=	Sequence Reset5	=	Logout6	=	Indication of Interest7	=	Advertisement8	=	Execution Report9	=	Order Cancel RejectA	=	LogonB	=	NewsC	=	EmailD	=	Order – SingleE	=	Order – ListF	=	Order Cancel RequestG=	Order Cancel/Replace RequestH=	Order Status RequestJ	=	AllocationK	=	List Cancel RequestL	=	List ExecuteM = List Status RequestN	=	List StatusP = Allocation ACKQ = Don’t Know Trade (DK)R = Quote RequestS = QuoteT = Settlement InstructionsV = Market Data RequestW = Market Data-Snapshot/Full RefreshX = Market Data-Incremental RefreshY = Market Data Request RejectZ = Quote Cancela =  Quote Status Requestb =  Quote Acknowledgementc = Security Definition Requestd = Security Definitione = Security Status Requestf = Security Statusg = Trading Session Status Requesth = Trading Session Statusi = Mass Quotej = Business Message Rejectk = Bid Request l = Bid Response (lowercase L)m = List Strike Price</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>36</Tag>
+<FieldName>NewSeqNo</FieldName>
+<Type>int</Type>
+<Desc>New sequence number</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>37</Tag>
+<FieldName>OrderID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for Order as assigned by broker.  Uniqueness must be guaranteed within a single trading day.  Firms which accept multi-day orders should consider embedding a date within the OrderID field to assure uniqueness across days.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>38</Tag>
+<FieldName>OrderQty</FieldName>
+<Type>Qty</Type>
+<Desc>Number of shares ordered.  This represents the number of shares for equities or based on normal convention the number of contracts for options, futures, convertible bonds, etc.(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>39</Tag>
+<FieldName>OrdStatus</FieldName>
+<Type>char</Type>
+<Desc>Identifies current status of order.  Valid values: 0 = New1 = Partially filled2 = Filled3 = Done for day4 = Canceled5 = Replaced6 = Pending Cancel (e.g. result of Order Cancel Request) 7 = Stopped8 = Rejected9 = SuspendedA = Pending NewB = CalculatedC = ExpiredD = Accepted for biddingE = Pending Replace (e.g. result of Order Cancel/Replace Request)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>40</Tag>
+<FieldName>OrdType</FieldName>
+<Type>char</Type>
+<Desc>Order type.Valid values:  1 = Market2 = Limit3 = Stop4 = Stop limit5 = Market on close6 = With or without7 = Limit or better8 = Limit with or without9 = On basisA = On closeB = Limit on closeC =Forex - MarketD = Previously quotedE = Previously indicatedF = Forex - LimitG = Forex - SwapH = Forex - Previously QuotedI = Funari (Limit Day Order with unexecuted portion handled as Market On Close.   e.g. Japan)P = Pegged </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>41</Tag>
+<FieldName>OrigClOrdID</FieldName>
+<Type>String</Type>
+<Desc>ClOrdID of the previous order (NOT the initial order of the day) as assigned by the institution, used to identify the previous order in cancel and cancel/replace requests.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>42</Tag>
+<FieldName>OrigTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time of message origination (always expressed in UTC (Universal Time Coordinated, also known as “GMT”))</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>43</Tag>
+<FieldName>PossDupFlag</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates possible retransmission of message with this sequence numberValid values:Y = Possible duplicateN = Original transmission</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>44</Tag>
+<FieldName>Price</FieldName>
+<Type>Price</Type>
+<Desc>Price per share</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>45</Tag>
+<FieldName>RefSeqNum</FieldName>
+<Type>int</Type>
+<Desc>Reference message sequence number </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>46</Tag>
+<FieldName>RelatdSym</FieldName>
+<Type>String</Type>
+<Desc>Symbol of issue related to story.  Can be repeated within message to identify multiple companies.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>47</Tag>
+<FieldName>Rule80A(aka OrderCapacity)</FieldName>
+<Type>char</Type>
+<Desc>Note that the name of this field is changing to “OrderCapacity” as Rule80A is a very US market-specific term. Other world markets need to convey similar information, however, often a subset of the US values.  .  See the “Rule80A (aka OrderCapacity) Usage by Market” appendix for market-specific usage of this field.Valid values:A	=	Agency single orderB = Short exempt transaction (refer to A type)C = Program Order, non-index arb, for Member firm/orgD	=	Program Order, index arb, for Member firm/orgE = Registered Equity Market Maker tradesF = Short exempt transaction (refer to W type)H = Short exempt transaction (refer to I type)I 	= Individual Investor, single orderJ = Program Order, index arb, for individual customerK = Program Order, non-index arb, for individual customerL = Short exempt transaction for member competing market-maker affiliated with the firm clearing the trade (refer to P and O types)M = Program Order, index arb, for other memberN = Program Order, non-index arb, for other memberO = Competing dealer tradesP = PrincipalR = Competing dealer tradesS = Specialist tradesT = Competing dealer tradesU = Program Order, index arb, for other agencyW = All other orders as agent for other memberX = Short exempt transaction for member competing market-maker not affiliated with the firm clearing the trade (refer to W and T types)Y = Program Order, non-index arb, for other agencyZ = Short exempt transaction for non-member competing market-maker (refer to A and R types)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>48</Tag>
+<FieldName>SecurityID</FieldName>
+<Type>String</Type>
+<Desc>CUSIP or other alternate security identifier</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>49</Tag>
+<FieldName>SenderCompID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify firm sending message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>50</Tag>
+<FieldName>SenderSubID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message originator (desk, trader, etc.)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>51</Tag>
+<FieldName>SendingDate   (no longer used)</FieldName>
+<Type>LocalMktDate</Type>
+<Desc>No longer used.  Included here for reference to prior versions.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>52</Tag>
+<FieldName>SendingTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time of message transmission (always expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>53</Tag>
+<FieldName>Shares</FieldName>
+<Type>Qty</Type>
+<Desc>Number of shares (Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>54</Tag>
+<FieldName>Side</FieldName>
+<Type>char</Type>
+<Desc>Side of orderValid values:1	=	Buy2	=	Sell3	=	Buy minus4	=	Sell plus5	=	Sell short6	=	Sell short exempt7  = Undisclosed (valid for IOI and List Order messages only)8 = Cross (orders where counterparty is an exchange, valid for all messages except IOIs)9 = Cross short</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>55</Tag>
+<FieldName>Symbol</FieldName>
+<Type>String</Type>
+<Desc>Ticker symbol  </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>56</Tag>
+<FieldName>TargetCompID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify receiving firm.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>57</Tag>
+<FieldName>TargetSubID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific individual or unit intended to receive message.  “ADMIN” reserved for administrative messages not intended for a specific user.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>58</Tag>
+<FieldName>Text</FieldName>
+<Type>String</Type>
+<Desc>Free format text string(Note: this field does not have a specified maximum length)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>59</Tag>
+<FieldName>TimeInForce</FieldName>
+<Type>char</Type>
+<Desc>Specifies how long the order remains in effect.  Absence of this field is interpreted as DAY.Valid values:  0	=	Day1	=	Good Till Cancel  (GTC)2	=	At the Opening  (OPG)3	=	Immediate or Cancel  (IOC)4	=	Fill or Kill  (FOK)5	=	Good Till Crossing  (GTX)6 = Good Till Date </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>60</Tag>
+<FieldName>TransactTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time of execution/order creation (expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>61</Tag>
+<FieldName>Urgency</FieldName>
+<Type>char</Type>
+<Desc>Urgency flagValid values:  0	=	Normal1	=	Flash2	=	Background</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>62</Tag>
+<FieldName>ValidUntilTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Indicates expiration time of indication message (always expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>63</Tag>
+<FieldName>SettlmntTyp</FieldName>
+<Type>char</Type>
+<Desc>Indicates order settlement period.  Absence of this field is interpreted as Regular.  Regular is defined as the default settlement period for the particular security on the exchange of execution.Valid values:0 = Regular1 = Cash2 = Next Day3 = T+24 = T+35 = T+46 = Future7 = When Issued8 = Sellers Option9 = T+ 5</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>64</Tag>
+<FieldName>FutSettDate</FieldName>
+<Type>LocalMktDate</Type>
+<Desc>Specific date of trade settlement (SettlementDate) in YYYYMMDD format.  Required when SettlmntTyp = 6 (Future) or SettlmntTyp = 8 (Sellers Option).  (expressed in local time at place of settlement)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>65</Tag>
+<FieldName>SymbolSfx</FieldName>
+<Type>String</Type>
+<Desc>Additional information about the security (e.g. preferred, warrants, etc.).   Note also see SecurityType.Valid values:		As defined in the NYSE Stock and bond Symbol Directory and in the AMEX Fitch Directory</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>66</Tag>
+<FieldName>ListID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for list as assigned by institution, used to associate multiple individual orders.  Uniqueness must be guaranteed within a single trading day.  Firms which generate multi-day orders should consider embedding a date within the ListID field to assure uniqueness across days.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>67</Tag>
+<FieldName>ListSeqNo</FieldName>
+<Type>int</Type>
+<Desc>Sequence of individual order within list (i.e. ListSeqNo of ListNoOrds, 2 of 25, 3 of 25,   . . . )</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>68</Tag>
+<FieldName>TotNoOrders(formerly named: ListNoOrds)</FieldName>
+<Type>int</Type>
+<Desc>Total number of list order entries across all messages. Should be the sum of all NoOrders in each message that has repeating list order entries related to the same ListID. Used to support fragmentation.(Prior to FIX 4.2 this field was named &quot;ListNoOrds&quot;)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>69</Tag>
+<FieldName>ListExecInst</FieldName>
+<Type>String</Type>
+<Desc>Free format text message containing list handling and execution instructions.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>70</Tag>
+<FieldName>AllocID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for allocation message.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>71</Tag>
+<FieldName>AllocTransType</FieldName>
+<Type>char</Type>
+<Desc>Identifies allocation transaction typeValid values:0 = New1 = Replace2 = Cancel3 = Preliminary (without MiscFees and NetMoney)4 = Calculated (includes MiscFees and NetMoney)5 = Calculated without Preliminary (sent unsolicited by broker, includes MiscFees and NetMoney)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>72</Tag>
+<FieldName>RefAllocID</FieldName>
+<Type>String</Type>
+<Desc>Reference identifier to be used with Replace, Cancel, and Calculated AllocTransType messages.(Prior to FIX 4.1 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>73</Tag>
+<FieldName>NoOrders</FieldName>
+<Type>int</Type>
+<Desc>Indicates number of orders to be combined for average pricing and allocation.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>74</Tag>
+<FieldName>AvgPrxPrecision</FieldName>
+<Type>int</Type>
+<Desc>Indicates number of decimal places to be used for average pricing.  Absence of this field indicates that default precision arranged by the broker/institution is to be used.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>75</Tag>
+<FieldName>TradeDate</FieldName>
+<Type>LocalMktDate</Type>
+<Desc>Indicates date of trade referenced in this message in YYYYMMDD format.  Absence of this field indicates current day (expressed in local time at place of trade).</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>76</Tag>
+<FieldName>ExecBroker</FieldName>
+<Type>String</Type>
+<Desc>Identifies executing / give-up broker.  Standard NASD market-maker mnemonic is preferred.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>77</Tag>
+<FieldName>OpenClose</FieldName>
+<Type>char</Type>
+<Desc>Indicates whether the resulting position after a  trade should be an opening position or closing position. Used for omnibus accounting - where accounts are held on a gross basis instead of being netted together.Valid Values:O=Open	C=Close</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>78</Tag>
+<FieldName>NoAllocs</FieldName>
+<Type>int</Type>
+<Desc>Number of  repeating AllocAccount/AllocPrice entries.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>79</Tag>
+<FieldName>AllocAccount</FieldName>
+<Type>String</Type>
+<Desc>Sub-account mnemonic</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>80</Tag>
+<FieldName>AllocShares</FieldName>
+<Type>Qty</Type>
+<Desc>Number of shares to be allocated to specific sub-account (Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>81</Tag>
+<FieldName>ProcessCode</FieldName>
+<Type>char</Type>
+<Desc>Processing code for sub-account.  Absence of this field in AllocAccount / AllocPrice/AllocShares / ProcessCode instance indicates regular trade.Valid values:0 = regular1 = soft dollar2 = step-in3 = step-out4 = soft-dollar step-in5 = soft-dollar step-out6 = plan sponsor </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>82</Tag>
+<FieldName>NoRpts</FieldName>
+<Type>int</Type>
+<Desc>Total number of reports within series.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>83</Tag>
+<FieldName>RptSeq</FieldName>
+<Type>int</Type>
+<Desc>Sequence number of message within report series.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>84</Tag>
+<FieldName>CxlQty</FieldName>
+<Type>Qty</Type>
+<Desc>Total number of shares canceled for this order. (Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>85</Tag>
+<FieldName>NoDlvyInst(no longer used)</FieldName>
+<Type>int</Type>
+<Desc>Number of delivery instruction fields to followNo longer used.  Included here for reference to prior versions.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>86</Tag>
+<FieldName>DlvyInst(no longer used)</FieldName>
+<Type>String</Type>
+<Desc>Free format text field to indicate delivery instructionsNo longer used.  Included here for reference to prior versions.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>87</Tag>
+<FieldName>AllocStatus</FieldName>
+<Type>int</Type>
+<Desc>Identifies status of allocation.Valid values:0 = accepted (successfully processed)1 = rejected2 = partial accept3 = received (received, not yet processed)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>88</Tag>
+<FieldName>AllocRejCode</FieldName>
+<Type>int</Type>
+<Desc>Identifies reason for rejection.Valid values:0 = unknown account(s)1 = incorrect quantity2 = incorrect average price3 = unknown executing broker mnemonic4 = commission difference5 = unknown OrderID6 = unknown ListID7 = other</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>89</Tag>
+<FieldName>Signature</FieldName>
+<Type>data</Type>
+<Desc>Electronic signature</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>90</Tag>
+<FieldName>SecureDataLen</FieldName>
+<Type>Length</Type>
+<Desc>Length of encrypted message</Desc>
+<LenRefers>91</LenRefers>
+</Fields>
+<Fields>
+<Tag>91</Tag>
+<FieldName>SecureData</FieldName>
+<Type>data</Type>
+<Desc>Actual encrypted data stream</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>92</Tag>
+<FieldName>BrokerOfCredit</FieldName>
+<Type>String</Type>
+<Desc>Broker to receive trade credit.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>93</Tag>
+<FieldName>SignatureLength</FieldName>
+<Type>Length</Type>
+<Desc>Number of bytes in signature field.</Desc>
+<LenRefers>89</LenRefers>
+</Fields>
+<Fields>
+<Tag>94</Tag>
+<FieldName>EmailType</FieldName>
+<Type>char</Type>
+<Desc>Email message type.Valid values:0 = New1 = Reply2 = Admin Reply</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>95</Tag>
+<FieldName>RawDataLength</FieldName>
+<Type>Length</Type>
+<Desc>Number of bytes in raw data field.</Desc>
+<LenRefers>96</LenRefers>
+</Fields>
+<Fields>
+<Tag>96</Tag>
+<FieldName>RawData</FieldName>
+<Type>data</Type>
+<Desc>Unformatted raw data, can include bitmaps, word processor documents, etc.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>97</Tag>
+<FieldName>PossResend</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates that message may contain information that has been sent under another sequence number.Valid Values:	Y=Possible resend	N=Original transmission</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>98</Tag>
+<FieldName>EncryptMethod</FieldName>
+<Type>int</Type>
+<Desc>Method of encryption.Valid values:0 = None / other1 = PKCS (proprietary)2 = DES (ECB mode)3 = PKCS/DES (proprietary)4 = PGP/DES (defunct)5 = PGP/DES-MD5  (see app note on FIX web site)6 = PEM/DES-MD5  (see app note on FIX web site)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>99</Tag>
+<FieldName>StopPx</FieldName>
+<Type>Price</Type>
+<Desc>Price per share</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>100</Tag>
+<FieldName>ExDestination</FieldName>
+<Type>Exchange</Type>
+<Desc>Execution destination as defined by institution when order is entered.Valid values:See Appendix C</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>101</Tag>
+<FieldName>(Not Defined)</FieldName>
+<Type>n/a</Type>
+<Desc>This field has not been defined.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>102</Tag>
+<FieldName>CxlRejReason</FieldName>
+<Type>int</Type>
+<Desc>Code to identify reason for cancel rejection.Valid values:0 = Too late to cancel1 = Unknown order2 = Broker Option3 = Order already in Pending Cancel or Pending Replace status</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>103</Tag>
+<FieldName>OrdRejReason</FieldName>
+<Type>int</Type>
+<Desc>Code to identify reason for order rejection.Valid values:0 = Broker option1 = Unknown symbol2 = Exchange closed3 = Order exceeds limit4 = Too late to enter5 = Unknown Order6 = Duplicate Order (e.g. dupe ClOrdID)7 = Duplicate of a verbally communicated order8 = Stale Order</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>104</Tag>
+<FieldName>IOIQualifier</FieldName>
+<Type>char</Type>
+<Desc>Code to qualify IOI use.Valid values:A = All or noneC = At the closeI = In touch withL = LimitM = More behindO = At the openP = Taking a positionQ = At the Market (previously called Current Quote)R = Ready to tradeS = Portfolio show-nT = Through the dayV = VersusW = Indication - Working awayX = Crossing opportunityY = At the MidpointZ = Pre-open</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>105</Tag>
+<FieldName>WaveNo</FieldName>
+<Type>String</Type>
+<Desc>Identifier to aid in the management of multiple lists derived from a single, master list.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>106</Tag>
+<FieldName>Issuer</FieldName>
+<Type>String</Type>
+<Desc>Company name of security issuer (e.g. International Business Machines) </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>107</Tag>
+<FieldName>SecurityDesc</FieldName>
+<Type>String</Type>
+<Desc>Security description. </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>108</Tag>
+<FieldName>HeartBtInt</FieldName>
+<Type>int</Type>
+<Desc>Heartbeat interval (seconds) </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>109</Tag>
+<FieldName>ClientID</FieldName>
+<Type>String</Type>
+<Desc>Firm identifier used in third party-transactions (should not be a substitute for OnBehalfOfCompID/DeliverToCompID). </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>110</Tag>
+<FieldName>MinQty</FieldName>
+<Type>Qty</Type>
+<Desc>Minimum quantity of an order to be executed. 
+(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>111</Tag>
+<FieldName>MaxFloor</FieldName>
+<Type>Qty</Type>
+<Desc>Maximum number of shares within an order to be shown on the exchange floor at any given time. 
+(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>112</Tag>
+<FieldName>TestReqID</FieldName>
+<Type>String</Type>
+<Desc>Identifier included in Test Request message to be returned in resulting Heartbeat</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>113</Tag>
+<FieldName>ReportToExch</FieldName>
+<Type>Boolean</Type>
+<Desc>Identifies party of trade responsible for exchange reporting.Valid values:Y = Indicates that party receiving message must report tradeN = Indicates that party sending message will report trade</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>114</Tag>
+<FieldName>LocateReqd</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether the broker is to locate the stock in conjunction with a short sell order.
+
+Valid values:Y = Indicates the broker is responsible for locating the stockN = Indicates the broker is not required to locate</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>115</Tag>
+<FieldName>OnBehalfOfCompID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify firm originating message if the message was delivered by a third party  i.e.   the third party firm identifier would be delivered in the SenderCompID field and the firm originating the message in this field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>116</Tag>
+<FieldName>OnBehalfOfSubID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message originator (i.e. trader) if the message was delivered by a third party</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>117</Tag>
+<FieldName>QuoteID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for quote</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>118</Tag>
+<FieldName>NetMoney</FieldName>
+<Type>Amt</Type>
+<Desc>Total amount due as the result of the transaction (e.g. for Buy order - principal + commission + fees) reported in currency of execution.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>119</Tag>
+<FieldName>SettlCurrAmt</FieldName>
+<Type>Amt</Type>
+<Desc>Total amount due expressed in settlement currency (includes the effect of the forex transaction)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>120</Tag>
+<FieldName>SettlCurrency</FieldName>
+<Type>Currency</Type>
+<Desc>Currency code of settlement denomination. </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>121</Tag>
+<FieldName>ForexReq</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates request for forex accommodation trade to be executed along with security transaction.Valid values:Y = Execute Forex after security tradeN = Do not execute Forex after security trade</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>122</Tag>
+<FieldName>OrigSendingTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Original time of message transmission (always expressed in UTC (Universal Time Coordinated, also known as “GMT”) when transmitting orders as the result of a resend request.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>123</Tag>
+<FieldName>GapFillFlag</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates that the Sequence Reset message is replacing administrative or application messages which will not be resent.Valid values:Y = Gap Fill message, MsgSeqNum field validN = Sequence Reset, ignore MsgSeqNum</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>124</Tag>
+<FieldName>NoExecs</FieldName>
+<Type>int</Type>
+<Desc>No of execution repeating group entries to follow.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>125</Tag>
+<FieldName>CxlType(no longer used)</FieldName>
+<Type> char</Type>
+<Desc>No longer used.  Included here for reference to prior versions.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>126</Tag>
+<FieldName>ExpireTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time/Date of order expiration (always expressed in UTC (Universal Time Coordinated, also known as “GMT”) </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>127</Tag>
+<FieldName>DKReason</FieldName>
+<Type>char</Type>
+<Desc>Reason for execution rejection.Valid values:A =	 Unknown symbolB = Wrong sideC = Quantity exceeds orderD = No matching orderE = Price exceeds limitZ	= Other</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>128</Tag>
+<FieldName>DeliverToCompID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify the firm targeted to receive the message if the message is delivered by a third party   i.e.  the third party firm identifier would be delivered in the TargetCompID field and the ultimate receiver firm ID in this field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>129</Tag>
+<FieldName>DeliverToSubID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message recipient (i.e. trader) if the message is delivered by a third party</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>130</Tag>
+<FieldName>IOINaturalFlag</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates that IOI is the result of an existing agency order or a facilitation position resulting from an agency order, not from principal trading or order solicitation activity.Valid values:Y = NaturalN = Not natural</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>131</Tag>
+<FieldName>QuoteReqID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for quote request</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>132</Tag>
+<FieldName>BidPx</FieldName>
+<Type>Price</Type>
+<Desc>Bid price/rate</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>133</Tag>
+<FieldName>OfferPx</FieldName>
+<Type>Price</Type>
+<Desc>Offer price/rate</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>134</Tag>
+<FieldName>BidSize</FieldName>
+<Type>Qty</Type>
+<Desc>Quantity of bid(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>135</Tag>
+<FieldName>OfferSize</FieldName>
+<Type>Qty</Type>
+<Desc>Quantity of offer(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>136</Tag>
+<FieldName>NoMiscFees</FieldName>
+<Type>int</Type>
+<Desc>Number of repeating groups of miscellaneous fees</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>137</Tag>
+<FieldName>MiscFeeAmt</FieldName>
+<Type>Amt</Type>
+<Desc>Miscellaneous fee value</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>138</Tag>
+<FieldName>MiscFeeCurr</FieldName>
+<Type>Currency</Type>
+<Desc>Currency of miscellaneous fee</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>139</Tag>
+<FieldName>MiscFeeType</FieldName>
+<Type>char</Type>
+<Desc>Indicates type of miscellaneous fee.Valid values:1 = Regulatory (e.g. SEC)2 = Tax3 = Local Commission4 = Exchange Fees5 = Stamp6 = Levy7 = Other8 = Markup9 = Consumption Tax</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>140</Tag>
+<FieldName>PrevClosePx</FieldName>
+<Type>Price</Type>
+<Desc>Previous closing price of security.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>141</Tag>
+<FieldName>ResetSeqNumFlag</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates that the both sides of the FIX session should reset sequence numbers.Valid values:Y = Yes, reset sequence numbersN = No</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>142</Tag>
+<FieldName>SenderLocationID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message originator’s location (i.e. geographic location and/or desk, trader)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>143</Tag>
+<FieldName>TargetLocationID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message destination’s location (i.e. geographic location and/or desk, trader)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>144</Tag>
+<FieldName>OnBehalfOfLocationID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message originator’s location (i.e. geographic location and/or desk, trader) if the message was delivered by a third party</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>145</Tag>
+<FieldName>DeliverToLocationID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify specific message recipient’s location (i.e. geographic location and/or desk, trader) if the message was delivered by a third party</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>146</Tag>
+<FieldName>NoRelatedSym</FieldName>
+<Type>int</Type>
+<Desc>Specifies the number of repeating symbols specified.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>147</Tag>
+<FieldName>Subject</FieldName>
+<Type>String</Type>
+<Desc>The subject of an Email message</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>148</Tag>
+<FieldName>Headline</FieldName>
+<Type>String</Type>
+<Desc>The headline of a News message</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>149</Tag>
+<FieldName>URLLink</FieldName>
+<Type>String</Type>
+<Desc>A URL (Uniform Resource Locator) link to additional information (i.e. http://www.XYZ.com/research.html)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>150</Tag>
+<FieldName>ExecType</FieldName>
+<Type>char</Type>
+<Desc>Describes the specific ExecutionRpt (i.e. Pending Cancel) while OrdStatus will always identify the current order status (i.e. Partially Filled) Valid values: 0 = New1 = Partial fill2 = Fill3 = Done for day4 = Canceled5 = Replace6 = Pending Cancel  (e.g. result of Order Cancel Request)7 = Stopped8 = Rejected9 = SuspendedA = Pending NewB = CalculatedC = ExpiredD = Restated (ExecutionRpt sent unsolicited by sellside, with ExecRestatementReason set)E = Pending Replace (e.g. result of Order Cancel/Replace Request)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>151</Tag>
+<FieldName>LeavesQty</FieldName>
+<Type>Qty</Type>
+<Desc>Amount of shares open for further execution. If the OrdStatus is Canceled, DoneForTheDay, Expired, Calculated, or Rejected (in which case the order is no longer active) then LeavesQty could be 0, otherwise LeavesQty = OrderQty - CumQty.(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>152</Tag>
+<FieldName>CashOrderQty</FieldName>
+<Type>Qty</Type>
+<Desc>Specifies the approximate  order quantity desired in total monetary units vs. as a number of shares.  The broker would be responsible for converting and calculating a share quantity (OrderQty) based upon this amount to be used for the actual order and subsequent messages.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>153</Tag>
+<FieldName>AllocAvgPx</FieldName>
+<Type>Price</Type>
+<Desc>AvgPx for a specific AllocAccount</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>154</Tag>
+<FieldName>AllocNetMoney</FieldName>
+<Type>Amt</Type>
+<Desc>NetMoney for a specific AllocAccount</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>155</Tag>
+<FieldName>SettlCurrFxRate</FieldName>
+<Type>float</Type>
+<Desc>Foreign exchange rate used to compute SettlCurrAmt from Currency to SettlCurrency</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>156</Tag>
+<FieldName>SettlCurrFxRateCalc</FieldName>
+<Type>char</Type>
+<Desc>Specifies whether or not SettlCurrFxRate should be multiplied or divided.M=MultiplyD=Divide</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>157</Tag>
+<FieldName>NumDaysInterest</FieldName>
+<Type>int</Type>
+<Desc>Number of Days of Interest for convertible bonds and fixed income</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>158</Tag>
+<FieldName>AccruedInterestRate</FieldName>
+<Type>float</Type>
+<Desc>Accrued Interest Rate for convertible bonds and fixed income</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>159</Tag>
+<FieldName>AccruedInterestAmt</FieldName>
+<Type>Amt</Type>
+<Desc>Amount of Accrued Interest for convertible bonds and fixed income</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>160</Tag>
+<FieldName>SettlInstMode</FieldName>
+<Type>char</Type>
+<Desc>Indicates mode used for Settlement InstructionsValid values:  0 = Default1 = Standing Instructions Provided2 = Specific Allocation Account Overriding3 = Specific Allocation Account Standing</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>161</Tag>
+<FieldName>AllocText</FieldName>
+<Type>String</Type>
+<Desc>Free format text related to a specific AllocAccount.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>162</Tag>
+<FieldName>SettlInstID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for Settlement Instructions message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>163</Tag>
+<FieldName>SettlInstTransType</FieldName>
+<Type>char</Type>
+<Desc>Settlement Instructions message transaction typeValid values:  N = NewC = CancelR = Replace </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>164</Tag>
+<FieldName>EmailThreadID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for an email thread (new and chain of replies)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>165</Tag>
+<FieldName>SettlInstSource</FieldName>
+<Type>char</Type>
+<Desc>Indicates source of Settlement InstructionsValid values:  1 = Broker’s Instructions2 = Institution’s Instructions</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>166</Tag>
+<FieldName>SettlLocation</FieldName>
+<Type>String</Type>
+<Desc>Identifies Settlement Depository or Country Code (ISITC spec)Valid values:   CED = CEDEL  DTC = Depository Trust Company  EUR = Euroclear  FED = Federal Book Entry  PNY= Physical  PTC = Participant Trust Company  ISO Country Code = Local Market Settle Location</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>167</Tag>
+<FieldName>SecurityType</FieldName>
+<Type>String</Type>
+<Desc>Indicates type of security (ISITC spec)Valid values:  BA = Bankers AcceptanceCB = Convertible Bond (Note not part of ISITC spec)CD = Certificate Of DepositCMO = Collateralize Mortgage ObligationCORP = Corporate BondCP = Commercial PaperCPP = Corporate Private PlacementCS = Common StockFHA = Federal Housing AuthorityFHL = Federal Home LoanFN = Federal National Mortgage AssociationFOR = Foreign Exchange ContractFUT = FutureGN =  Government National Mortgage AssociationGOVT = Treasuries + Agency DebentureIET Mortgage IOETTEMF =  Mutual FundMIO = Mortgage Interest OnlyMPO = Mortgage Principal OnlyMPP = Mortgage Private PlacementMPT = Miscellaneous Pass-ThruMUNI = Municipal BondNONE = No ISITC Security TypeOPT = OptionPS = Preferred StockRP = Repurchase AgreementRVRP =  Reverse Repurchase AgreementSL = Student Loan Marketing AssociationTD = Time DepositUSTB = US Treasury BillWAR = WarrantZOO = Cats, Tigers &amp; Lions (a real code: US Treasury Receipts) ? = “Wildcard” entry (used on Security Definition Request message)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>168</Tag>
+<FieldName>EffectiveTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time the details within the message should take effect (always expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>169</Tag>
+<FieldName>StandInstDbType</FieldName>
+<Type>int</Type>
+<Desc>Identifies the Standing Instruction database usedValid values:  0 = Other1 = DTC SID2 = Thomson ALERT3 = A Global Custodian (StandInstDbName must be provided)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>170</Tag>
+<FieldName>StandInstDbName</FieldName>
+<Type>String</Type>
+<Desc>Name of the Standing Instruction database represented with StandInstDbType (i.e. the Global Custodian’s name).</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>171</Tag>
+<FieldName>StandInstDbID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier used on the Standing Instructions database for the Standing Instructions to be referenced.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>172</Tag>
+<FieldName>SettlDeliveryType</FieldName>
+<Type>int</Type>
+<Desc>Identifies type of settlement0 = “Versus. Payment”: Deliver (if  Sell) or Receive (if Buy) vs. (Against) Payment 1 = “Free”: Deliver (if Sell) or Receive (if Buy) Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>173</Tag>
+<FieldName>SettlDepositoryCode</FieldName>
+<Type>String</Type>
+<Desc>Broker’s account code at the depository (i.e. CEDEL ID  for CEDEL, FINS for DTC, or Euroclear ID for Euroclear) if SettlLocation is a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>174</Tag>
+<FieldName>SettlBrkrCode</FieldName>
+<Type>String</Type>
+<Desc>BIC (Bank Identification Code—Swift managed) code of  the broker involved (i.e. for multi-company brokerage firms)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>175</Tag>
+<FieldName>SettlInstCode</FieldName>
+<Type>String</Type>
+<Desc>BIC (Bank Identification Code—Swift managed) code of  the institution involved (i.e. for multi-company institution firms)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>176</Tag>
+<FieldName>SecuritySettlAgentName</FieldName>
+<Type>String</Type>
+<Desc>Name of SettlInstSource&apos;s local agent bank if SettlLocation is  not a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>177</Tag>
+<FieldName>SecuritySettlAgentCode</FieldName>
+<Type>String</Type>
+<Desc>BIC (Bank Identification Code--Swift managed) code of  the SettlInstSource&apos;s local agent bank if SettlLocation  is not a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>178</Tag>
+<FieldName>SecuritySettlAgentAcctNum</FieldName>
+<Type>String</Type>
+<Desc>SettlInstSource&apos;s account number at local agent bank if  SettlLocation is not a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>179</Tag>
+<FieldName>SecuritySettlAgentAcctName</FieldName>
+<Type>String</Type>
+<Desc>Name of SettlInstSource&apos;s account at local agent bank if  SettlLocation is not a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>180</Tag>
+<FieldName>SecuritySettlAgentContactName</FieldName>
+<Type>String</Type>
+<Desc>Name of contact at local agent bank for SettlInstSource&apos;s account if SettlLocation is not a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>181</Tag>
+<FieldName>SecuritySettlAgentContactPhone</FieldName>
+<Type>String</Type>
+<Desc>Phone number for contact at local agent bank if  SettlLocation is not a depository</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>182</Tag>
+<FieldName>CashSettlAgentName</FieldName>
+<Type>String</Type>
+<Desc>Name of SettlInstSource&apos;s local agent bank if SettlDeliveryType=Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>183</Tag>
+<FieldName>CashSettlAgentCode</FieldName>
+<Type>String</Type>
+<Desc>BIC (Bank Identification Code--Swift managed) code of  the SettlInstSource&apos;s local agent bank if SettlDeliveryType=Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>184</Tag>
+<FieldName>CashSettlAgentAcctNum</FieldName>
+<Type>String</Type>
+<Desc>SettlInstSource&apos;s account number at local agent bank if SettlDeliveryType=Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>185</Tag>
+<FieldName>CashSettlAgentAcctName</FieldName>
+<Type>String</Type>
+<Desc>Name of SettlInstSource&apos;s account at local agent bank if SettlDeliveryType=Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>186</Tag>
+<FieldName>CashSettlAgentContactName</FieldName>
+<Type>String</Type>
+<Desc>Name of contact at local agent bank for SettlInstSource&apos;s account  if SettlDeliveryType=Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>187</Tag>
+<FieldName>CashSettlAgentContactPhone</FieldName>
+<Type>String</Type>
+<Desc>Phone number for contact at local agent bank for SettlInstSource&apos;s account  if SettlDeliveryType=Free</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>188</Tag>
+<FieldName>BidSpotRate</FieldName>
+<Type>Price</Type>
+<Desc>Bid F/X spot rate.y vary and not limited to four)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>189</Tag>
+<FieldName>BidForwardPoints</FieldName>
+<Type>PriceOffset</Type>
+<Desc>Bid F/X forward points added to spot rate. May be a negative value.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>190</Tag>
+<FieldName>OfferSpotRate</FieldName>
+<Type>Price</Type>
+<Desc>Offer F/X spot rate.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>191</Tag>
+<FieldName>OfferForwardPoints</FieldName>
+<Type>PriceOffset</Type>
+<Desc>Offer F/X forward points added to spot rate. May be a negative value.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>192</Tag>
+<FieldName>OrderQty2</FieldName>
+<Type>Qty</Type>
+<Desc>OrderQty of the future part of a F/X swap order.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>193</Tag>
+<FieldName>FutSettDate2</FieldName>
+<Type>LocalMktDate</Type>
+<Desc>FutSettDate of the future part of a F/X swap order.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>194</Tag>
+<FieldName>LastSpotRate</FieldName>
+<Type>Price</Type>
+<Desc>F/X spot rate.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>195</Tag>
+<FieldName>LastForwardPoints</FieldName>
+<Type>PriceOffset</Type>
+<Desc>F/X forward points added to LastSpotRate.  May be a negative value.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>196</Tag>
+<FieldName>AllocLinkID</FieldName>
+<Type>String</Type>
+<Desc>Can be used to link two different Allocation messages (each with unique AllocID) together, i.e. for F/X “Netting” or “Swaps”.  Should be unique.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>197</Tag>
+<FieldName>AllocLinkType</FieldName>
+<Type>int</Type>
+<Desc>Identifies the type of Allocation linkage when AllocLinkID is used.Valid values:  0 = F/X Netting1 = F/X Swap</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>198</Tag>
+<FieldName>SecondaryOrderID</FieldName>
+<Type>String</Type>
+<Desc>Assigned by the party which accepts the order.  Can be used to provide the OrderID used by an exchange or executing system.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>199</Tag>
+<FieldName>NoIOIQualifiers</FieldName>
+<Type>int</Type>
+<Desc>Number of repeating groups of IOIQualifiers.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>200</Tag>
+<FieldName>MaturityMonthYear</FieldName>
+<Type>month-year</Type>
+<Desc>Month and Year of the maturity for SecurityType=FUT or SecurityType=OPT. Required if MaturityDay is specified.Format:  YYYYMM       (i.e. 199903)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>201</Tag>
+<FieldName>PutOrCall</FieldName>
+<Type>int</Type>
+<Desc>Indicates whether an Option is for a put or call.Valid values:  0 = Put1 = Call</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>202</Tag>
+<FieldName>StrikePrice</FieldName>
+<Type>Price</Type>
+<Desc>Strike Price for an Option.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>203</Tag>
+<FieldName>CoveredOrUncovered</FieldName>
+<Type>int</Type>
+<Desc>Used for optionsValid values:  0 = Covered1 = Uncovered</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>204</Tag>
+<FieldName>CustomerOrFirm</FieldName>
+<Type>int</Type>
+<Desc>Used for options when delivering the order to an execution system/exchange to specify if the order is for a customer or the firm placing the order itself.Valid values:  0 = Customer1 = Firm</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>205</Tag>
+<FieldName>MaturityDay</FieldName>
+<Type>day-of-month</Type>
+<Desc>Day of month used in conjunction with MaturityMonthYear to specify the maturity date for SecurityType=FUT or SecurityType=OPT.Valid values:      1-31</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>206</Tag>
+<FieldName>OptAttribute</FieldName>
+<Type>char</Type>
+<Desc>Can be used for SecurityType=OPT to identify a particular security.Valid values vary by SecurityExchange:      For Exchange: MONEP (Paris)       L = Long (a.k.a. “American”)       S = Short (a.k.a. “European”)   For Exchanges: DTB (Frankfurt), HKSE (Hong Kong), and SOFFEX (Zurich)      0-9 = single digit “version” number assigned by exchange following capital adjustments (0=current, 1=prior, 2=prior to 1, etc).</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>207</Tag>
+<FieldName>SecurityExchange</FieldName>
+<Type>Exchange</Type>
+<Desc>Market used to help identify a security.Valid values:      See Appendix C</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>208</Tag>
+<FieldName>NotifyBrokerOfCredit</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether or not details should be communicated to BrokerOfCredit (i.e. step-in broker).Valid values:      Y = Details should be communicated    N = Details should not be communicated</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>209</Tag>
+<FieldName>AllocHandlInst</FieldName>
+<Type>int</Type>
+<Desc>Indicates how the receiver (i.e. third party) of Allocation message should handle/process the account details.Valid values:      1 = Match    2 = Forward    3 = Forward and Match</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>210</Tag>
+<FieldName>MaxShow</FieldName>
+<Type>Qty</Type>
+<Desc>Maximum number of shares within an order to be shown  to other customers (i.e. sent via an IOI).(Prior to FIX 4.2 this field was of type int)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>211</Tag>
+<FieldName>PegDifference</FieldName>
+<Type>PriceOffset</Type>
+<Desc>Amount (signed) added to the price of the peg  for a pegged order.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>212</Tag>
+<FieldName>XmlDataLen</FieldName>
+<Type>Length</Type>
+<Desc>Length of the XmlData data block.</Desc>
+<LenRefers>213</LenRefers>
+</Fields>
+<Fields>
+<Tag>213</Tag>
+<FieldName>XmlData</FieldName>
+<Type>data</Type>
+<Desc>Actual XML data stream (e.g. FIXML). See approriate XML reference (e.g. FIXML).  Note: may contain embedded SOH characters.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>214</Tag>
+<FieldName>SettlInstRefID</FieldName>
+<Type>String</Type>
+<Desc>Reference identifier for the SettlInstID with Cancel and Replace SettlInstTransType transaction types.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>215</Tag>
+<FieldName>NoRoutingIDs</FieldName>
+<Type>int</Type>
+<Desc>Number of repeating groups of RoutingID and RoutingType values.See Appendix L – Pre-Trade Message Targeting/Routing</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>216</Tag>
+<FieldName>RoutingType</FieldName>
+<Type>int</Type>
+<Desc>Indicates the type of RoutingID specified.Valid values:      1 = Target Firm    2 = Target List    3 = Block Firm    4 = Block List</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>217</Tag>
+<FieldName>RoutingID</FieldName>
+<Type>String</Type>
+<Desc>Assigned value used to identify a specific routing destination.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>218</Tag>
+<FieldName>SpreadToBenchmark</FieldName>
+<Type>PriceOffset</Type>
+<Desc>For Fixed Income.  Basis points relative to a benchmark.  To be expressed as &quot;count of basis points&quot; (vs. an absolute value).  E.g. High Grade Corporate Bonds may express price as basis points relative to benchmark (the Benchmark field).  Note: Basis points can be negative.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>219</Tag>
+<FieldName>Benchmark</FieldName>
+<Type>char</Type>
+<Desc>For Fixed Income.  Identifies the benchmark (e.g. used in conjunction with the SpreadToBenchmark field).Valid values:1 = CURVE2 = 5-YR3 = OLD-54 = 10-YR5 = OLD-106 = 30-YR7 = OLD-308 = 3-MO-LIBOR9 = 6-MO-LIBOR</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>220</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>221</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>222</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>223</Tag>
+<FieldName>CouponRate</FieldName>
+<Type>float</Type>
+<Desc>For Fixed Income.  Coupon rate of the bond.  Will be zero for step-up bonds.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>224</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>225</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>226</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>227</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>228</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>229</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>230</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>231</Tag>
+<FieldName>ContractMultiplier</FieldName>
+<Type>float</Type>
+<Desc>Specifies the ratio or multiply factor to convert from contracts to shares (e.g. 1.0, 100, 1000, etc).  Applicable For Fixed Income, Convertible Bonds, Derivatives, etc.  Note: If used, quantities should be expressed in the &quot;nominal&quot; (e.g. contracts vs. shares) amount.  </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>232</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>233</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>234</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>235</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>236</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>237</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>238</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>239</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>240</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>241</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>242</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>243</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>244</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>245</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>246</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>247</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>248</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>249</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>250</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>251</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>252</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>253</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>254</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>255</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>256</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>257</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>258</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>259</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>260</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>261</Tag>
+<FieldName>Reserved/Allocated to the Fixed Income proposal</FieldName>
+<Type></Type>
+<Desc></Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>262</Tag>
+<FieldName>MDReqID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for Market Data Request</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>263</Tag>
+<FieldName>SubscriptionRequestType</FieldName>
+<Type>char</Type>
+<Desc>Subscription Request TypeValid values:0 = Snapshot1 = Snapshot + Updates (Subscribe)2 = Disable previous Snapshot + Update Request (Unsubscribe)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>264</Tag>
+<FieldName>MarketDepth</FieldName>
+<Type>int</Type>
+<Desc>Depth of market for Book SnapshotValid values:0 = Full Book1 = Top of BookN&gt;1 = Report best N price tiers of data</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>265</Tag>
+<FieldName>MDUpdateType</FieldName>
+<Type>int</Type>
+<Desc>Specifies the type of Market Data update.Valid values:0 = Full Refresh1 = Incremental Refresh</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>266</Tag>
+<FieldName>AggregatedBook</FieldName>
+<Type>Boolean</Type>
+<Desc>Specifies whether or not book entries should be aggregated.Valid values:Y = one book entry per side per priceN = Multiple entries per side per price allowed(Not specified) = broker option</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>267</Tag>
+<FieldName>NoMDEntryTypes</FieldName>
+<Type>int</Type>
+<Desc>Number of MDEntryType fields requested.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>268</Tag>
+<FieldName>NoMDEntries</FieldName>
+<Type>int</Type>
+<Desc>Number of entries in Market Data message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>269</Tag>
+<FieldName>MDEntryType</FieldName>
+<Type>char</Type>
+<Desc>Type  Market Data entry.Valid values:0 = Bid1 = Offer2 = Trade3 = Index Value4 = Opening Price5 = Closing Price6 = Settlement Price7 = Trading Session High Price8 = Trading Session Low Price9 = Trading Session VWAP Price</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>270</Tag>
+<FieldName>MDEntryPx</FieldName>
+<Type>Price</Type>
+<Desc>Price of the Market Data Entry.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>271</Tag>
+<FieldName>MDEntrySize</FieldName>
+<Type>Qty</Type>
+<Desc>Number of shares represented by the Market Data Entry.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>272</Tag>
+<FieldName>MDEntryDate</FieldName>
+<Type>UTCDate</Type>
+<Desc>Date of Market Data Entry.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>273</Tag>
+<FieldName>MDEntryTime</FieldName>
+<Type>UTCTimeOnly</Type>
+<Desc>Time of Market Data Entry.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>274</Tag>
+<FieldName>TickDirection</FieldName>
+<Type>char</Type>
+<Desc>Direction of the &quot;tick&quot;.Valid values:0 = Plus Tick1 = Zero-Plus Tick2 = Minus Tick3 = Zero-Minus Tick</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>275</Tag>
+<FieldName>MDMkt</FieldName>
+<Type>Exchange</Type>
+<Desc>Market posting quote / trade.  Valid values:See Appendix C</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>276</Tag>
+<FieldName>QuoteCondition</FieldName>
+<Type>MultipleValueString</Type>
+<Desc>Space-delimited list of conditions describing a quote.Valid values:A = Open / ActiveB = Closed / InactiveC = Exchange BestD = Consolidated BestE = LockedF = CrossedG = DepthH = Fast TradingI = Non-Firm</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>277</Tag>
+<FieldName>TradeCondition</FieldName>
+<Type>MultipleValueString</Type>
+<Desc>Space-delimited list of conditions describing a tradeValid values:A = Cash (only) MarketB = Average Price TradeC = Cash Trade (same day clearing)D = Next Day (only) MarketE = Opening / Reopening Trade DetailF = Intraday Trade DetailG = Rule 127 Trade (NYSE)H = Rule 155 Trade (Amex)I = Sold Last (late reporting)J = Next Day Trade (next day clearing)K = Opened (late report of opened trade)L = SellerM = Sold (out of sequence)N = Stopped Stock (guarantee of price but does not execute the order)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>278</Tag>
+<FieldName>MDEntryID</FieldName>
+<Type>String</Type>
+<Desc>Unique Market Data Entry identifier.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>279</Tag>
+<FieldName>MDUpdateAction</FieldName>
+<Type>char</Type>
+<Desc>Type of Market Data update action.Valid values:0 = New1 = Change2 = Delete</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>280</Tag>
+<FieldName>MDEntryRefID</FieldName>
+<Type>String</Type>
+<Desc>Refers to a previous MDEntryID.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>281</Tag>
+<FieldName>MDReqRejReason</FieldName>
+<Type>char</Type>
+<Desc>Reason for the rejection of a Market Data request.Valid values:0 = Unknown symbol1 = Duplicate MDReqID2 = Insufficient Bandwidth3 = Insufficient Permissions4 = Unsupported SubscriptionRequestType5 = Unsupported MarketDepth6 = Unsupported MDUpdateType7 = Unsupported AggregatedBook8 = Unsupported MDEntryType</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>282</Tag>
+<FieldName>MDEntryOriginator</FieldName>
+<Type>String</Type>
+<Desc>Originator of a Market Data Entry</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>283</Tag>
+<FieldName>LocationID</FieldName>
+<Type>String</Type>
+<Desc>Identification of a Market Maker’s location</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>284</Tag>
+<FieldName>DeskID</FieldName>
+<Type>String</Type>
+<Desc>Identification of a Market Maker’s desk</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>285</Tag>
+<FieldName>DeleteReason</FieldName>
+<Type>char</Type>
+<Desc>Reason for deletion.Valid values:0 = Cancelation / Trade Bust1 = Error</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>286</Tag>
+<FieldName>OpenCloseSettleFlag</FieldName>
+<Type>char</Type>
+<Desc>Flag that identifies a price.Valid values:0 = Daily Open / Close / Settlement price1 = Session Open / Close / Settlement price2 = Delivery Settlement price</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>287</Tag>
+<FieldName>SellerDays</FieldName>
+<Type>int</Type>
+<Desc>Specifies the number of days that may elapse before delivery of the security</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>288</Tag>
+<FieldName>MDEntryBuyer</FieldName>
+<Type>String</Type>
+<Desc>Buying party in a trade</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>289</Tag>
+<FieldName>MDEntrySeller</FieldName>
+<Type>String</Type>
+<Desc>Selling party in a trade</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>290</Tag>
+<FieldName>MDEntryPositionNo</FieldName>
+<Type>int</Type>
+<Desc>Display position of a bid or offer, numbered from most competitive to least competitive, per market side, beginning with 1.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>291</Tag>
+<FieldName>FinancialStatus</FieldName>
+<Type>char</Type>
+<Desc>Identifies a firm’s financial status.Valid values:  1 = Bankrupt</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>292</Tag>
+<FieldName>CorporateAction</FieldName>
+<Type>char</Type>
+<Desc>Identifies the type of Corporate Action.Valid values:  A = Ex-Dividend  B = Ex-Distribution  C = Ex-Rights  D = New  E = Ex-Interest</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>293</Tag>
+<FieldName>DefBidSize</FieldName>
+<Type>Qty</Type>
+<Desc>Default Bid Size.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>294</Tag>
+<FieldName>DefOfferSize</FieldName>
+<Type>Qty</Type>
+<Desc>Default Offer Size.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>295</Tag>
+<FieldName>NoQuoteEntries</FieldName>
+<Type>int</Type>
+<Desc>The number of quote entries for a QuoteSet.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>296</Tag>
+<FieldName>NoQuoteSets</FieldName>
+<Type>int</Type>
+<Desc>The number of sets of quotes in the message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>297</Tag>
+<FieldName>QuoteAckStatus</FieldName>
+<Type>int</Type>
+<Desc>Identifies the status of the quote acknowledgement.Valid values:  0-Accepted  1-Canceled for Symbol(s)  2-Canceled  for Security Type(s)  3-Canceled for Underlying  4-Canceled All  5-Rejected</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>298</Tag>
+<FieldName>QuoteCancelType</FieldName>
+<Type>int</Type>
+<Desc>Identifies the type of  quote cancel.Valid Values:  1 – Cancel for Symbol(s)  2 – Cancel for Security Type(s)  3 – Cancel for Underlying Symbol  4 – Cancel All Quotes</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>299</Tag>
+<FieldName>QuoteEntryID</FieldName>
+<Type>String</Type>
+<Desc>Uniquely identifies the quote as part of a QuoteSet.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>300</Tag>
+<FieldName>QuoteRejectReason</FieldName>
+<Type>int</Type>
+<Desc>Reason Quote was rejected:Valid Values:  1 = Unknown symbol (Security)  2 = Exchange(Security) closed  3 = Quote Request exceeds limit  4 = Too late to enter  5 = Unknown Quote  6 = Duplicate Quote  7 = Invalid bid/ask spread  8 = Invalid price  9 = Not authorized to quote security</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>301</Tag>
+<FieldName>QuoteResponseLevel</FieldName>
+<Type>int</Type>
+<Desc>Level of Response requested from receiver of quote messages.Valid Values:  0 – No Acknowledgement (Default)  1 – Acknowledge only negative or erroneous quotes  2 – Acknowledge each quote messages</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>302</Tag>
+<FieldName>QuoteSetID</FieldName>
+<Type>String</Type>
+<Desc>Unique id for the Quote Set. </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>303</Tag>
+<FieldName>QuoteRequestType</FieldName>
+<Type>int</Type>
+<Desc>Indicates the type of Quote Request being generatedValid values:  1-Manual  2-Automatic</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>304</Tag>
+<FieldName>TotQuoteEntries</FieldName>
+<Type>int</Type>
+<Desc>Total number of quotes for the quote set across all messages. Should be the sum of all NoQuoteEntries in each message that has repeating quotes that are part of the same quote set.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>305</Tag>
+<FieldName>UnderlyingIDSource</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s IDSource.  Valid values:   see IDSource field</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>306</Tag>
+<FieldName>UnderlyingIssuer</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s Issuer.  See Issuer field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>307</Tag>
+<FieldName>UnderlyingSecurityDesc</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s SecurityDesc.  See SecurityDesc field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>308</Tag>
+<FieldName>UnderlyingSecurityExchange</FieldName>
+<Type>Exchange</Type>
+<Desc>Underlying security’s SecurityExchange.  Can be used to identify the underlying security.  Valid values:  see SecurityExchange</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>309</Tag>
+<FieldName>UnderlyingSecurityID</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s SecurityID.  See SecurityID field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>310</Tag>
+<FieldName>UnderlyingSecurityType</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s SecurityType.  Valid values:   see SecurityType field</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>311</Tag>
+<FieldName>UnderlyingSymbol</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s Symbol.  See Symbol field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>312</Tag>
+<FieldName>UnderlyingSymbolSfx</FieldName>
+<Type>String</Type>
+<Desc>Underlying security’s SymbolSfx.  See SymbolSfx field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>313</Tag>
+<FieldName>UnderlyingMaturityMonthYear</FieldName>
+<Type>month-year</Type>
+<Desc>Underlying security’s MaturityMonthYear. Required if UnderlyingMaturityDay is specified.  See MaturityMonthYear field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>314</Tag>
+<FieldName>UnderlyingMaturityDay</FieldName>
+<Type>day-of-month</Type>
+<Desc>Underlying security’s MaturityDay.  See MaturityDay field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>315</Tag>
+<FieldName>UnderlyingPutOrCall</FieldName>
+<Type>int</Type>
+<Desc>Underlying security’s PutOrCall.  See PutOrCall field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>316</Tag>
+<FieldName>UnderlyingStrikePrice</FieldName>
+<Type>Price</Type>
+<Desc>Underlying security’s StrikePrice.  See StrikePrice field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>317</Tag>
+<FieldName>UnderlyingOptAttribute</FieldName>
+<Type>char</Type>
+<Desc>Underlying security’s OptAttribute.  See OptAttribute field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>318</Tag>
+<FieldName>Underlying Currency</FieldName>
+<Type>Currency</Type>
+<Desc>Underlying security’s Currency.  See Currency field for description and valid values</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>319</Tag>
+<FieldName>RatioQty</FieldName>
+<Type>Quantity</Type>
+<Desc>Quantity of a particular leg in the security.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>320</Tag>
+<FieldName>SecurityReqID</FieldName>
+<Type>String</Type>
+<Desc>Unique ID of a Security Definition Request.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>321</Tag>
+<FieldName>SecurityRequestType</FieldName>
+<Type>int</Type>
+<Desc>Type of Security Definition Request.Valid values:  0 = Request Security identity and specifications  1 = Request Security identity for the specifications provided (Name of the security is not supplied)  2 = Request List Security Types  3 = Request List Securities (Can be qualified with Symbol, SecurityType, TradingSessionID, SecurityExchange is provided then only list Securities for the specific type)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>322</Tag>
+<FieldName>SecurityResponseID</FieldName>
+<Type>String</Type>
+<Desc>Unique ID of a Security Definition message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>323</Tag>
+<FieldName>SecurityResponseType</FieldName>
+<Type>int</Type>
+<Desc>Type of Security Definition message response.Valid values:  1 = Accept security proposal as is  2 = Accept security proposal with revisions as indicated in the message  3 = List of security types returned per request   4 = List of securities returned per request  5 = Reject security proposal  6 = Can not match selection criteria</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>324</Tag>
+<FieldName>SecurityStatusReqID</FieldName>
+<Type>String</Type>
+<Desc>Unique ID of a Security Status Request message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>325</Tag>
+<FieldName>UnsolicitedIndicator</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether or not message is being sent as a result of a subscription request or not.Valid values:   Y = Message is being sent unsolicited   N = Message is being sent as a result of a prior request</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>326</Tag>
+<FieldName>SecurityTradingStatus</FieldName>
+<Type>int</Type>
+<Desc>Identifies the trading status applicable to the transaction.Valid values:  1 = Opening Delay  2 = Trading Halt  3 = Resume  4 = No Open/No Resume  5 = Price Indication  6 = Trading Range Indication  7 = Market Imbalance Buy  8 = Market Imbalance Sell  9 = Market On Close Imbalance Buy  10 = Market On Close Imbalance Sell  11 = (not assigned)  12 = No Market Imbalance  13 = No Market On Close Imbalance  14 = ITS Pre-Opening  15 = New Price Indication  16 = Trade Dissemination Time  17 = Ready to trade (start of session)  18 = Not Available for trading (end of session)  19 = Not Traded on this Market  20 = Unknown or Invalid</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>327</Tag>
+<FieldName>HaltReason</FieldName>
+<Type>char</Type>
+<Desc>Denotes the reason for the Opening Delay or Trading Halt.Valid values:  I = Order Imbalance  X = Equipment Changeover  P = News Pending  D = News Dissemination  E = Order Influx  M = Additional Information</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>328</Tag>
+<FieldName>InViewOfCommon</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether or not the halt was due to Common Stock trading being halted.Valid values:  Y = Halt was due to common stock being halted  N = Halt was not related to a halt of the common stock</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>329</Tag>
+<FieldName>DueToRelated</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether or not the halt was due to the Related Security being halted.Valid values:  Y = Halt was due to related security being halted  N = Halt was not related to a halt of the related security</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>330</Tag>
+<FieldName>BuyVolume</FieldName>
+<Type>Qty</Type>
+<Desc>Number of shares bought.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>331</Tag>
+<FieldName>SellVolume</FieldName>
+<Type>Qty</Type>
+<Desc>Number of shares sold.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>332</Tag>
+<FieldName>HighPx</FieldName>
+<Type>Price</Type>
+<Desc>Represents an indication of the high end of the price range for a security prior to the open or reopen</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>333</Tag>
+<FieldName>LowPx</FieldName>
+<Type>Price</Type>
+<Desc>Represents an indication of the low end of the price range for a security prior to the open or reopen</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>334</Tag>
+<FieldName>Adjustment</FieldName>
+<Type>int</Type>
+<Desc>Identifies the type of adjustment.Valid values:  1 = Cancel  2 = Error  3 = Correction</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>335</Tag>
+<FieldName>TradSesReqID</FieldName>
+<Type>String</Type>
+<Desc>Unique ID of a Trading Session Status message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>336</Tag>
+<FieldName>TradingSessionID</FieldName>
+<Type>String</Type>
+<Desc>Identifier for Trading SessionCan be used to represent a specific market trading session (e.g. “PRE-OPEN&quot;, &quot;CROSS_2&quot;, &quot;AFTER-HOURS&quot;, &quot;TOSTNET1&quot;, &quot;TOSTNET2&quot;, etc). Values should be bi-laterally agreed to between counterparties.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>337</Tag>
+<FieldName>ContraTrader</FieldName>
+<Type>String</Type>
+<Desc>Identifies the trader (e.g. &quot;badge number&quot;) of the ContraBroker.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>338</Tag>
+<FieldName>TradSesMethod</FieldName>
+<Type>int</Type>
+<Desc>Method of tradingValid values:  1 = Electronic  2 = Open Outcry  3 = Two Party</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>339</Tag>
+<FieldName>TradSesMode</FieldName>
+<Type>int</Type>
+<Desc>Trading Session ModeValid values:  1 = Testing  2 = Simulated  3 = Production</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>340</Tag>
+<FieldName>TradSesStatus</FieldName>
+<Type>int</Type>
+<Desc>State of the trading session. Valid values:  1 = Halted  2 = Open  3 = Closed  4 = Pre-Open  5 = Pre-Close</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>341</Tag>
+<FieldName>TradSesStartTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Starting time of the trading session</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>342</Tag>
+<FieldName>TradSesOpenTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time of the opening of the trading session</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>343</Tag>
+<FieldName>TradSesPreCloseTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Time of the pre-closed of the trading session</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>344</Tag>
+<FieldName>TradSesCloseTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Closing time of the trading session</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>345</Tag>
+<FieldName>TradSesEndTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>End time of the trading session</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>346</Tag>
+<FieldName>NumberOfOrders</FieldName>
+<Type>int</Type>
+<Desc>Number of orders in the market.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>347</Tag>
+<FieldName>MessageEncoding</FieldName>
+<Type>String</Type>
+<Desc>Type of message encoding (non-ASCII (non-English) characters) used in a message’s “Encoded” fields.Valid values:  ISO-2022-JP   (for using JIS)  EUC-JP           (for using EUC)  Shift_JIS         (for using SJIS)  UTF-8             (for using Unicode)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>348</Tag>
+<FieldName>EncodedIssuerLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedIssuer field.</Desc>
+<LenRefers>349</LenRefers>
+</Fields>
+<Fields>
+<Tag>349</Tag>
+<FieldName>EncodedIssuer</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the Issuer field in the encoded format specified via the MessageEncoding field.  If used, the ASCII (English) representation should also be specified in the Issuer field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>350</Tag>
+<FieldName>EncodedSecurityDescLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedSecurityDesc field.</Desc>
+<LenRefers>351</LenRefers>
+</Fields>
+<Fields>
+<Tag>351</Tag>
+<FieldName>EncodedSecurityDesc</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the SecurityDesc field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the SecurityDesc field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>352</Tag>
+<FieldName>EncodedListExecInstLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedListExecInst field.</Desc>
+<LenRefers>353</LenRefers>
+</Fields>
+<Fields>
+<Tag>353</Tag>
+<FieldName>EncodedListExecInst</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the ListExecInst field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the ListExecInst field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>354</Tag>
+<FieldName>EncodedTextLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedText field.</Desc>
+<LenRefers>355</LenRefers>
+</Fields>
+<Fields>
+<Tag>355</Tag>
+<FieldName>EncodedText</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the Text field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the Text field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>356</Tag>
+<FieldName>EncodedSubjectLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedSubject field.</Desc>
+<LenRefers>357</LenRefers>
+</Fields>
+<Fields>
+<Tag>357</Tag>
+<FieldName>EncodedSubject</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the Subject field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the Subject field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>358</Tag>
+<FieldName>EncodedHeadlineLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedHeadline field.</Desc>
+<LenRefers>359</LenRefers>
+</Fields>
+<Fields>
+<Tag>359</Tag>
+<FieldName>EncodedHeadline</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the Headline field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the Headline field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>360</Tag>
+<FieldName>EncodedAllocTextLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedAllocText field.</Desc>
+<LenRefers>361</LenRefers>
+</Fields>
+<Fields>
+<Tag>361</Tag>
+<FieldName>EncodedAllocText</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the AllocText field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the AllocText field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>362</Tag>
+<FieldName>EncodedUnderlyingIssuerLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedUnderlyingIssuer field.</Desc>
+<LenRefers>363</LenRefers>
+</Fields>
+<Fields>
+<Tag>363</Tag>
+<FieldName>EncodedUnderlyingIssuer</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the UnderlyingIssuer field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the UnderlyingIssuer field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>364</Tag>
+<FieldName>EncodedUnderlyingSecurityDescLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedUnderlyingSecurityDesc field.</Desc>
+<LenRefers>365</LenRefers>
+</Fields>
+<Fields>
+<Tag>365</Tag>
+<FieldName>EncodedUnderlyingSecurityDesc</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the UnderlyingSecurityDesc field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the UnderlyingSecurityeDesc  field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>366</Tag>
+<FieldName>AllocPrice</FieldName>
+<Type>Price</Type>
+<Desc>Executed price for an AllocAccount entry used when using “executed price” vs. “average price” allocations (e.g. Japan).</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>367</Tag>
+<FieldName>QuoteSetValidUntilTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Indicates expiration time of this particular QuoteSet (always expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>368</Tag>
+<FieldName>QuoteEntryRejectReason</FieldName>
+<Type>int</Type>
+<Desc>Reason Quote Entry was rejected:Valid values:  1 = Unknown symbol (Security)  2 = Exchange(Security) closed  3 = Quote exceeds limit  4 = Too late to enter  5 = Unknown Quote  6 = Duplicate Quote  7 = Invalid bid/ask spread  8 = Invalid price  9 = Not authorized to quote security</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>369</Tag>
+<FieldName>LastMsgSeqNumProcessed</FieldName>
+<Type>int</Type>
+<Desc>The last MsgSeqNum value received and processed.  Can be specified on every message sent.  Useful for detecting a backlog with a counterparty.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>370</Tag>
+<FieldName>OnBehalfOfSendingTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Used when a message is sent via a “hub” or “service bureau”.  If A sends to Q (the hub) who then sends to B via a separate FIX session, then when Q sends to B the value of this field should represent the SendingTime on the message A sent to Q.   (always expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>371</Tag>
+<FieldName>RefTagID</FieldName>
+<Type>int</Type>
+<Desc>The tag number of the FIX field being referenced.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>372</Tag>
+<FieldName>RefMsgType</FieldName>
+<Type>String</Type>
+<Desc>The MsgType of the FIX message being referenced.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>373</Tag>
+<FieldName>SessionRejectReason</FieldName>
+<Type>int</Type>
+<Desc>Code to identify reason for a session-level Reject message.Valid values:0 = Invalid tag number1 = Required tag missing2 = Tag not defined for this message type3 = Undefined Tag4 = Tag specified without a value5 = Value is incorrect (out of range) for this tag6 = Incorrect data format for value7 = Decryption problem8 = Signature problem9 = CompID problem10 = SendingTime accuracy problem11  = Invalid MsgType</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>374</Tag>
+<FieldName>BidRequestTransType</FieldName>
+<Type>char</Type>
+<Desc>Identifies the Bid Request message type.Valid values:N = NewC = Cancel</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>375</Tag>
+<FieldName>ContraBroker</FieldName>
+<Type>String</Type>
+<Desc>Identifies contra broker.  Standard NASD market-maker mnemonic is preferred.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>376</Tag>
+<FieldName>ComplianceID</FieldName>
+<Type>String</Type>
+<Desc>ID used to represent this transaction for compliance purposes (e.g. OATS reporting).</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>377</Tag>
+<FieldName>SolicitedFlag</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether or not the order was solicited.Valid values:Y = Was solcitiedN = Was not solicited</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>378</Tag>
+<FieldName>ExecRestatementReason</FieldName>
+<Type>int</Type>
+<Desc>Code to identify reason for an ExecutionRpt message sent with ExecType=Restated or used when communicating an unsolicited cancel. Valid values:0 = GT Corporate action1 = GT renewal / restatement (no corporate action)2 = Verbal change3 = Repricing of order4 = Broker option5 = Partial decline of OrderQty (e.g. exchange-initiated partial cancel)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>379</Tag>
+<FieldName>BusinessRejectRefID</FieldName>
+<Type>String</Type>
+<Desc>The value of the business-level “ID” field on the message being referenced.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>380</Tag>
+<FieldName>BusinessRejectReason</FieldName>
+<Type>int</Type>
+<Desc>Code to identify reason for a Business Message Reject message.Valid values:0 = Other1 = Unkown ID2 = Unknown Security3 = Unsupported Message Type4 = Application not available5 = Conditionally Required Field Missing</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>381</Tag>
+<FieldName>GrossTradeAmt</FieldName>
+<Type>Amt</Type>
+<Desc>Total amount traded (e.g. CumQty * AvgPx) expressed in units of currency.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>382</Tag>
+<FieldName>NoContraBrokers</FieldName>
+<Type>int</Type>
+<Desc>The number of ContraBroker entries.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>383</Tag>
+<FieldName>MaxMessageSize</FieldName>
+<Type>int</Type>
+<Desc>Maximum number of bytes supported for a single message.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>384</Tag>
+<FieldName>NoMsgTypes</FieldName>
+<Type>int</Type>
+<Desc>Number of MsgTypes in repeating group.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>385</Tag>
+<FieldName>MsgDirection</FieldName>
+<Type>char</Type>
+<Desc>Specifies the direction of the messsage.Valid values:S = SendR = Receive</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>386</Tag>
+<FieldName>NoTradingSessions</FieldName>
+<Type>int</Type>
+<Desc>Number of TradingSessionIDs in repeating group.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>387</Tag>
+<FieldName>TotalVolumeTraded</FieldName>
+<Type>Qty</Type>
+<Desc>Total volume (quantity) traded.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>388</Tag>
+<FieldName>DiscretionInst</FieldName>
+<Type>char</Type>
+<Desc>Code to identify the price a DiscretionOffset is related to and should be mathematically added to.Valid values:0 = Related to displayed price1 = Related to market price2 = Related to primary price3 = Related to local primary price4 = Related to midpoint price5 = Related to last trade price</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>389</Tag>
+<FieldName>DiscretionOffset</FieldName>
+<Type>PriceOffset</Type>
+<Desc>Amount (signed) added to the “related to” price specified via DiscretionInst.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>390</Tag>
+<FieldName>BidID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for Bid Response as assigned by broker.  Uniqueness must be guaranteed within a single trading day.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>391</Tag>
+<FieldName>ClientBidID</FieldName>
+<Type>String</Type>
+<Desc>Unique identifier for a Bid Request as assigned by institution.  Uniqueness must be guaranteed within a single trading day.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>392</Tag>
+<FieldName>ListName</FieldName>
+<Type>String</Type>
+<Desc>Descriptive name for list order.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>393</Tag>
+<FieldName>TotalNumSecurities</FieldName>
+<Type>int</Type>
+<Desc>Total number of securities.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>394</Tag>
+<FieldName>BidType</FieldName>
+<Type>int</Type>
+<Desc>Code to identify the type of Bid Request.Valid values:1 – “Non Disclosed” Style (e.g. US/European)2 – “Disclosed”  Style (e.g. Japanese)3 – No Bidding Process</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>395</Tag>
+<FieldName>NumTickets</FieldName>
+<Type>int</Type>
+<Desc>Total number of tickets.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>396</Tag>
+<FieldName>SideValue1</FieldName>
+<Type>Amt</Type>
+<Desc>Amounts in currency</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>397</Tag>
+<FieldName>SideValue2</FieldName>
+<Type>Amt</Type>
+<Desc>Amounts in currency</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>398</Tag>
+<FieldName>NoBidDescriptors</FieldName>
+<Type>int</Type>
+<Desc>Number of BidDescriptor entries.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>399</Tag>
+<FieldName>BidDescriptorType</FieldName>
+<Type>int</Type>
+<Desc>Code to identify the type of BidDescriptor.Valid values:1 – Sector2 – Country3 – Index</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>400</Tag>
+<FieldName>BidDescriptor</FieldName>
+<Type>String</Type>
+<Desc>BidDescriptor value.  Usage depends upon BidDescriptorType.If BidDescriptorType =1 Industrials etc – Free textIf BidDescriptorType =2&quot;FR&quot; etc – ISO Country CodesIf BidDescriptorType =3FT100, FT250, STOX – Free text</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>401</Tag>
+<FieldName>SideValueInd</FieldName>
+<Type>int</Type>
+<Desc>Code to identify which &quot;SideValue&quot; the value refers to.  SideValue1 and SideValue2 are used as opposed to Buy or Sell so that the basket can be quoted either way as Buy or Sell.Valid values:1 – SideValue12 – SideValue 2</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>402</Tag>
+<FieldName>LiquidityPctLow</FieldName>
+<Type>float</Type>
+<Desc>Liquidity indicator or lower limit if TotalNumSecurities &gt; 1.  Represented as a percentage.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>403</Tag>
+<FieldName>LiquidityPctHigh</FieldName>
+<Type>float</Type>
+<Desc>Upper liquidity indicator if TotalNumSecurities &gt; 1.  Represented as a percentage.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>404</Tag>
+<FieldName>LiquidityValue</FieldName>
+<Type>Amt</Type>
+<Desc>Value between LiquidityPctLow and LiquidityPctHigh in Currency</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>405</Tag>
+<FieldName>EFPTrackingError</FieldName>
+<Type>float</Type>
+<Desc>Eg Used in EFP trades 12% (EFP – Exchange for Physical ).  Represented as a percentage.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>406</Tag>
+<FieldName>FairValue</FieldName>
+<Type>Amt</Type>
+<Desc>Used in EFP trades</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>407</Tag>
+<FieldName>OutsideIndexPct</FieldName>
+<Type>float</Type>
+<Desc>Used in EFP trades.  Represented as a percentage.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>408</Tag>
+<FieldName>ValueOfFutures</FieldName>
+<Type>Amt</Type>
+<Desc>Used in EFP trades</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>409</Tag>
+<FieldName>LiquidityIndType</FieldName>
+<Type>int</Type>
+<Desc>Code to identify the type of liquidity indicator.Valid values:1 – 5day moving average2 – 20 day moving average3 – Normal Market Size 4 – Other</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>410</Tag>
+<FieldName>WtAverageLiquidity</FieldName>
+<Type>float</Type>
+<Desc>Overall weighted average liquidity expressed as a % of average daily volume.  Represented as a percentage.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>411</Tag>
+<FieldName>ExchangeForPhysical</FieldName>
+<Type>Boolean</Type>
+<Desc>Indicates whether or not to exchange for phsyical.Valid values:   Y = True   N = False</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>412</Tag>
+<FieldName>OutMainCntryUIndex</FieldName>
+<Type>Amt</Type>
+<Desc>Value of stocks in Currency</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>413</Tag>
+<FieldName>CrossPercent</FieldName>
+<Type>float</Type>
+<Desc>Percentage of program that crosses in Currency.  Represented as a percentage.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>414</Tag>
+<FieldName>ProgRptReqs</FieldName>
+<Type>int</Type>
+<Desc>Code to identify the desired frequency of progress reports.Valid values:1 – BuySide explicitly requests status using StatusRequest (Default) The sell-side firm can however, send a DONE status List Status Response in an unsolicited fashion2 – SellSide periodically sends status using ListStatus. Period optionally specified in ProgressPeriod3 – Real-time execution reports (to be discouraged)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>415</Tag>
+<FieldName>ProgPeriodInterval</FieldName>
+<Type>int</Type>
+<Desc>Time in minutes between each ListStatus report sent by SellSide. Zero means don’t send status.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>416</Tag>
+<FieldName>IncTaxInd</FieldName>
+<Type>int</Type>
+<Desc>Code to represent whether value is net (inclusive of tax) or gross.Valid values:1 - Net2 - Gross</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>417</Tag>
+<FieldName>NumBidders</FieldName>
+<Type>int</Type>
+<Desc>Indicates the total number of bidders on the list</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>418</Tag>
+<FieldName>TradeType</FieldName>
+<Type>char</Type>
+<Desc>Code to represent the type of trade.Valid values:R: Risk TradeG: VWAP GuaranteeA: AgencyJ: Guaranteed Close</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>419</Tag>
+<FieldName>BasisPxType</FieldName>
+<Type>char</Type>
+<Desc>Code to represent the basis price type.Valid values:2: Closing Price at morning session3: Closing Price4: Current price 5: SQ6: VWAP through a day7: VWAP through a morning session8: VWAP through an afternoon session9: VWAP through a day except YORIA: VWAP through a morning session except YORIB: VWAP through an afternoon session except YORIC: StrikeD: OpenZ: Others</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>420</Tag>
+<FieldName>NoBidComponents</FieldName>
+<Type>int</Type>
+<Desc>Indicates the number of list entries.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>421</Tag>
+<FieldName>Country</FieldName>
+<Type>String</Type>
+<Desc>ISO Country Code in field</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>422</Tag>
+<FieldName>TotNoStrikes</FieldName>
+<Type>int</Type>
+<Desc>Total number of strike price entries across all messages. Should be the sum of all NoStrikes in each message that has repeating strike price entries related to the same ListID.  Used to support fragmentation.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>423</Tag>
+<FieldName>PriceType</FieldName>
+<Type>int</Type>
+<Desc>Code to represent the price type.Valid values:1 - Percentage2 - per share (e.g. cents per share)3 - Fixed Amount (absolute value)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>424</Tag>
+<FieldName>DayOrderQty</FieldName>
+<Type>Qty</Type>
+<Desc>For GT orders, the OrderQty less all shares (adjusted for stock splits) that traded on previous days.  DayOrderQty = OrderQty – (CumQty - DayCumQty)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>425</Tag>
+<FieldName>DayCumQty</FieldName>
+<Type>Qty</Type>
+<Desc>The number of shares on a GT order that have traded today.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>426</Tag>
+<FieldName>DayAvgPx</FieldName>
+<Type>Price</Type>
+<Desc>The average price of shares on a GT order that have traded today.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>427</Tag>
+<FieldName>GTBookingInst</FieldName>
+<Type>int</Type>
+<Desc>Code to identify whether to book out executions on a part-filled GT order on the day of execution or to accumulate.Valid values:0 = book out all trades on day of execution1 = accumulate executions until order is filled or expires 2 = accumulate until verbally notified otherwise</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>428</Tag>
+<FieldName>NoStrikes</FieldName>
+<Type>int</Type>
+<Desc>Number of list strike price entries.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>429</Tag>
+<FieldName>ListStatusType</FieldName>
+<Type>int</Type>
+<Desc>Code to represent the price type.Valid values:1 – Ack2 – Response3 – Timed4 – ExecStarted5 – AllDone6 – Alert</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>430</Tag>
+<FieldName>NetGrossInd</FieldName>
+<Type>int</Type>
+<Desc>Code to represent whether value is net (inclusive of tax) or gross.Valid values:1 - Net2 - Gross</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>431</Tag>
+<FieldName>ListOrderStatus</FieldName>
+<Type>int</Type>
+<Desc>Code to represent the status of a list order.Valid values:1 – InBiddingProcess2 – ReceivedForExecution3 – Executing4 – Canceling5 – Alert6 – All Done7 – Reject</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>432</Tag>
+<FieldName>ExpireDate</FieldName>
+<Type>LocalMktDate</Type>
+<Desc>Date of order expiration (last day the order can trade), always expressed in terms of the local market date.  The time at which the order expires is determined by the local market’s business practices</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>433</Tag>
+<FieldName>ListExecInstType</FieldName>
+<Type>char</Type>
+<Desc>Identifies the type of ListExecInst. Valid values:1 - Immediate2 - Wait for Execute Instruction (e.g. a List Execute message or phone call before proceeding with execution of the list) </Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>434</Tag>
+<FieldName>CxlRejResponseTo</FieldName>
+<Type>char</Type>
+<Desc>Identifies the type of request that a Cancel Reject is in response to. Valid values:1 - Order Cancel Request2 - Order Cancel/Replace Request</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>435</Tag>
+<FieldName>UnderlyingCouponRate</FieldName>
+<Type>float</Type>
+<Desc>Underlying security’s CouponRate.  See CouponRate field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>436</Tag>
+<FieldName>UnderlyingContractMultiplier</FieldName>
+<Type>float</Type>
+<Desc>Underlying security’s ContractMultiplier.  See ContractMultiplier field for description</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>437</Tag>
+<FieldName>ContraTradeQty</FieldName>
+<Type>Qty</Type>
+<Desc>Quantity traded with the ContraBroker.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>438</Tag>
+<FieldName>ContraTradeTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>Identifes the time of the trade with the ContraBroker.   (always expressed in UTC (Universal Time Coordinated, also known as “GMT”)</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>439</Tag>
+<FieldName>ClearingFirm</FieldName>
+<Type>String</Type>
+<Desc>Firm that will clear the trade.  Used if different from the executing firm.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>440</Tag>
+<FieldName>ClearingAccount</FieldName>
+<Type>String</Type>
+<Desc>Supplemental accounting information forwared to clearing house/firm.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>441</Tag>
+<FieldName>LiquidityNumSecurities</FieldName>
+<Type>int</Type>
+<Desc>Number of Securites between LiquidityPctLow and LiquidityPctHigh in Currency.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>442</Tag>
+<FieldName>MultiLegReportingType</FieldName>
+<Type>char</Type>
+<Desc>Used to indicate what an Execution Report represents (e.g. used with multi-leg securiteis, such as option strategies, spreads, etc.).Valid Values:1 - Single Security (default if not specified)2 - Individual leg of a multi-leg security3 - Multi-leg security</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>443</Tag>
+<FieldName>StrikeTime</FieldName>
+<Type>UTCTimestamp</Type>
+<Desc>The time at which current market prices are used to determine the value of a basket.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>444</Tag>
+<FieldName>ListStatusText</FieldName>
+<Type>String</Type>
+<Desc>Free format text string related to List Status.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+<Fields>
+<Tag>445</Tag>
+<FieldName>EncodedListStatusTextLen</FieldName>
+<Type>Length</Type>
+<Desc>Byte length of encoded (non-ASCII characters) EncodedListStatusText field.</Desc>
+<LenRefers>446</LenRefers>
+</Fields>
+<Fields>
+<Tag>446</Tag>
+<FieldName>EncodedListStatusText</FieldName>
+<Type>data</Type>
+<Desc>Encoded (non-ASCII characters) representation of the ListStatusText field in the encoded format specified via the MessageEncoding field. If used, the ASCII (English) representation should also be specified in the ListStatusText field.</Desc>
+<LenRefers>0</LenRefers>
+</Fields>
+</dataroot>
