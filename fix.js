@@ -4,21 +4,22 @@
 //Check duplicate senderCompIDs
 //Grouped fields
 //Drop copy
+//expire messages (for resend, send gap fill instead)
 
 //DOING:
-//Pretty print fix messages
-//keys(object) doesn't work
 
 var net = require("net");
 var events = require("events");
 var sys = require("sys");
 var logger = require('../node-logger/logger').createLogger();
-var fix40 = require('./resources/Fields40');
-var fix41 = require('./resources/Fields41');
-var fix42 = require('./resources/Fields42');
-var fix43 = require('./resources/Fields43');
-var fix44 = require('./resources/Fields44');
+var fix40 = require('./resources/Fields40').keyvals;
+var fix41 = require('./resources/Fields41').keyvals;
+var fix42 = require('./resources/Fields42').keyvals;
+var fix43 = require('./resources/Fields43').keyvals;
+var fix44 = require('./resources/Fields44').keyvals;
 
+
+//logger.setLevel('debug');
 //Message container
 //{targetCompiD:{incoming:[], outgoing:[]}}
 var msgContainer = {};
@@ -83,17 +84,17 @@ function getOutMessages(target, beginSeqNo, endSeqNo){
 
 function tag2txtCreator(version){
     switch(version){
-        case "FIX.4.0" : return function(msg){ return keys(msg).map(function(key){fix40[key]+msg[key];});}; break;
-        case "FIX.4.1" : return function(msg){ return keys(msg).map(function(key){fix41[key]+msg[key];});}; break;
-        case "FIX.4.2" : return function(msg){ return keys(msg).map(function(key){fix42[key]+msg[key];});}; break;
-        case "FIX.4.3" : return function(msg){ return keys(msg).map(function(key){fix43[key]+msg[key];});}; break;
-        case "FIX.4.4" : return function(msg){ return keys(msg).map(function(key){fix44[key]+msg[key];});}; break;
+        case "FIX.4.0" : return function(msg){ return Object.keys(msg).map(function(key){return fix40[key]+"="+msg[key];}).join("|");}; break;
+        case "FIX.4.1" : return function(msg){ return Object.keys(msg).map(function(key){return fix41[key]+"="+msg[key];});}; break;
+        case "FIX.4.2" : return function(msg){ return Object.keys(msg).map(function(key){return fix42[key]+"="+msg[key];});}; break;
+        case "FIX.4.3" : return function(msg){ return Object.keys(msg).map(function(key){return fix43[key]+"="+msg[key];});}; break;
+        case "FIX.4.4" : return function(msg){ return Object.keys(msg).map(function(key){return fix44[key]+"="+msg[key];});}; break;
         default : return function(tag){ return tag;}; break;
     }
 }
 
 logger.format = function(level, timestamp, message) {
-  return ["[", timestamp.getUTCFullYear() ,"/", timestamp.getUTCMonth() ,"/", timestamp.getUTCDay() , "-" , timestamp.getUTCHours() , ":" , timestamp.getUTCMinutes() , ":" , timestamp.getUTCSeconds() , "." , timestamp.getUTCMilliseconds() , "] " , message].join("");
+  return [timestamp.getUTCFullYear() ,"/", timestamp.getUTCMonth() ,"/", timestamp.getUTCDay() , "-" , timestamp.getUTCHours() , ":" , timestamp.getUTCMinutes() , ":" , timestamp.getUTCSeconds() , "." , timestamp.getUTCMilliseconds() , " [" , level, "] ",  message].join("");
 };
 
 function checksum(str){
@@ -182,7 +183,7 @@ function Session(stream, isInitiator,  opt) {
         }
 
         if (currentTime - timeOfLastIncoming > heartbeatDuration * 3) {
-            logger.info("[ERROR] No message received from counterparty and no response to test request.");
+            logger.error("[ERROR] No message received from counterparty and no response to test request.");
             stream.end();
             return;
         }
@@ -214,7 +215,7 @@ function Session(stream, isInitiator,  opt) {
                 }
 
                 if (tag.charAt(tag.length - 1) != "?" && msg[tag] === undefined) { //If tag is required, but missing
-                    logger.info("[ERROR] tag " + tag + " is required but missing in outgoing message: " + msg);
+                    logger.error("[ERROR] tag " + tag + " is required but missing in outgoing message: " + msg);
                     return;
                 }
 
@@ -241,7 +242,7 @@ function Session(stream, isInitiator,  opt) {
                 }
 
                 if (tag.charAt(tag.length - 1) != "?" && msg[tag] === undefined) { //If tag is required, but missing
-                    logger.info("[ERROR] tag " + tag + " is required but missing in outgoing message: " + msg);
+                    logger.error("[ERROR] tag " + tag + " is required but missing in outgoing message: " + msg);
                     return;
                 }
 
@@ -308,7 +309,7 @@ function Session(stream, isInitiator,  opt) {
             var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str, 10) + ENDOFTAG8;
 
             if (isNaN(idxOfEndOfTag9)) {
-                logger.info("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: " + databuffer.toString());
+                logger.error("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: " + databuffer.toString());
                 stream.end();
                 return;
             }
@@ -317,7 +318,7 @@ function Session(stream, isInitiator,  opt) {
             //If we don't have enough data to stop extracting body length AND we have received a lot of data
             //then perhaps there is a problem with how the message is formatted and the session should be killed
             if (idxOfEndOfTag9 < 0 && databuffer.length > 100) {
-                logger.info("[ERROR] Over 100 character received but body length still not extractable.  Message probably misformed: " + databuffer.toString());
+                logger.error("[ERROR] Over 100 character received but body length still not extractable.  Message probably misformed: " + databuffer.toString());
                 stream.end();
                 return;
             }
@@ -331,7 +332,7 @@ function Session(stream, isInitiator,  opt) {
             var _bodyLengthStr = databuffer.substring(STARTOFTAG9VAL, idxOfEndOfTag9);
             var bodyLength = parseInt(_bodyLengthStr, 10);
             if (isNaN(bodyLength)) {
-                logger.info("[ERROR] Unable to parse bodyLength field. Message probably misformed: " + databuffer.toString());
+                logger.error("[ERROR] Unable to parse bodyLength field. Message probably misformed: " + databuffer.toString());
                 stream.end();
                 return;
             }
@@ -360,7 +361,7 @@ function Session(stream, isInitiator,  opt) {
             var extractedChecksum = msg.substr(msg.length - 4, 3);
             
             if (calculatedChecksum !== extractedChecksum) {
-                logger.info("[WARNING] Discarding message because body length or checksum are wrong (expected checksum: "+calculatedChecksum+"): " + msg);
+                logger.warn("[WARNING] Discarding message because body length or checksum are wrong (expected checksum: "+calculatedChecksum+"): " + msg);
                 continue;
             }
 
@@ -381,7 +382,7 @@ function Session(stream, isInitiator,  opt) {
                 if (headers.hasOwnProperty(f)) {
                     var tag = headers[f];
                     if (tag.charAt(tag.length - 1) != "?" && fix[tag] === undefined) { //If tag is required, but missing
-                        logger.info("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
+                        logger.error("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
                         if (loggedIn) {
                             writefix({
                                 "35": "3",
@@ -401,7 +402,7 @@ function Session(stream, isInitiator,  opt) {
                 if (trailers.hasOwnProperty(f)) {
                     var tag = trailers[f];
                     if (tag.charAt(tag.length - 1) != "?" && fix[tag] === undefined) { //If tag is required, but missing
-                        logger.info("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
+                        logger.error("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
                         if (loggedIn) {
                             writefix({
                                 "35": "3",
@@ -420,13 +421,13 @@ function Session(stream, isInitiator,  opt) {
             //====Step 5: Confirm first message is a logon message and it has a heartbeat
             var msgType = fix["35"];
             if (!loggedIn && msgType != "A") {
-                logger.info("[ERROR] Logon message expected, received message of type " + msgType);
+                logger.error("[ERROR] Logon message expected, received message of type " + msgType);
                 stream.end();
                 return;
             }
 
             if (msgType == "A" && fix["108"] === undefined) {
-                logger.info("[ERROR] Logon does not have tag 108 (heartbeat) ");
+                logger.error("[ERROR] Logon does not have tag 108 (heartbeat) ");
                 stream.end();
                 return;
             }
@@ -434,12 +435,26 @@ function Session(stream, isInitiator,  opt) {
 
             //====Step 6: Confirm incoming sequence number====
             var _seqNum = parseInt(fix["34"], 10);
+            if(fix["35"]==="4" /*seq reset*/ && (fix["123"] === undefined || fix["123"] === "N")){
+                logger.warn("Requence Reset request received: " + msg);
+                var resetseqno = parseInt(fix["36"],10);
+                if(resetseqno <= incomingSeqnum){
+                    //TODO: Reject, sequence number may only be incremented
+                }
+                else{
+                    incomingSeqNum = resetseqno;                
+                }
+            }
             if (loggedIn && _seqNum == incomingSeqNum) {
                 incomingSeqNum++;
                 resendRequested = false;
             }
             else if (loggedIn && _seqNum < incomingSeqNum) {
-                logger.info("[ERROR] Incoming sequence number lower than expected. No way to recover.");
+                var posdup = fix["43"];
+                if(posdup !== undefined && posdup === "Y"){
+                    logger.warn("This posdup message's seqno has already been processed. Ignoring: "+msg);
+                }
+                logger.error("[ERROR] Incoming sequence number lower than expected. No way to recover:"+msg);
                 stream.end();
                 return;
             }
@@ -459,13 +474,13 @@ function Session(stream, isInitiator,  opt) {
             var incomingTargetCompID = fix["49"];
 
             if (loggedIn && (fixVersion != incomingFixVersion || senderCompID != incomingsenderCompID || targetCompID != incomingTargetCompID)) {
-                logger.info("[WARNING] Incoming fix version (" + incomingFixVersion + "), sender compid (" + incomingsenderCompID + ") or target compid (" + incomingTargetCompID + ") did not match expected values (" + fixVersion + "," + senderCompID + "," + targetCompID + ")"); /*write session reject*/
+                logger.warn("[WARNING] Incoming fix version (" + incomingFixVersion + "), sender compid (" + incomingsenderCompID + ") or target compid (" + incomingTargetCompID + ") did not match expected values (" + fixVersion + "," + senderCompID + "," + targetCompID + ")"); /*write session reject*/
             }
             
             
             //===Step 8: Record incoming message -- might be needed during resync
             addInMsg(targetCompID, fix);
-            logger.info("FIXMAP in: " + tag2txt(fix));
+            logger.debug("FIXMAP in: " + tag2txt(fix));
             
 
 
@@ -488,7 +503,10 @@ function Session(stream, isInitiator,  opt) {
                 outgoingSeqNum = beginSeqNo;
                 var outmsgs = getOutMessages(targetCompID, beginSeqNo, endSeqNo);
                 for(var k in outmsgs){
-                    writefix(msgs[k]);
+                    var resendmsg = msgs[k];
+                    resendmsg["43"] = "Y"; 
+                    resendmsg["122"] = resendmsg["52"];
+                    writefix(resendmsg);
                 }
                 //handle resendrequest; break;
                 break;
@@ -496,6 +514,19 @@ function Session(stream, isInitiator,  opt) {
                 //handle sessionreject; break;
                 break;
             case "4":
+                //Gap fill mode
+                if(fix["123"] === "Y"){
+                    var newSeqNo = parseInt(fix["36"],10);
+                    
+                    if(newSeqNo <= incomingSeqNo){
+                        //TODO: Reject, sequence number may only be incremented
+                    }
+                    else{
+                        incomingSeqNo = newSeqNo;                    
+                    }
+                }
+                //Reset mode
+                //Reset mode is handled in step 6, when confirming incoming seqnums
                 //handle seqreset; break;
             case "5":
                 //handle logout; break;
