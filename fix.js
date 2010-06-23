@@ -543,7 +543,7 @@ function Session(stream, isInitiator,  opt) {
                 loggedIn = true;
                 heartbeatIntervalID = setInterval(heartbeatCallback, heartbeatDuration);
                 //heartbeatIntervalIDs.push(intervalID);
-                this.emit("logon", fix);
+                this.emit("logon", targetCompID,stream);
                 logger.info(fix["49"] + " logged on from " + stream.remoteAddress);
                 
                 if(isInitiator === true){
@@ -571,26 +571,29 @@ sys.inherits(Session, events.EventEmitter);
 //Session.prototype.write = function(msg){ this.writefix(msg);};
 
 
+//---------------------SERVER
 function Server() {
     events.EventEmitter.call(this);
-
+    this.clients = {};
+    //this.addListener("logon", function(client,stream) { clients[client]=stream; } );
+    
 }
 sys.inherits(Server, events.EventEmitter);
-Server.prototype.listen = function (port) {
-    this.socket.listen(port);
-};
-//Server.prototype.disconnect = function(client){ this.socket.listen(port);};
+Server.prototype.listen = function (port) { this.socket.listen(port); };
+Server.prototype.write = function(client, msg) { this.clients[client].write(msg); };
+Server.prototype.end = function(client){ this.clients[client].end(); };
 
+//---------------------CLIENT
 function Client(senderCompID, targetCompID, opt) {
     events.EventEmitter.call(this);
 
 }
 sys.inherits(Client, events.EventEmitter);
-Client.prototype.end = function () {
-    this.socket.end();
-};
+Client.prototype.end = function () { this.socket.end(); };
 
 
+
+//---------------------EXPORTS
 //events: connect, end, data, logon
 exports.createServer = function (opt, func) {
 
@@ -610,6 +613,11 @@ exports.createServer = function (opt, func) {
         });
 
         stream.addListener("data", function(data){session.handle(data);});
+        session.addListener("logon", function(client,strm){
+                server.clients[client]=strm; 
+                sys.log("------"+ Object.keys(server.clients));
+            }
+        );
 
     });
 
