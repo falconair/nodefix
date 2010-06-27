@@ -7,19 +7,18 @@
 //expire messages (for resend, send gap fill instead)
 
 //DOING:
+//Web control
 
 var net = require("net");
 var events = require("events");
 var sys = require("sys");
 var logger = require('../node-logger/logger').createLogger();
-var fix40 = require('./resources/Fields40').keyvals;
-var fix41 = require('./resources/Fields41').keyvals;
-var fix42 = require('./resources/Fields42').keyvals;
-var fix43 = require('./resources/Fields43').keyvals;
-var fix44 = require('./resources/Fields44').keyvals;
+var fixtagnums = require('./resources/fixtagnums').keyvals;
 
 
 //logger.setLevel('debug');
+
+
 //Message container
 //{targetCompiD:{incoming:[], outgoing:[]}}
 var msgContainer = {};
@@ -82,16 +81,7 @@ function getOutMessages(target, beginSeqNo, endSeqNo){
 
 //Utility methods
 
-function tag2txtCreator(version){
-    switch(version){
-        case "FIX.4.0" : return function(msg){ return Object.keys(msg).map(function(key){return fix40[key]+"="+msg[key];}).join("|");}; break;
-        case "FIX.4.1" : return function(msg){ return Object.keys(msg).map(function(key){return fix41[key]+"="+msg[key];});}; break;
-        case "FIX.4.2" : return function(msg){ return Object.keys(msg).map(function(key){return fix42[key]+"="+msg[key];});}; break;
-        case "FIX.4.3" : return function(msg){ return Object.keys(msg).map(function(key){return fix43[key]+"="+msg[key];});}; break;
-        case "FIX.4.4" : return function(msg){ return Object.keys(msg).map(function(key){return fix44[key]+"="+msg[key];});}; break;
-        default : return function(tag){ return tag;}; break;
-    }
-}
+function tag2txt = function(msg){ return Object.keys(msg).map(function(key){return fixtagnums[key]+"="+msg[key];}).join("|");}
 
 logger.format = function(level, timestamp, message) {
   return [timestamp.getUTCFullYear() ,"/", timestamp.getUTCMonth() ,"/", timestamp.getUTCDay() , "-" , timestamp.getUTCHours() , ":" , timestamp.getUTCMinutes() , ":" , timestamp.getUTCSeconds() , "." , timestamp.getUTCMilliseconds() , " [" , level, "] ",  message].join("");
@@ -140,7 +130,6 @@ function Session(stream, isInitiator,  opt) {
     var headers = opt.headers;
     var trailers = opt.trailers;
     
-    var tag2txt = tag2txtCreator(fixVersion);
 
     //session vars
     var senderCompID = ""; //senderCompID || "";
@@ -162,6 +151,7 @@ function Session(stream, isInitiator,  opt) {
 
     this.addListener("end", function () {
         clearInterval(heartbeatIntervalID);
+        this.emit("logoff", targetCompID);
     });
     
 
@@ -613,9 +603,14 @@ exports.createServer = function (opt, func) {
         });
 
         stream.addListener("data", function(data){session.handle(data);});
+        
         session.addListener("logon", function(client,strm){
                 server.clients[client]=strm; 
                 sys.log("------"+ Object.keys(server.clients));
+            }
+        );
+        session.addListener("logoff", function(client){
+                delete server.clients[client];
             }
         );
 
