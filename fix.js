@@ -196,8 +196,8 @@ function Session(stream, isInitiator,  opt) {
         delete msg["49"]; //targetcompid
         delete msg["34"]; //seqnum
         var headermsgarr = [];
-        for (var f in headers) {
-            if (headers.hasOwnProperty(f)) {
+        for (var f in Object.keys(headers)) {
+            //if (headers.hasOwnProperty(f)) {
                 var tag = headers[f];
 
                 if (tag == "8" || tag == "9" || tag == "59" || tag == "52" || tag == "56" || tag == "49" || tag == "34") {
@@ -213,7 +213,7 @@ function Session(stream, isInitiator,  opt) {
                     headermsgarr.push(tag, "=", msg[tag], SOHCHAR);
                     delete msg[tag];
                 }
-            }
+            //}
         }
 
         var timestamp = new Date();
@@ -223,8 +223,8 @@ function Session(stream, isInitiator,  opt) {
         headermsgarr.push("34=" , (outgoingSeqNum++) , SOHCHAR);
 
         var trailermsgarr = [];
-        for (var f in trailers) {
-            if (trailers.hasOwnProperty(f)) {
+        for (var f in Object.keys(trailers)) {
+            //if (trailers.hasOwnProperty(f)) {
                 var tag = trailers[f];
 
                 if (tag == "10") {
@@ -241,7 +241,7 @@ function Session(stream, isInitiator,  opt) {
                     delete msg[tag];
                 }
 
-            }
+            //}
         }
 
         var bodymsgarr = [];
@@ -359,17 +359,16 @@ function Session(stream, isInitiator,  opt) {
             var keyvals = msg.split(SOHCHAR);
             //sys.debug("keyvals:"+keyvals);
             var fix = {};
-            for (var kv in keyvals) {
-                if (keyvals.hasOwnProperty(kv)) {
+            for (var kv in Object.keys(keyvals)) {
+                //if (keyvals.hasOwnProperty(kv)) {
                     var kvpair = keyvals[kv].split("=");
                     fix[kvpair[0]] = kvpair[1];
-
-                }
+                //}
             }
 
             //====Step 4: Confirm all required fields are available====
-            for (var f in headers) {
-                if (headers.hasOwnProperty(f)) {
+            for (var f in Object.keys(headers)) {
+                //if (headers.hasOwnProperty(f)) {
                     var tag = headers[f];
                     if (tag.charAt(tag.length - 1) != "?" && fix[tag] === undefined) { //If tag is required, but missing
                         logger.error("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
@@ -385,11 +384,11 @@ function Session(stream, isInitiator,  opt) {
                             return;
                         }
                     }
-                }
+                //}
             }
 
-            for (var f in trailers) {
-                if (trailers.hasOwnProperty(f)) {
+            for (var f in Object.keys(trailers)) {
+                //if (trailers.hasOwnProperty(f)) {
                     var tag = trailers[f];
                     if (tag.charAt(tag.length - 1) != "?" && fix[tag] === undefined) { //If tag is required, but missing
                         logger.error("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
@@ -405,7 +404,7 @@ function Session(stream, isInitiator,  opt) {
                             return;
                         }
                     }
-                }
+                //}
             }
 
             //====Step 5: Confirm first message is a logon message and it has a heartbeat
