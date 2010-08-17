@@ -14,8 +14,8 @@
 var net = require("net");
 var events = require("events");
 var sys = require("sys");
-var logger = require('../node-logger/logger').createLogger();
-var Dirty = require('../node-dirty/lib/dirty').Dirty;
+var logger = require('./lib/logger').createLogger();
+var Dirty = require('./lib/dirty').Dirty;
 var tags = require('./resources/fixtagnums').keyvals;
 
 
@@ -24,7 +24,7 @@ var tags = require('./resources/fixtagnums').keyvals;
 
 //Message container
 //{targetCompiD:{incoming:[], outgoing:[]}}
-var msgContainer = {};
+/*var msgContainer = {};
 
 function addInMsg(target, msg){
     var tgt = msgContainer[target];
@@ -80,7 +80,7 @@ function getOutMessages(target, beginSeqNo, endSeqNo){
             }
         }
     }
-}
+}*/
 
 //Utility methods
 
@@ -274,7 +274,7 @@ function Session(stream, isInitiator,  opt) {
         logger.info("FIX out:" + outmsg);
         timeOfLastOutgoing = new Date().getTime();
 
-        addOutMsg(targetCompID, outmsg);
+        //addOutMsg(targetCompID, outmsg);
 
         stream.write(outmsg);
     }
