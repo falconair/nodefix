@@ -23,7 +23,9 @@ var tags = require('./resources/fixtagnums').keyvals;
 
 
 //Message container
-//{targetCompiD:{incoming:[], outgoing:[]}}
+
+//Upon resend request, messages are retreived from this container and replayed.
+//{targetCompiD:{incoming:[], outgoing:[]}} //an object containing id of the counter party and their incoming and outgoing messages
 /*var msgContainer = {};
 
 function addInMsg(target, msg){
