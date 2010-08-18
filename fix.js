@@ -666,6 +666,4 @@ exports.createConnection = function (senderCompID, targetCompID, heartbeatsecond
 
 
 
-//Copyright 2010 Shahbaz Chaudhary (shahbazc@gmail.com)
-//Not for public release
-//Not publicly lisenced
+//Copyright 2010 Shahbaz Chaudhary (shahbazc gmail com)
