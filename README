@@ -1,0 +1,36 @@
+nodefix
+
+An implementation of the FIX (Financial Information Exchange) protocol.
+
+Currently the implementation is pre-alpha.  It is not even close to working.
+
+A very simple test can be performed by running the test server and test clients as
+follows:
+
+>node testfixserver.js
+>node testfixclient.js
+
+Both programs should start communicating with each other.  Wait a few seconds to see
+heart-beat messages fly by.
+
+TODO:
+1. Change the architecture of the code.  Right now the organization of the code is a mess.
+    a. The data structure used to hold messages for resend logic either needs to be
+    refactored out of fix.js, or a third party library needs to be used (one that can
+    survive fix server/client crashes).
+    
+    b. The business lgoic feels like it is forced into node.js.
+    
+    c. etc.
+2. Business logic needs to be extended
+    a. Groups are not currently handled
+    b. A web-services interface needs to be added, to allow management of session
+    through REST like services
+        A. Disconnect session
+        B. Modify sequence numbers
+    c. Routing ability needs to be added.
+    
+Note: The whole point of putting this out in public is to get feedback and code
+contributions.
+
+shahbazc gmail com
