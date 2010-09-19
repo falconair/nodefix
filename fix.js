@@ -96,6 +96,8 @@ function FIXFrameDecoder(){
             ctx.next(event);
         }
         
+        var stream = ctx.stream;
+        
         self.databuffer += event.data;
         while (self.databuffer.length > 0) {
             //====Step 1: Extract complete FIX message====
@@ -167,6 +169,7 @@ function FIXParser(){
         }
         
         var msg = event.data;
+        var stream = ctx.stream;
         
         //====Step 2: Validate message====
             var calculatedChecksum = checksum(msg.substr(0,msg.length - 7));
@@ -388,6 +391,7 @@ function FIXMsgCreator(){
         }
         
         var msg = event.data;
+        var stream = ctx.stream;
         
         var senderCompIDExtracted = msg[tags["TargetCompID"]];
         var targetCompIDExtracted = msg[tags["SenderCompID"]];
