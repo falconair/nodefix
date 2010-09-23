@@ -1,6 +1,20 @@
-exports.makeFIXMsgCreator = function(){ return new FIXMsgCreator();}
+var logger = require("../lib/logger").createLogger();
+var tags = require('../resources/fixtagnums').keyvals;
 
-function FIXMsgCreator(){
+var SOHCHAR = require("../utils").SOHCHAR;
+var logger_format = require("../utils").logger_format;
+//var checksum = require("../utils").checksum;
+
+exports.makeFIXMsgCreator = function(options){ return new FIXMsgCreator(options);}
+
+logger.format = logger_format;
+
+function FIXMsgCreator(opt){
+
+    var fixVersion = opt.version;
+    var headers = opt.headers;
+    var trailers = opt.trailers;
+
     this.description = "converts key/val map to fix string with correct checksum";
     
     this.outgoing = function(ctx, event){
