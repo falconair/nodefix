@@ -1,9 +1,9 @@
 var pipe = require("../lib/nodepipe");
 var assert = require("assert");
 
-var FIXFrameDecoder = require("../FIXFrameDecoderHandler");
-var FIXParser = require("../FIXParserHandler");
-var FIXMsgCreator = require("../FIXMsgCreatorHandler");
+var FIXFrameDecoder = require("../handlers/FIXFrameDecoderHandler");
+var FIXParser = require("../handlers/FIXParserHandler");
+var FIXMsgCreator = require("../handlers/FIXMsgCreatorHandler");
 
 const FIX42 = {version: "FIX.4.2",
 		headers:["8", "9", "35", "49", "56", "115?", "128?", "90?", "91?", "34", "50?","142?", "57?", "143?", "116?", "144?", "129?", "145?", "43?", "97?","52", "122?", "212?", "213?", "347?", "369?", "370?"],
@@ -41,7 +41,7 @@ function TestFIXParser(){
     //assert.equal(2, result);
 }
 
-functioin TestMsgCreator(){
+function TestMsgCreator(){
     //TODO
 }
 

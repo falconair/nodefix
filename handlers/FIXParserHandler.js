@@ -1,10 +1,10 @@
-var logger = require("./lib/logger").createLogger();
-var tags = require('./resources/fixtagnums').keyvals;
+var logger = require("../lib/logger").createLogger();
+var tags = require('../resources/fixtagnums').keyvals;
 
 
-var SOHCHAR = require("./utils").SOHCHAR;
-var logger_format = require("./utils").logger_format;
-var checksum = require("./utils").checksum;
+var SOHCHAR = require("../utils").SOHCHAR;
+var logger_format = require("../utils").logger_format;
+var checksum = require("../utils").checksum;
 
 exports.makeFIXParser = function(options){ return new FIXParser(options);}
 

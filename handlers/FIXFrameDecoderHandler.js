@@ -1,10 +1,10 @@
-var logger = require("./lib/logger").createLogger();
+var logger = require("../lib/logger").createLogger();
 
-var SOHCHAR = require("./utils").SOHCHAR;
-var ENDOFTAG8 = require("./utils").ENDOFTAG8;
-var STARTOFTAG9VAL = require("./utils").STARTOFTAG9VAL;
-var SIZEOFTAG10 = require("./utils").SIZEOFTAG10;
-var logger_format = require("./utils").logger_format;
+var SOHCHAR = require("../utils").SOHCHAR;
+var ENDOFTAG8 = require("../utils").ENDOFTAG8;
+var STARTOFTAG9VAL = require("../utils").STARTOFTAG9VAL;
+var SIZEOFTAG10 = require("../utils").SIZEOFTAG10;
+var logger_format = require("../utils").logger_format;
 
 exports.makeFIXFrameDecoder = function(){ return new FIXFrameDecoder();}
 
