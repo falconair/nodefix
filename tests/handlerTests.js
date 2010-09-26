@@ -44,7 +44,7 @@ var tests = {
 
     TestMsgCreator: function(){
         var actual = "x";
-        var expected = "8=FIX.4.29=5135=A52=201080-2:9:46.41556=SENDER49=TARGET34=110=163";
+        var expected = "8=FIX.4.29=5535=A52=20100826-02:58:56.29556=SENDER49=TARGET34=110=122";
         
         var msg = {8:"FIX.4.4", 35:"A"};
         
@@ -60,19 +60,24 @@ var tests = {
         
         pipeline.pushOutgoingData(msg);
         
+        //remove time stamp
         var expectedStartOfTS = parseInt(expected.indexOf("52="), 10);
         var expectedEndOfTS = parseInt(expected.indexOf("", expectedStartOfTS + 1), 10);
         var expectedTS = expected.substring(expectedStartOfTS, expectedEndOfTS);
         var normalizedExpected = expected.replace(expectedTS, "");
-        console.log(normalizedExpected);        
+        //console.log(normalizedExpected);        
 
         var actualStartOfTS = parseInt(actual.indexOf("52="), 10);
         var actualEndOfTS = parseInt(actual.indexOf("", actualStartOfTS + 1), 10);
         var actualTS = actual.substring(actualStartOfTS, actualEndOfTS);
         var normalizedActual = actual.replace(actualTS, "");
-        console.log(normalizedActual);
+        //console.log(normalizedActual);
         
-        //assert.equal(actual, expected);
+        //remove checksum
+        normalizedActual=normalizedActual.substring(0,normalizedActual.length-4);
+        normalizedExpected=normalizedExpected.substring(0,normalizedExpected.length-4);
+        
+        assert.equal(normalizedActual, normalizedExpected);
 
     }
 };
