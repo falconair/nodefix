@@ -1,3 +1,4 @@
+//var dirtyStore = require('dirty');
 var logger = require("../lib/logger").createLogger();
 var tags = require('../resources/fixtagnums').keyvals;
 
@@ -22,6 +23,28 @@ function FIXParser(opt){
     var timeOfLastIncoming = 0;
     var timeOfLastOutgoing = 0;
     var resendRequested = false;
+    
+    var heartbeatCallback = function () {
+
+        var currentTime = new Date().getTime();
+
+        if (currentTime - timeOfLastOutgoing > heartbeatDuration) {
+            ctx.reverse( {eventType:"data", data:{"35": "0"}} ); /*write heartbeat*/
+        }
+
+        if (currentTime - timeOfLastIncoming > heartbeatDuration * 1.5) {
+            ctx.reverse({eventType:"data", data:{
+                "35": "1",
+                "112": outgoingSeqNum + ""
+            }}); /*write testrequest*/
+        }
+
+        if (currentTime - timeOfLastIncoming > heartbeatDuration * 3) {
+            logger.error("[ERROR] No message received from counterparty and no response to test request.");
+            stream.end();
+            return;
+        }
+    };
 
 
     this.description = "fix parser: accepts fix messages, creates key/tag vals";
@@ -157,10 +180,11 @@ function FIXParser(opt){
             
             //===Step 8: Record incoming message -- might be needed during resync
             if(loggedIn){
-                datastore.add(fix);
+                //datastore.add(fix);
                 //addInMsg(targetCompID, fix);
             }
-            logger.debug("FIXMAP in: " + tag2txt(fix));
+            //logger.debug("FIXMAP in: " + tag2txt(fix));
+            logger.debug("FIXMAP in: " + fix);
             
 
 
@@ -222,26 +246,23 @@ function FIXParser(opt){
                     targetCompID = fix[tags["SenderCompID"]];
 
                     //create data store
-                    datastore = new Dirty(senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
-                    datastore.add(fix);
+                    //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
+                    //datastore.set("incoming-"+incomingSeqNo,msg);
 
                     heartbeatDuration = parseInt(fix[tags["HeartBtInt"]], 10) * 1000;
                     loggedIn = true;
                     heartbeatIntervalID = setInterval(heartbeatCallback, heartbeatDuration);
                     //heartbeatIntervalIDs.push(intervalID);
-                    this.emit("logon", targetCompID,stream);
+                    //this.emit("logon", targetCompID,stream);
+                    ctx.forward({eventType:"logon", data:targetCompID});
                     logger.info(fix[tags["SenderCompID"]] + " logged on from " + stream.remoteAddress);
                     
-                    if(isInitiator === true){
-                        ctx.reverse({
-                            "35": "A",
-                            "108": fix[tags["HeartBtInt"]]
-                        }); /*write logon ack*/
-                    }
                     break;
                 default:
             }
-            ctx.next({eventType:"data", data:fix});
+            ctx.forward({eventType:"data", data:fix});
     }
 }
+
+
 

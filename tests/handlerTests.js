@@ -1,3 +1,4 @@
+//TODO Move heartbeat logic to its own handler
 var pipe = require("../lib/nodepipe");
 var assert = require("assert");
 
@@ -28,14 +29,14 @@ var tests = {
 
     TestFIXParser: function(){
 
-        var fix = "8=FIX.4.49=11635=A34=249=A50=152=20100219-14:33:32.25856=B57=M263=1568=1569=0580=175=2010021860=20100218-00:00:00.00010=133";
+        var fix = "8=FIX.4.29=6735=A52=20100826-02:58:56.29598=0108=3056=SENDER49=TARGET34=110=150";
         var result = 0;
 
         
         var pipeline = pipe.makePipe({ end:function(){} });
         
         pipeline.addHandler(FIXParser.makeFIXParser(FIX42));
-        pipeline.addHandler( {incoming: function(ctx,evt){ assert.equal( evt.data['8'] = "FIX.4.4" ); } } );
+        pipeline.addHandler( {incoming: function(ctx,evt){ if(evt.eventType==="data"){assert.equal( evt.data['8'] , "FIX.4.2" );} } } );
         
         pipeline.pushIncomingData(fix);
 
@@ -82,12 +83,11 @@ var tests = {
     }
 };
 
-//TestFIXFrameDecoder();
-//TestFIXParser();
-//TestMsgCreator();
 
 for (var testx in Object.keys(tests)) {
-    console.log("\n\n============Running " + Object.keys(tests)[testx]);
-    tests[Object.keys(tests)[testx]].call();
+    if(true){
+        console.log("\n\n============Running " + Object.keys(tests)[testx]);
+        tests[Object.keys(tests)[testx]].call();
+    }
 }
 
