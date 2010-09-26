@@ -3,7 +3,7 @@ var tags = require('../resources/fixtagnums').keyvals;
 
 var SOHCHAR = require("../utils").SOHCHAR;
 var logger_format = require("../utils").logger_format;
-//var checksum = require("../utils").checksum;
+var checksum = require("../utils").checksum;
 
 exports.makeFIXMsgCreator = function(options){ return new FIXMsgCreator(options);}
 
@@ -58,9 +58,9 @@ function FIXMsgCreator(opt){
 
         var timestamp = new Date();
         headermsgarr.push("52=" , timestamp.getUTCFullYear() , timestamp.getUTCMonth() , timestamp.getUTCDay() , "-" , timestamp.getUTCHours() , ":" , timestamp.getUTCMinutes() , ":" , timestamp.getUTCSeconds() , "." , timestamp.getUTCMilliseconds() , SOHCHAR);
-        headermsgarr.push("56=" , (senderCompIDExtracted || senderCompID) , SOHCHAR);
-        headermsgarr.push("49=" , (targetCompIDExtracted || targetCompID) , SOHCHAR);
-        headermsgarr.push("34=" , (outgoingSeqNum++) , SOHCHAR);
+        headermsgarr.push("56=" , (ctx.state.senderCompID) , SOHCHAR); // TODO compid should be available from the context object, if extracted compid doesn't match the one in ctx, it is an error
+        headermsgarr.push("49=" , (ctx.state.targetCompID) , SOHCHAR);
+        headermsgarr.push("34=" , (ctx.state.outgoingSeqNum++) , SOHCHAR);
 
         var trailermsgarr = [];
         for (var f in Object.keys(trailers)) {

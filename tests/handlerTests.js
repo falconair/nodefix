@@ -32,7 +32,7 @@ var tests = {
         var result = 0;
 
         
-        var pipeline = pipe.makePipe({end:function(){}});
+        var pipeline = pipe.makePipe({ end:function(){} });
         
         pipeline.addHandler(FIXParser.makeFIXParser(FIX42));
         pipeline.addHandler( {incoming: function(ctx,evt){ assert.equal( evt.data['8'] = "FIX.4.4" ); } } );
@@ -45,7 +45,13 @@ var tests = {
     TestMsgCreator: function(){
         var msg = {8:"FIX.4.4", 35:"A"};
         
-        var pipeline = pipe.makePipe({end:function() {} });
+        var pipeline = pipe.makePipe({end:function() {}  , write:function(msg){console.log(msg);} });
+
+        pipeline.state['senderCompID'] = "SENDER";
+        pipeline.state['targetCompID'] = "TARGET";
+        pipeline.state['outgoingSeqNum'] = 1;
+        pipeline.state['incomingSeqNum'] = 1;
+        
         pipeline.addHandler(FIXMsgCreator.makeFIXMsgCreator(FIX42));
         
         pipeline.pushOutgoingData(msg);
