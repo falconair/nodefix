@@ -43,6 +43,9 @@ var tests = {
     },
 
     TestMsgCreator: function(){
+        var actual = "x";
+        var expected = "8=FIX.4.29=5135=A52=201080-2:9:46.41556=SENDER49=TARGET34=110=163";
+        
         var msg = {8:"FIX.4.4", 35:"A"};
         
         var pipeline = pipe.makePipe({end:function() {}  , write:function(msg){console.log(msg);} });
@@ -52,9 +55,25 @@ var tests = {
         pipeline.state['outgoingSeqNum'] = 1;
         pipeline.state['incomingSeqNum'] = 1;
         
+        pipeline.addHandler({ outgoing:function(ctx,event){ actual = event.data;} });
         pipeline.addHandler(FIXMsgCreator.makeFIXMsgCreator(FIX42));
         
         pipeline.pushOutgoingData(msg);
+        
+        var expectedStartOfTS = parseInt(expected.indexOf("52="), 10);
+        var expectedEndOfTS = parseInt(expected.indexOf("", expectedStartOfTS + 1), 10);
+        var expectedTS = expected.substring(expectedStartOfTS, expectedEndOfTS);
+        var normalizedExpected = expected.replace(expectedTS, "");
+        console.log(normalizedExpected);        
+
+        var actualStartOfTS = parseInt(actual.indexOf("52="), 10);
+        var actualEndOfTS = parseInt(actual.indexOf("", actualStartOfTS + 1), 10);
+        var actualTS = actual.substring(actualStartOfTS, actualEndOfTS);
+        var normalizedActual = actual.replace(actualTS, "");
+        console.log(normalizedActual);
+        
+        //assert.equal(actual, expected);
+
     }
 };
 

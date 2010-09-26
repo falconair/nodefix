@@ -57,7 +57,7 @@ function FIXMsgCreator(opt){
         }
 
         var timestamp = new Date();
-        headermsgarr.push("52=" , timestamp.getUTCFullYear() , timestamp.getUTCMonth() , timestamp.getUTCDay() , "-" , timestamp.getUTCHours() , ":" , timestamp.getUTCMinutes() , ":" , timestamp.getUTCSeconds() , "." , timestamp.getUTCMilliseconds() , SOHCHAR);
+        headermsgarr.push("52=" , getUTCTimeStamp() , SOHCHAR);
         headermsgarr.push("56=" , (ctx.state.senderCompID) , SOHCHAR); // TODO compid should be available from the context object, if extracted compid doesn't match the one in ctx, it is an error
         headermsgarr.push("49=" , (ctx.state.targetCompID) , SOHCHAR);
         headermsgarr.push("34=" , (ctx.state.outgoingSeqNum++) , SOHCHAR);
@@ -111,7 +111,52 @@ function FIXMsgCreator(opt){
 
         //addOutMsg(targetCompID, outmsg);
 
-        stream.write(outmsg);
+        //stream.write(outmsg);
+        ctx.forward({eventType:"data", data:outmsg});
     }
+}
+
+function getUTCTimeStamp(datetime){
+    var timestamp = datetime || new Date();
+    
+    var year = timestamp.getUTCFullYear();
+    var month = timestamp.getUTCMonth();
+    var day = timestamp.getUTCDate();
+    var hours = timestamp.getUTCHours();
+    var minutes = timestamp.getUTCMinutes();
+    var seconds = timestamp.getUTCSeconds();
+    var millis = timestamp.getUTCMilliseconds();
+    
+
+    if(month < 10){
+        month = "0" + month;
+    }
+    
+    if(day < 10){
+        day = "0" + day;
+    }
+    
+    if(hours < 10){
+        hours = "0" + hours;
+    }
+    
+    if(minutes < 10){
+        minutes = "0" + minutes;
+    }
+    
+    if(seconds < 10){
+        seconds = "0" + seconds;
+    }
+    
+    if(millis < 10){
+        millis = "00" + millis;
+    } else if(millis < 100){
+        millis = "0" + millis;    
+    }
+    
+    
+    var ts = [year , month , day , "-" , hours , ":" , minutes , ":" , seconds , "." , millis].join("");
+
+    return ts;
 }
 
