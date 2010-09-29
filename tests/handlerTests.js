@@ -1,4 +1,6 @@
 //TODO Move heartbeat logic to its own handler
+//TODO Move login logic to its own handler
+//TODO Convert FIX's documented test cases to javascript test cases
 var pipe = require("../lib/nodepipe");
 var assert = require("assert");
 
