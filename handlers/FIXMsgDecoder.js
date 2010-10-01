@@ -7,11 +7,11 @@ var SOHCHAR = require("../utils").SOHCHAR;
 var logger_format = require("../utils").logger_format;
 var checksum = require("../utils").checksum;
 
-exports.makeFIXParser = function(options){ return new FIXParser(options);}
+exports.makeFIXMsgDecoder = function(options){ return new FIXMsgDecoder(options);}
 
 logger.format = logger_format;
 
-function FIXParser(opt){
+function FIXMsgDecoder(opt){
 
     var fixVersion = opt.version;
     var headers = opt.headers;

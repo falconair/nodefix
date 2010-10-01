@@ -39,10 +39,11 @@ var tags = require('./resources/fixtagnums').keyvals;
 net.createServer(function(stream){
     var pipeline = pipe.makePipe(stream);
 
-    pipeline.addHandler(new FIXMsgWriter());    
-    pipeline.addHandler(new FIXMsgCreator());
+    //pipeline.addHandler(new FIXMsgWriter());
+    pipeline.addHandler({outgoing: function(ctx,event){if(event.eventType==="data"){ctx.stream.write(event.data);}} });
+    pipeline.addHandler(new FIXMsgEncoder());
     pipeline.addHandler(new FIXFrameDecoder());
-    pipeline.addHandler(new FIXParser());
+    pipeline.addHandler(new FIXMsgDecoder());
     
     stream.setEncoding("utf8");
     

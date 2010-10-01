@@ -5,11 +5,11 @@ var SOHCHAR = require("../utils").SOHCHAR;
 var logger_format = require("../utils").logger_format;
 var checksum = require("../utils").checksum;
 
-exports.makeFIXMsgCreator = function(options){ return new FIXMsgCreator(options);}
+exports.makeFIXMsgEncoder = function(options){ return new FIXMsgEncoder(options);}
 
 logger.format = logger_format;
 
-function FIXMsgCreator(opt){
+function FIXMsgEncoder(opt){
 
     var fixVersion = opt.version;
     var headers = opt.headers;
