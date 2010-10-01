@@ -17,7 +17,7 @@ function FIXFrameDecoder(){
     
     this.incoming = function(ctx, event){
         if(event.eventType !== "data"){
-            ctx.next(event);
+            ctx.sendNext(event);
         }
         
         var stream = ctx.stream;
@@ -81,7 +81,7 @@ function FIXFrameDecoder(){
 
             logger.info("FIX in: " + msg);
 
-            ctx.forward({eventType:"data",data:msg});
+            ctx.sendNext({eventType:"data",data:msg});
         }
     }
 }

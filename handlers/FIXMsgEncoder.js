@@ -19,7 +19,7 @@ function FIXMsgEncoder(opt){
     
     this.outgoing = function(ctx, event){
         if(event.eventType !== "data"){
-            ctx.next(event);
+            ctx.sendNext(event);
         }
         
         var msg = event.data;
@@ -112,7 +112,7 @@ function FIXMsgEncoder(opt){
         //addOutMsg(targetCompID, outmsg);
 
         //stream.write(outmsg);
-        ctx.forward({eventType:"data", data:outmsg});
+        ctx.sendNext({eventType:"data", data:outmsg});
     }
 }
 

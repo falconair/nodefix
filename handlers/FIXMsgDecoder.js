@@ -33,7 +33,7 @@ function FIXMsgDecoder(opt){
         }
 
         if (currentTime - timeOfLastIncoming > heartbeatDuration * 1.5) {
-            ctx.reverse({eventType:"data", data:{
+            ctx.sendPrev({eventType:"data", data:{
                 "35": "1",
                 "112": outgoingSeqNum + ""
             }}); /*write testrequest*/
@@ -50,7 +50,7 @@ function FIXMsgDecoder(opt){
     this.description = "fix parser: accepts fix messages, creates key/tag vals";
     this.incoming = function(ctx, event){
         if(event.eventType !== "data"){
-            ctx.next(event);
+            ctx.sendNext(event);
         }
         
         var msg = event.data;
@@ -84,7 +84,7 @@ function FIXMsgDecoder(opt){
                     if (tag.charAt(tag.length - 1) != "?" && fix[tag] === undefined) { //If tag is required, but missing
                         logger.error("[ERROR] tag '" + tag + "' is required but missing in incoming message: " + msg);
                         if (loggedIn) {
-                            ctx.reverse({
+                            ctx.sendPrev({
                                 "35": "3",
                                 "45": fix[tags["MsgSeqNum"]],
                                 "58": "MissingTags"
@@ -104,7 +104,7 @@ function FIXMsgDecoder(opt){
                     if (tag.charAt(tag.length - 1) != "?" && fix[tag] === undefined) { //If tag is required, but missing
                         logger.error("[ERROR] tag " + tag + " is required but missing in incoming message: " + msg);
                         if (loggedIn) {
-                            ctx.reverse({
+                            ctx.sendPrev({
                                 "35": "3",
                                 "45": fix[tags["MsgSeqNum"]],
                                 "58": "MissingTags"
@@ -164,7 +164,7 @@ function FIXMsgDecoder(opt){
                 //set flag saying "waiting for rewrite"
                 if(resendRequested !== true){
                     resendRequested = true;
-                    ctx.reverse({"35":2, "7":incomingSeqNum, "8":0});
+                    ctx.sendPrev({"35":2, "7":incomingSeqNum, "8":0});
                 }
             }
 
@@ -196,7 +196,7 @@ function FIXMsgDecoder(opt){
                 case "1":
                     //handle testrequest; break;
                     var testReqID = fix[tags["TestReqID"]];
-                    ctx.reverse({
+                    ctx.sendPrev({
                         "35": "0",
                         "112": testReqID
                     }); /*write heartbeat*/
@@ -210,7 +210,7 @@ function FIXMsgDecoder(opt){
                         var resendmsg = msgs[k];
                         resendmsg[tags["PossDupFlag"]] = "Y"; 
                         resendmsg[tags["OrigSendingTime"]] = resendmsg["SendingTime"];
-                        ctx.reverse(resendmsg);
+                        ctx.sendPrev(resendmsg);
                     }
                     //handle resendrequest; break;
                     break;
@@ -235,7 +235,7 @@ function FIXMsgDecoder(opt){
                     //handle seqreset; break;
                 case "5":
                     //handle logout; break;
-                    ctx.reverse({
+                    ctx.sendPrev({
                         "35": "5"
                     }); /*write a logout ack right back*/
                     break;
@@ -254,13 +254,13 @@ function FIXMsgDecoder(opt){
                     heartbeatIntervalID = setInterval(heartbeatCallback, heartbeatDuration);
                     //heartbeatIntervalIDs.push(intervalID);
                     //this.emit("logon", targetCompID,stream);
-                    ctx.forward({eventType:"logon", data:targetCompID});
+                    ctx.sendNext({eventType:"logon", data:targetCompID});
                     logger.info(fix[tags["SenderCompID"]] + " logged on from " + stream.remoteAddress);
                     
                     break;
                 default:
             }
-            ctx.forward({eventType:"data", data:fix});
+            ctx.sendNext({eventType:"data", data:fix});
     }
 }
 
