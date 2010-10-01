@@ -44,6 +44,7 @@ net.createServer(function(stream){
     pipeline.addHandler(new FIXMsgEncoder());
     pipeline.addHandler(new FIXFrameDecoder());
     pipeline.addHandler(new FIXMsgDecoder());
+    pipeline.addHandler(new FIXMsgValidator());
     
     stream.setEncoding("utf8");
     
