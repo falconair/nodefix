@@ -20,28 +20,28 @@ function FIXMsgValidator(opt){
 /*
     var loggedIn = false;
     var incomingSeqNum = 1;
-    var outgoingSeqNum = 1;
-    var timeOfLastIncoming = 0;
-    var timeOfLastOutgoing = 0;
-    var resendRequested = false;
+    var `outgoingSeqNum = 1;
+    var ctx.state.timeOfLastIncoming = 0;
+    var ctx.state.timeOfLastOutgoing = 0;
+    var ctx.state.resendRequested = false;
 */
     
     var heartbeatCallback = function () {
 
         var currentTime = new Date().getTime();
 
-        if (currentTime - timeOfLastOutgoing > heartbeatDuration) {
+        if (currentTime - ctx.state.timeOfLastOutgoing > ctx.state.heartbeatDuration) {
             ctx.reverse( {eventType:"data", data:{"35": "0"}} ); /*write heartbeat*/
         }
 
-        if (currentTime - timeOfLastIncoming > heartbeatDuration * 1.5) {
+        if (currentTime - ctx.state.timeOfLastIncoming > ctx.state.heartbeatDuration * 1.5) {
             ctx.sendPrev({eventType:"data", data:{
                 "35": "1",
-                "112": outgoingSeqNum + ""
+                "112": ctx.state.outgoingSeqNum + ""
             }}); /*write testrequest*/
         }
 
-        if (currentTime - timeOfLastIncoming > heartbeatDuration * 3) {
+        if (currentTime - ctx.state.timeOfLastIncoming > ctx.state.heartbeatDuration * 3) {
             logger.error("[ERROR] No message received from counterparty and no response to test request.");
             stream.end();
             return;
@@ -62,7 +62,7 @@ function FIXMsgValidator(opt){
 
             //====Step 5: Confirm first message is a logon message and it has a heartbeat
             var msgType = fix[tags["MsgType"]];
-            if (!loggedIn && msgType != "A") {
+            if (!ctx.state.loggedIn && msgType != "A") {
                 logger.error("[ERROR] Logon message expected, received message of type " + msgType + ", [" + msg + "]");
                 stream.end();
                 return;
@@ -80,18 +80,18 @@ function FIXMsgValidator(opt){
             if(fix[tags["MsgType"]]==="4" /*seq reset*/ && (fix[tags["GapFillFlag"]] === undefined || fix[tags["GapFillFlag"]] === "N")){
                 logger.warn("Requence Reset request received: " + msg);
                 var resetseqno = parseInt(fix[tags["NewSeqNo"]],10);
-                if(resetseqno <= incomingSeqnum){
+                if(resetseqno <= ctx.state.incomingSeqnum){
                     //TODO: Reject, sequence number may only be incremented
                 }
                 else{
-                    incomingSeqNum = resetseqno;                
+                    ctx.state.incomingSeqNum = resetseqno;                
                 }
             }
-            if (loggedIn && _seqNum == incomingSeqNum) {
-                incomingSeqNum++;
-                resendRequested = false;
+            if (ctx.state.loggedIn && _seqNum == ctx.state.incomingSeqNum) {
+                ctx.state.incomingSeqNum++;
+                ctx.state.resendRequested = false;
             }
-            else if (loggedIn && _seqNum < incomingSeqNum) {
+            else if (ctx.state.loggedIn && _seqNum < ctx.state.incomingSeqNum) {
                 var posdup = fix[tags["PossDupFlag"]];
                 if(posdup !== undefined && posdup === "Y"){
                     logger.warn("This posdup message's seqno has already been processed. Ignoring: "+msg);
@@ -100,13 +100,13 @@ function FIXMsgValidator(opt){
                 stream.end();
                 return;
             }
-            else if (loggedIn && _seqNum > incomingSeqNum) {
+            else if (ctx.state.loggedIn && _seqNum > ctx.state.incomingSeqNum) {
                 //Missing messages, write resend request and don't process any more messages
                 //until the rewrite request is processed
                 //set flag saying "waiting for rewrite"
-                if(resendRequested !== true){
-                    resendRequested = true;
-                    ctx.sendPrev({"35":2, "7":incomingSeqNum, "8":0});
+                if(ctx.state.resendRequested !== true){
+                    ctx.state.resendRequested = true;
+                    ctx.sendPrev({"35":2, "7":ctx.state.incomingSeqNum, "8":0});
                 }
             }
 
@@ -115,13 +115,13 @@ function FIXMsgValidator(opt){
             var incomingsenderCompID = fix[tags["TargetCompID"]];
             var incomingTargetCompID = fix[tags["SenderCompID"]];
 
-            if (loggedIn && (fixVersion != incomingFixVersion || senderCompID != incomingsenderCompID || targetCompID != incomingTargetCompID)) {
+            if (ctx.state.loggedIn && (fixVersion != incomingFixVersion || senderCompID != incomingsenderCompID || targetCompID != incomingTargetCompID)) {
                 logger.warn("[WARNING] Incoming fix version (" + incomingFixVersion + "), sender compid (" + incomingsenderCompID + ") or target compid (" + incomingTargetCompID + ") did not match expected values (" + fixVersion + "," + senderCompID + "," + targetCompID + ")"); /*write session reject*/
             }
             
             
             //===Step 8: Record incoming message -- might be needed during resync
-            if(loggedIn){
+            if(ctx.state.loggedIn){
                 //datastore.add(fix);
                 //addInMsg(targetCompID, fix);
             }
@@ -146,7 +146,7 @@ function FIXMsgValidator(opt){
                 case "2":
                     var beginSeqNo = parseInt(fix[tags["BeginSeqNo"]],10);
                     var endSeqNo = parseInt(fix[tags["EndSeqNo"]],10);
-                    outgoingSeqNum = beginSeqNo;
+                    ctx.state.outgoingSeqNum = beginSeqNo;
                     var outmsgs = getOutMessages(targetCompID, beginSeqNo, endSeqNo);
                     for(var k in outmsgs){
                         var resendmsg = msgs[k];
@@ -195,9 +195,9 @@ function FIXMsgValidator(opt){
                     //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
                     //datastore.set("incoming-"+incomingSeqNo,msg);
 
-                    heartbeatDuration = parseInt(fix[tags["HeartBtInt"]], 10) * 1000;
-                    loggedIn = true;
-                    heartbeatIntervalID = setInterval(heartbeatCallback, heartbeatDuration);
+                    ctx.state.heartbeatDuration = parseInt(fix[tags["HeartBtInt"]], 10) * 1000;
+                    ctx.state.loggedIn = true;
+                    heartbeatIntervalID = setInterval(heartbeatCallback, ctx.state.heartbeatDuration);
                     //heartbeatIntervalIDs.push(intervalID);
                     //this.emit("logon", targetCompID,stream);
                     ctx.sendNext({eventType:"logon", data:targetCompID});

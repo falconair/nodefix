@@ -57,7 +57,7 @@ function FIXMsgEncoder(opt){
         }
 
         var timestamp = new Date();
-        headermsgarr.push("52=" , getUTCTimeStamp() , SOHCHAR);
+        headermsgarr.push("52=" , getUTCTimeStamp(timestamp) , SOHCHAR);
         headermsgarr.push("56=" , (ctx.state.senderCompID) , SOHCHAR); // TODO compid should be available from the context object, if extracted compid doesn't match the one in ctx, it is an error
         headermsgarr.push("49=" , (ctx.state.targetCompID) , SOHCHAR);
         headermsgarr.push("34=" , (ctx.state.outgoingSeqNum++) , SOHCHAR);
@@ -107,7 +107,7 @@ function FIXMsgEncoder(opt){
         outmsg += "10=" + checksum(outmsg) + SOHCHAR;
 
         logger.info("FIX out:" + outmsg);
-        timeOfLastOutgoing = new Date().getTime();
+        ctx.state.timeOfLastOutgoing = timestamp.getTime();
 
         //addOutMsg(targetCompID, outmsg);
 

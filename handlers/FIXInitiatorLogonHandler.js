@@ -12,7 +12,7 @@ function FIXMsgCreator(opt){
         
         ctx.sendPrev({eventType:"data", data:{
                             "35": "A",
-                            "108": ctx.state.HeartbtInt || 30 //TODO this needs to be double checked
+                            "108": ctx.state.heartbeatDuration || 30 //TODO this needs to be double checked
                         }});    
     }
 
