@@ -56,9 +56,11 @@ var tests = {
         //console.log(sys.inspect(pipeline));
         
         //pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.eventType);} });
+        pipeline.addHandler({outgoing:function(ctx,evt){console.log("out"+evt.data);} });
         pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder(FIX42));
         pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.data);} });
         pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator(FIX42));
+        pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.data);} });
         
         pipeline.pushIncomingData(fix);
         console.log(pipeline.state.senderCompID);
