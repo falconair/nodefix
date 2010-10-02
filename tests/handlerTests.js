@@ -57,6 +57,7 @@ var tests = {
         
         //pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.eventType);} });
         pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder(FIX42));
+        pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.data);} });
         pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator(FIX42));
         
         pipeline.pushIncomingData(fix);
