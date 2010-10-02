@@ -1,6 +1,7 @@
 //var dirtyStore = require('dirty');
 var logger = require("../lib/logger").createLogger();
 var tags = require('../resources/fixtagnums').keyvals;
+var sys = require('sys');
 
 
 var SOHCHAR = require("../utils").SOHCHAR;
@@ -200,7 +201,7 @@ function FIXMsgValidator(opt){
                     heartbeatIntervalID = setInterval(heartbeatCallback, ctx.state.heartbeatDuration);
                     //heartbeatIntervalIDs.push(intervalID);
                     //this.emit("logon", targetCompID,stream);
-                    ctx.sendNext({eventType:"logon", data:targetCompID});
+                    ctx.sendNext({eventType:"logon", data:ctx.state.targetCompID});
                     logger.info(fix[tags["SenderCompID"]] + " logged on from " + stream.remoteAddress);
                     
                     break;

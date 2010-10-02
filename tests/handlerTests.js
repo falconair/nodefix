@@ -3,10 +3,12 @@
 //TODO Convert FIX's documented test cases to javascript test cases
 var pipe = require("../lib/nodepipe");
 var assert = require("assert");
+var sys = require("sys");
 
-var FIXFrameDecoder = require("../handlers/FIXFrameDecoderHandler");
-var FIXParser = require("../handlers/FIXParserHandler");
-var FIXMsgCreator = require("../handlers/FIXMsgCreatorHandler");
+var FIXFrameDecoder = require("../handlers/FIXFrameDecoder");
+var FIXMsgDecoder = require("../handlers/FIXMsgDecoder");
+var FIXMsgEncoder = require("../handlers/FIXMsgEncoder");
+var FIXMsgValidator = require("../handlers/FIXMsgValidator");
 
 const FIX42 = {version: "FIX.4.2",
 		headers:["8", "9", "35", "49", "56", "115?", "128?", "90?", "91?", "34", "50?","142?", "57?", "143?", "116?", "144?", "129?", "145?", "43?", "97?","52", "122?", "212?", "213?", "347?", "369?", "370?"],
@@ -29,7 +31,7 @@ var tests = {
         assert.equal(2, result);
     },
 
-    TestFIXParser: function(){
+    TestFIXMsgDecoder: function(){
 
         var fix = "8=FIX.4.29=6735=A52=20100826-02:58:56.29598=0108=3056=SENDER49=TARGET34=110=150";
         var result = 0;
@@ -37,7 +39,7 @@ var tests = {
         
         var pipeline = pipe.makePipe({ end:function(){} });
         
-        pipeline.addHandler(FIXParser.makeFIXParser(FIX42));
+        pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder(FIX42));
         pipeline.addHandler( {incoming: function(ctx,evt){ if(evt.eventType==="data"){assert.equal( evt.data['8'] , "FIX.4.2" );} } } );
         
         pipeline.pushIncomingData(fix);
@@ -45,7 +47,24 @@ var tests = {
         //assert.equal(2, result);
     },
 
-    TestMsgCreator: function(){
+    TestFIXMsgValidator: function(){
+
+        var fix = "8=FIX.4.29=6735=A52=20100826-02:58:56.29598=0108=3056=SENDER49=TARGET34=110=150";
+        
+        var pipeline = pipe.makePipe({ end:function(){} });
+        
+        //console.log(sys.inspect(pipeline));
+        
+        //pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.eventType);} });
+        pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder(FIX42));
+        pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator(FIX42));
+        
+        pipeline.pushIncomingData(fix);
+        console.log(pipeline.state.senderCompID);
+        assert.equal( pipeline.state.senderCompID, "SENDER" );
+    },
+
+    TestFIXMsgEncoder: function(){
         var actual = "x";
         var expected = "8=FIX.4.29=5535=A52=20100826-02:58:56.29556=SENDER49=TARGET34=110=122";
         
@@ -59,7 +78,7 @@ var tests = {
         pipeline.state['incomingSeqNum'] = 1;
         
         pipeline.addHandler({ outgoing:function(ctx,event){ actual = event.data;} });
-        pipeline.addHandler(FIXMsgCreator.makeFIXMsgCreator(FIX42));
+        pipeline.addHandler(FIXMsgEncoder.makeFIXMsgEncoder(FIX42));
         
         pipeline.pushOutgoingData(msg);
         

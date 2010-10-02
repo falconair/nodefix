@@ -13,6 +13,8 @@ logger.format = logger_format;
 
 function FIXMsgDecoder(opt){
 
+    var headers = opt.headers;
+    var trailers = opt.trailers;
 
     this.description = "fix parser: accepts fix messages, creates key/tag vals";
     this.incoming = function(ctx, event){
