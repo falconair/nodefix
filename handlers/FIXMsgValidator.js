@@ -55,6 +55,7 @@ function FIXMsgValidator(opt){
     this.incoming = function(ctx, event){
         if(event.eventType !== "data"){
             ctx.sendNext(event);
+            return;
         }
         
         var fix = event.data;

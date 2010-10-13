@@ -18,6 +18,7 @@ function FIXFrameDecoder(){
     this.incoming = function(ctx, event){
         if(event.eventType !== "data"){
             ctx.sendNext(event);
+            return;
         }
         
         var stream = ctx.stream;

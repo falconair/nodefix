@@ -55,14 +55,16 @@ var tests = {
         
         //console.log(sys.inspect(pipeline));
         
-        //pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.eventType);} });
-        pipeline.addHandler({outgoing:function(ctx,evt){console.log("out"+evt.data);} });
-        pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder(FIX42));
-        pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.data);} });
-        pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator(FIX42));
-        pipeline.addHandler({incoming:function(ctx,evt){console.log(evt.data);} });
+        pipeline.addHandler({incoming:function(ctx,evt){console.log("in1:"+evt.data); ctx.sendNext(evt); } });
+        //pipeline.addHandler({outgoing:function(ctx,evt){console.log("out1:"+evt.data); ctx.sendNext(evt); } });
+        //pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder(FIX42));
+        pipeline.addHandler({incoming:function(ctx,evt){console.log("in2:"+evt.data); ctx.sendNext(evt); } });
+        //pipeline.addHandler({outgoing:function(ctx,evt){console.log("out2:"+evt.data); ctx.sendNext(evt); } });
+        //pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator(FIX42));
+        //pipeline.addHandler({incoming:function(ctx,evt){console.log("in3:"+evt.data); ctx.sendNext(evt); } });
         
         pipeline.pushIncomingData(fix);
+        console.log(pipeline.state);
         console.log(pipeline.state.senderCompID);
         assert.equal( pipeline.state.senderCompID, "SENDER" );
     },

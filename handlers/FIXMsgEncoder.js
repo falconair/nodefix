@@ -20,6 +20,7 @@ function FIXMsgEncoder(opt){
     this.outgoing = function(ctx, event){
         if(event.eventType !== "data"){
             ctx.sendNext(event);
+            return;
         }
         
         var msg = event.data;
