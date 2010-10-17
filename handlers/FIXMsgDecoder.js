@@ -1,5 +1,5 @@
 //var dirtyStore = require('dirty');
-var sys = require('sys');
+var sys = require('util');
 var logger = require("../lib/logger").createLogger();
 var tags = require('../resources/fixtagnums').keyvals;
 

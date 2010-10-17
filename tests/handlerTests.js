@@ -113,10 +113,10 @@ var tests = {
     TestFIXIdleHandler: function(){//uncomment the commented line and watch for messages every three seconds
         var pipeline = pipe.makePipe({end:function(){}});
 
-        pipeline.addHandler({outgoing:function(ctx,evt){ console.log(sys.inspect(evt));} });
+        pipeline.addHandler({outgoing:function(ctx,evt){ console.log("out:"+sys.inspect(evt));} });
         pipeline.addHandler(FIXIdleHandler.makeFIXIdleHandler());
         
-        //pipeline.pushIncomingData({"35":"A", "108":"3"});
+        pipeline.pushIncomingData({"35":"A", "108":"3"});
     }
 };
 

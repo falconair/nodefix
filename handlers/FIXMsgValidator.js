@@ -1,7 +1,7 @@
 //var dirtyStore = require('dirty');
 var logger = require("../lib/logger").createLogger();
 var tags = require('../resources/fixtagnums').keyvals;
-var sys = require('sys');
+var sys = require('util');
 
 
 var SOHCHAR = require("../utils").SOHCHAR;

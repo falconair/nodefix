@@ -28,28 +28,111 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 var net = require("net");
 var events = require("events");
-var sys = require("sys");
+var sys = require("util");
 var logger = require("./lib/logger").createLogger();
 var pipe = require("./lib/nodepipe");
-var tags = require('./resources/fixtagnums').keyvals;
 
+var FIXFrameDecoder = require("./handlers/FIXFrameDecoder");
+var FIXMsgDecoder = require("./handlers/FIXMsgDecoder");
+var FIXMsgEncoder = require("./handlers/FIXMsgEncoder");
+var FIXMsgValidator = require("./handlers/FIXMsgValidator");
+var FIXIdleHandler = require("./handlers/FIXIdleHandler");
+var FIXInitiatorLogonHandler = require("./handlers/FIXInitiatorLogonHandler");
 
+//---------------------CLIENT
+function Client(senderCompID, targetCompID, opt) {
+    events.EventEmitter.call(this);
 
+}
+sys.inherits(Client, events.EventEmitter);
+Client.prototype.end = function () { this.stream.end(); };
+Client.prototype.write = function (data) { this.pipeline.pushOutgoing(data); };
 
-net.createServer(function(stream){
+//---------------------CLIENT EXPORT
+exports.createConnection = function (senderCompID, targetCompID, heartbeatseconds, opt, port, host) {
+
+    var client = new Client(senderCompID, targetCompID, opt);
+
+    var stream = net.createConnection(port, host);
+
     var pipeline = pipe.makePipe(stream);
-
-    //pipeline.addHandler(new FIXMsgWriter());
-    pipeline.addHandler({outgoing: function(ctx,event){if(event.eventType==="data"){ctx.stream.write(event.data);}} });
-    pipeline.addHandler(new FIXMsgEncoder());
-    pipeline.addHandler(new FIXFrameDecoder());
-    pipeline.addHandler(new FIXMsgDecoder());
-    pipeline.addHandler(new FIXMsgValidator());
+    pipeline.addHandler({outgoing: function(ctx,event){if(event.eventType==="data"){ stream.write(event.data);}} });
+    pipeline.addHandler(FIXFrameDecoder.makeFIXFrameDecoder());
+    pipeline.addHandler(FIXMsgEncoder.makeFIXMsgEncoder());
+    pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder());
+    pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator());
+    pipeline.addHandler(FIXInitiatorLogonHandler.makeFIXInitiatorLogonHandler());
+    pipeline.addHandler(FIXIdleHandler.makeFIXIdleHandler());
+    pipeline.addHandler({incoming:function(ctx,event){if(event.eventType==="data"){session.emit("data",event.data); }} });
     
     stream.setEncoding("utf8");
     
     stream.on("data", function(data){pipeline.pushIncoming({eventType:"data", data:data});}); 
-    stream.on("end", function(){pipeline.pushIncoming({eventType:"end"});}); 
-});
+    stream.on("end", function(){
+        pipeline.pushIncoming({eventType:"end"});
+        session.emit("end");
+    }); 
 
+    client.stream = stream;
+    client.pipeline = pipeline;
+
+    stream.on("connect", function () {
+        session.emit("connect");
+        pipeline.pushOutgoing({
+            "35": "A",
+            "49": senderCompID,
+            "56": targetCompID,
+            "108": heartbeatseconds,
+            "98": 0
+        });
+    });
+
+    stream.on("end", function () {
+        session.emit("end");
+    });
+
+    //stream.on("data", function(data){session.handle(data);});
+
+    return client;
+};
+
+
+//---------------------SERVER
+function Server(opt, func) {
+    events.EventEmitter.call(this);
+    //this.clients = {};
+
+    net.createServer(function(stream){
+        var pipeline = pipe.makePipe(stream);
+
+        pipeline.addHandler({outgoing: function(ctx,event){if(event.eventType==="data"){stream.write(event.data);}} });
+        pipeline.addHandler(FIXFrameDecoder.makeFIXFrameDecoder());
+        pipeline.addHandler(FIXMsgEncoder.makeFIXMsgEncoder());
+        pipeline.addHandler(FIXMsgDecoder.makeFIXMsgDecoder());
+        pipeline.addHandler(FIXMsgValidator.makeFIXMsgValidator());
+        pipeline.addHandler(FIXIdleHandler.makeFIXIdleHandler());
+        //TODO dispatch events to func?
+        
+        stream.setEncoding("utf8");
+        
+        stream.on("data", function(data){pipeline.pushIncoming({eventType:"data", data:data});}); 
+        stream.on("end", function(){pipeline.pushIncoming({eventType:"end"});}); 
+    });
+
+}
+sys.inherits(Server, events.EventEmitter);
+Server.prototype.listen = function (port) { this.stream.listen(port); };
+//Server.prototype.write = function(client, msg) { this.clients[client].write(msg); };
+//Server.prototype.end = function(client){ this.clients[client].end(); };
+
+
+
+//---------------------SERVER EXPORT
+exports.createServer = function (opt, func) {
+    
+    var server = new Server(opt, func);
+    
+    
+    return server;
+}
 
