@@ -9,6 +9,7 @@ var FIXFrameDecoder = require("../handlers/FIXFrameDecoder");
 var FIXMsgDecoder = require("../handlers/FIXMsgDecoder");
 var FIXMsgEncoder = require("../handlers/FIXMsgEncoder");
 var FIXMsgValidator = require("../handlers/FIXMsgValidator");
+var FIXIdleHandler = require("../handlers/FIXIdleHandler");
 
 const FIX42 = {version: "FIX.4.2",
 		headers:["8", "9", "35", "49", "56", "115?", "128?", "90?", "91?", "34", "50?","142?", "57?", "143?", "116?", "144?", "129?", "145?", "43?", "97?","52", "122?", "212?", "213?", "347?", "369?", "370?"],
@@ -107,6 +108,15 @@ var tests = {
         
         assert.equal(normalizedActual, normalizedExpected);
 
+    },
+    
+    TestFIXIdleHandler: function(){//uncomment the commented line and watch for messages every three seconds
+        var pipeline = pipe.makePipe({end:function(){}});
+
+        pipeline.addHandler({outgoing:function(ctx,evt){ console.log(sys.inspect(evt));} });
+        pipeline.addHandler(FIXIdleHandler.makeFIXIdleHandler());
+        
+        //pipeline.pushIncomingData({"35":"A", "108":"3"});
     }
 };
 
@@ -117,4 +127,5 @@ for (var testx in Object.keys(tests)) {
         tests[Object.keys(tests)[testx]].call();
     }
 }
+
 

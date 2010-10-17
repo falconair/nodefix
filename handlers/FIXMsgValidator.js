@@ -27,28 +27,6 @@ function FIXMsgValidator(opt){
     var ctx.state.resendRequested = false;
 */
     
-    var heartbeatCallback = function () {
-
-        var currentTime = new Date().getTime();
-
-        if (currentTime - ctx.state.timeOfLastOutgoing > ctx.state.heartbeatDuration) {
-            ctx.reverse( {eventType:"data", data:{"35": "0"}} ); /*write heartbeat*/
-        }
-
-        if (currentTime - ctx.state.timeOfLastIncoming > ctx.state.heartbeatDuration * 1.5) {
-            ctx.sendPrev({eventType:"data", data:{
-                "35": "1",
-                "112": ctx.state.outgoingSeqNum + ""
-            }}); /*write testrequest*/
-        }
-
-        if (currentTime - ctx.state.timeOfLastIncoming > ctx.state.heartbeatDuration * 3) {
-            logger.error("[ERROR] No message received from counterparty and no response to test request.");
-            stream.end();
-            return;
-        }
-    };
-
 
     this.description = "fix validator: accepts fix messages, confirms they are correct";
     
@@ -199,10 +177,10 @@ function FIXMsgValidator(opt){
 
                     ctx.state.heartbeatDuration = parseInt(fix[tags["HeartBtInt"]], 10) * 1000;
                     ctx.state.loggedIn = true;
-                    heartbeatIntervalID = setInterval(heartbeatCallback, ctx.state.heartbeatDuration);
+                    //heartbeatIntervalID = setInterval(heartbeatCallback, ctx.state.heartbeatDuration);
                     //heartbeatIntervalIDs.push(intervalID);
                     //this.emit("logon", targetCompID,stream);
-                    ctx.sendNext({eventType:"logon", data:ctx.state.targetCompID});
+                    //ctx.sendNext({eventType:"logon", data:ctx.state.targetCompID});
                     logger.info(fix[tags["SenderCompID"]] + " logged on from " + stream.remoteAddress);
                     
                     break;
