@@ -1,6 +1,5 @@
 //var dirtyStore = require('dirty');
 var logger = require("../lib/logger").createLogger();
-var tags = require('../resources/fixtagnums').keyvals;
 var sys = require('util');
 
 
@@ -41,14 +40,14 @@ function FIXMsgValidator(opt){
         
 
             //====Step 5: Confirm first message is a logon message and it has a heartbeat
-            var msgType = fix[tags["MsgType"]];
+            var msgType = fix["35"];
             if (!ctx.state.loggedIn && msgType != "A") {
                 logger.error("[ERROR] Logon message expected, received message of type " + msgType + ", [" + msg + "]");
                 stream.end();
                 return;
             }
 
-            if (msgType == "A" && fix[tags["HeartBtInt"]] === undefined) {
+            if (msgType == "A" && fix["108"] === undefined) {
                 logger.error("[ERROR] Logon does not have tag 108 (heartbeat) ");
                 stream.end();
                 return;
@@ -56,10 +55,10 @@ function FIXMsgValidator(opt){
 
 
             //====Step 6: Confirm incoming sequence number====
-            var _seqNum = parseInt(fix[tags["MsgSeqNum"]], 10);
-            if(fix[tags["MsgType"]]==="4" /*seq reset*/ && (fix[tags["GapFillFlag"]] === undefined || fix[tags["GapFillFlag"]] === "N")){
+            var _seqNum = parseInt(fix["34"], 10);
+            if(fix["35"]==="4" /*seq reset*/ && (fix["123"] === undefined || fix["123"] === "N")){
                 logger.warn("Requence Reset request received: " + msg);
-                var resetseqno = parseInt(fix[tags["NewSeqNo"]],10);
+                var resetseqno = parseInt(fix["36"],10);
                 if(resetseqno <= ctx.state.incomingSeqnum){
                     //TODO: Reject, sequence number may only be incremented
                 }
@@ -72,7 +71,7 @@ function FIXMsgValidator(opt){
                 ctx.state.resendRequested = false;
             }
             else if (ctx.state.loggedIn && _seqNum < ctx.state.incomingSeqNum) {
-                var posdup = fix[tags["PossDupFlag"]];
+                var posdup = fix["43"];
                 if(posdup !== undefined && posdup === "Y"){
                     logger.warn("This posdup message's seqno has already been processed. Ignoring: "+msg);
                 }
@@ -91,9 +90,9 @@ function FIXMsgValidator(opt){
             }
 
             //====Step 7: Confirm compids and fix version match what was in the logon msg
-            var incomingFixVersion = fix[tags["BeginString"]];
-            var incomingsenderCompID = fix[tags["TargetCompID"]];
-            var incomingTargetCompID = fix[tags["SenderCompID"]];
+            var incomingFixVersion = fix["8"];
+            var incomingsenderCompID = fix["56"];
+            var incomingTargetCompID = fix["49"];
 
             if (ctx.state.loggedIn && (fixVersion != incomingFixVersion || senderCompID != incomingsenderCompID || targetCompID != incomingTargetCompID)) {
                 logger.warn("[WARNING] Incoming fix version (" + incomingFixVersion + "), sender compid (" + incomingsenderCompID + ") or target compid (" + incomingTargetCompID + ") did not match expected values (" + fixVersion + "," + senderCompID + "," + targetCompID + ")"); /*write session reject*/
@@ -117,21 +116,21 @@ function FIXMsgValidator(opt){
                     break;
                 case "1":
                     //handle testrequest; break;
-                    var testReqID = fix[tags["TestReqID"]];
+                    var testReqID = fix["112"];
                     ctx.sendPrev({
                         "35": "0",
                         "112": testReqID
                     }); /*write heartbeat*/
                     break;
                 case "2":
-                    var beginSeqNo = parseInt(fix[tags["BeginSeqNo"]],10);
-                    var endSeqNo = parseInt(fix[tags["EndSeqNo"]],10);
+                    var beginSeqNo = parseInt(fix["7"],10);
+                    var endSeqNo = parseInt(fix["16"],10);
                     ctx.state.outgoingSeqNum = beginSeqNo;
                     var outmsgs = getOutMessages(targetCompID, beginSeqNo, endSeqNo);
                     for(var k in outmsgs){
                         var resendmsg = msgs[k];
-                        resendmsg[tags["PossDupFlag"]] = "Y"; 
-                        resendmsg[tags["OrigSendingTime"]] = resendmsg["SendingTime"];
+                        resendmsg["43"] = "Y"; 
+                        resendmsg["122"] = resendmsg["SendingTime"];
                         ctx.sendPrev(resendmsg);
                     }
                     //handle resendrequest; break;
@@ -141,8 +140,8 @@ function FIXMsgValidator(opt){
                     break;
                 case "4":
                     //Gap fill mode
-                    if(fix[tags["GapFillFlag"]] === "Y"){
-                        var newSeqNo = parseInt(fix[tags["NewSeqNo"]],10);
+                    if(fix["123"] === "Y"){
+                        var newSeqNo = parseInt(fix["36"],10);
                         
                         if(newSeqNo <= incomingSeqNo){
                             //TODO: Reject, sequence number may only be incremented
@@ -163,25 +162,25 @@ function FIXMsgValidator(opt){
                     break;
                 case "A":
                     //handle logon; break;
-                    //fixVersion = fix[tags["BeginString"]];
-                    //senderCompID = fix[tags["TargetCompID"]];
-                    //targetCompID = fix[tags["SenderCompID"]];
+                    //fixVersion = fix["8"];
+                    //senderCompID = fix["56"];
+                    //targetCompID = fix["49"];
 
-                    ctx.state.fixVersion = fix[tags["BeginString"]];
-                    ctx.state.senderCompID = fix[tags["TargetCompID"]];
-                    ctx.state.targetCompID = fix[tags["SenderCompID"]];
+                    ctx.state.fixVersion = fix["8"];
+                    ctx.state.senderCompID = fix["56"];
+                    ctx.state.targetCompID = fix["49"];
 
                     //create data store
                     //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
                     //datastore.set("incoming-"+incomingSeqNo,msg);
 
-                    ctx.state.heartbeatDuration = parseInt(fix[tags["HeartBtInt"]], 10) * 1000;
+                    ctx.state.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
                     ctx.state.loggedIn = true;
                     //heartbeatIntervalID = setInterval(heartbeatCallback, ctx.state.heartbeatDuration);
                     //heartbeatIntervalIDs.push(intervalID);
                     //this.emit("logon", targetCompID,stream);
                     //ctx.sendNext({eventType:"logon", data:ctx.state.targetCompID});
-                    logger.info(fix[tags["SenderCompID"]] + " logged on from " + stream.remoteAddress);
+                    logger.info(fix["49"] + " logged on from " + stream.remoteAddress);
                     
                     break;
                 default:
