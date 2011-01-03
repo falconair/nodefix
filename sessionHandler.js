@@ -1,4 +1,5 @@
 var sys = require('sys');
+var fs = require('fs');
 
 exports.makeSessionHandler = function(stream){
     return new sessionHandler(stream);
@@ -12,7 +13,7 @@ var SIZEOFTAG10 = 8;
 
 var buffer = "";
 
-function sessionHandler(stream){
+function sessionHandler(stream, isInitiator){
 	
 
 	this.fixVersion = "";
@@ -22,11 +23,15 @@ function sessionHandler(stream){
 	this.outgoingSeqNum = 1;
 	this.incomingSeqNum = 1;
 	
+	this.heartbeatDuration = 30;
+	
 	this.isLoggedIn = false;
 	this.isResendRequested = false;
 	
 	this.timeOfLastOutgoing;
 	this.timeOfLastIncoming;
+	
+	this.trafficFile = null;
 	
 	
 	this.buffer = "";
@@ -77,7 +82,7 @@ function sessionHandler(stream){
         outmsg += "10=" + checksum(outmsg) + SOHCHAR;
         
         sys.log("FIX out: " + outmsg);
-        timeOfLastOutgoing = timestamp.getTime();
+        self.timeOfLastOutgoing = timestamp.getTime();
         stream.write(outmsg);
 	}
 	
@@ -160,12 +165,8 @@ function sessionHandler(stream){
 
 	        //====================================Step 3: Convert to map====================================
 
-	        var keyvals = msg.split(SOHCHAR);
-	        var fix = {};
-	        for (var kv in Object.keys(keyvals)) {
-	            var kvpair = keyvals[kv].split("=");
-	            fix[kvpair[0]] = kvpair[1];
-	        }
+	        var fix = convertToMap(msg);
+	        self.timeOfLastIncoming = new Date().getTime();
 
 	        //============================Step 4: Confirm all required fields are available====================================
 	        //TODO do this differently
@@ -218,7 +219,7 @@ function sessionHandler(stream){
 	            //set flag saying "waiting for rewrite"
 	            if(self.resendRequested !== true){
 	                self.resendRequested = true;
-	                ctx.sendPrev({
+	                self.toSender({
 	                    "35":2,
 	                    "7":self.incomingSeqNum,
 	                    "8":0
@@ -233,7 +234,10 @@ function sessionHandler(stream){
 	        var incomingTargetCompID = fix["49"];
 
 	        if (self.isLoggedIn && 
-	            (fixVersion != incomingFixVersion|| senderCompID != incomingsenderCompID|| targetCompID != incomingTargetCompID)){
+	            (self.fixVersion != incomingFixVersion || 
+	                self.senderCompID != incomingsenderCompID || 
+	                self.targetCompID != incomingTargetCompID)){
+	                
 	                sys.log("[WARNING] Incoming fix version (" + 
 	                    incomingFixVersion + 
 	                    "), sender compid (" + 
@@ -241,7 +245,7 @@ function sessionHandler(stream){
 	                    ") or target compid (" + 
 	                    incomingTargetCompID + 
 	                    ") did not match expected values (" + 
-	                    fixVersion + "," + senderCompID + "," + targetCompID + ")"); /*write session reject*/
+	                    self.fixVersion + "," + self.senderCompID + "," + self.targetCompID + ")"); /*write session reject*/
 	        }
 	        
 
@@ -260,7 +264,7 @@ function sessionHandler(stream){
 	            case "1":
 	                //handle testrequest; break;
 	                var testReqID = fix["112"];
-	                ctx.sendPrev({
+	                self.toSender({
 	                    "35": "0",
 	                    "112": testReqID
 	                }); /*write heartbeat*/
@@ -269,13 +273,13 @@ function sessionHandler(stream){
 	                var beginSeqNo = parseInt(fix["7"],10);
 	                var endSeqNo = parseInt(fix["16"],10);
 	                self.outgoingSeqNum = beginSeqNo;
-	                var outmsgs = getOutMessages(targetCompID, beginSeqNo, endSeqNo);
+	                /*var outmsgs = getOutMessages(self.targetCompID, beginSeqNo, endSeqNo);
 	                for(var k in outmsgs){
 	                    var resendmsg = msgs[k];
 	                    resendmsg["43"] = "Y";
 	                    resendmsg["122"] = resendmsg["SendingTime"];
-	                    ctx.sendPrev(resendmsg);
-	                }
+	                    self.toSender(resendmsg);
+	                }*/
 	                //handle resendrequest; break;
 	                break;
 	            case "3":
@@ -299,7 +303,7 @@ function sessionHandler(stream){
 	            //handle seqreset; break;
 	            case "5":
 	                //handle logout; break;
-	                ctx.sendPrev({
+	                self.toSender({
 	                    "35": "5"
 	                }); /*write a logout ack right back*/
 	                break;
@@ -309,11 +313,14 @@ function sessionHandler(stream){
 	                //senderCompID = fix["56"];
 	                //targetCompID = fix["49"];
 
-	                self.fixVersion = fix["8"];
-	                self.senderCompID = fix["56"];
-	                self.targetCompID = fix["49"];
+	                if(self.fixVersion === "") self.fixVersion = fix["8"];
+            		if(self.senderCompID === "") self.senderCompID = fix["49"];
+            		if(self.targetCompID === "") self.targetCompID = fix["56"];
 
 	                //create data store
+	                var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
+	                self.trafficFile = fs.openSync(fileName,'a+');
+	                fs.write(self.trafficFile, msg);
 	                //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
 	                //datastore.set("incoming-"+incomingSeqNo,msg);
 
@@ -323,6 +330,10 @@ function sessionHandler(stream){
 	                //heartbeatIntervalIDs.push(intervalID);
 	                //this.emit("logon", targetCompID,stream);
 	                //ctx.sendNext({eventType:"logon", data:self.targetCompID});
+	                
+	                if(!isInitiator){
+	                    self.toSender(fix);
+	                }
 	                sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
 	                    
 	                break;
@@ -334,6 +345,17 @@ function sessionHandler(stream){
 
 	    }
 	}
+
+}
+
+function convertToMap(msg){
+    var fix = {};
+    var keyvals = msg.split(SOHCHAR);
+    for (var kv in Object.keys(keyvals)) {
+        var kvpair = keyvals[kv].split("=");
+	    fix[kvpair[0]] = kvpair[1];
+	}
+	return fix;
 
 }
 
