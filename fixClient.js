@@ -4,7 +4,7 @@ this.session = null;
 
 var stream = net.createConnection(56000,"localhost");
 stream.on("connect", function(){
-    this.session = require("./sessionHandler.js").makeSessionHandler(stream, true);
+    this.session = require("./sessionHandler.js").makeSessionHandler(stream, false);
     this.session.toSender({"8":"FIX.4.2", 
         "56":"acceptor", 
         "49":"initiator", 

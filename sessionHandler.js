@@ -13,7 +13,7 @@ var SIZEOFTAG10 = 8;
 
 var buffer = "";
 
-function sessionHandler(stream, isInitiator){
+function sessionHandler(stream, isAcceptor){
 	
 
 	this.fixVersion = "";
@@ -320,7 +320,7 @@ function sessionHandler(stream, isInitiator){
 	                //create data store
 	                var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
 	                self.trafficFile = fs.openSync(fileName,'a+');
-	                fs.write(self.trafficFile, msg);
+	                fs.write(self.trafficFile, msg+'\n');
 	                //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
 	                //datastore.set("incoming-"+incomingSeqNo,msg);
 
@@ -331,7 +331,7 @@ function sessionHandler(stream, isInitiator){
 	                //this.emit("logon", targetCompID,stream);
 	                //ctx.sendNext({eventType:"logon", data:self.targetCompID});
 	                
-	                if(!isInitiator){
+	                if(isAcceptor){
 	                    self.toSender(fix);
 	                }
 	                sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
