@@ -1,9 +1,72 @@
 var sys = require('sys');
 var fs = require('fs');
+var net = require('net');
+var events = require('events');
 
-exports.makeSessionHandler = function(stream){
-    return new sessionHandler(stream);
+
+//-----------------------------Expose server API-----------------------------
+exports.createServer = function( func ){
+    return new Server(func);
 }
+
+function Server(func){
+     events.EventEmitter.call(this);
+     
+     this.session = null;
+     var self = this;
+     
+     this.stream = net.createServer(function(stream){
+        stream.on('connect', function(){ 
+            self.session = new sessionHandler(stream, true);
+            self.emit('connect'); 
+            self.session.on('data', function(data){ self.emit('data', data); });
+            func(self.session);
+        });
+        stream.on('data', function(data){ self.session.onData(data); });
+        
+        
+     });
+     
+     this.listen = function(port, host){ self.stream.listen(port, host); };
+}
+sys.inherits(Server, events.EventEmitter);
+
+//-----------------------------Expose client API-----------------------------
+exports.createConnection = function(fixVersion, senderCompID, targetCompID, port, host){
+    return new Client(fixVersion, senderCompID, targetCompID, port, host);
+}
+
+function Client(fixVersion, senderCompID, targetCompID, port, host){
+    this.fixVersion = fixVersion;
+    this.senderCompID = senderCompID;
+    this.targetCompID = targetCompID;
+    this.port = port;
+    this.host = host;
+    
+    this.session = null;
+    var self = this;
+    
+    events.EventEmitter.call(this);
+    
+    var stream = net.createConnection(port,host);
+    stream.on('connect', function(){
+        self.session = new sessionHandler(stream, false);
+        self.session.on('data', function(data){ self.emit('data',data); });
+        self.session.write({"8":fixVersion, 
+            "56":targetCompID, 
+            "49":senderCompID, 
+            "35":"A", 
+            "90":"0", 
+            "108":"30"});
+        self.emit('connect'); 
+    });
+    stream.on('data', function(data){ self.session.onData(data); });
+    
+    this.write = function(data){ self.session.write(data); };
+}
+sys.inherits(Client, events.EventEmitter);
+
+//-----------------------------Sesson Logic------------------------------
 
 //static vars
 var SOHCHAR = String.fromCharCode(1);
@@ -14,7 +77,9 @@ var SIZEOFTAG10 = 8;
 var buffer = "";
 
 function sessionHandler(stream, isAcceptor){
+    console.log("isAcceptor:"+isAcceptor);
     
+    events.EventEmitter.call(this);
 
     this.fixVersion = "";
     this.senderCompID = "";
@@ -37,7 +102,7 @@ function sessionHandler(stream, isAcceptor){
     this.buffer = "";
     self = this;
     
-    this.toSender = function(msg){
+    this.write = function(msg){
         
         if(self.fixVersion === "") self.fixVersion = msg["8"];
         if(self.senderCompID === "") self.senderCompID = msg["49"];
@@ -94,7 +159,7 @@ function sessionHandler(stream, isAcceptor){
     }
     
     this.onData = function(data){
-        sys.log("Raw message received: "+data);
+
         buffer += data;
         
         while(buffer.length > 0){
@@ -226,7 +291,7 @@ function sessionHandler(stream, isAcceptor){
                 //set flag saying "waiting for rewrite"
                 if(self.resendRequested !== true){
                     self.resendRequested = true;
-                    self.toSender({
+                    self.write({
                         "35":2,
                         "7":self.incomingSeqNum,
                         "8":0
@@ -271,7 +336,7 @@ function sessionHandler(stream, isAcceptor){
                 case "1":
                     //handle testrequest; break;
                     var testReqID = fix["112"];
-                    self.toSender({
+                    self.write({
                         "35": "0",
                         "112": testReqID
                     }); /*write heartbeat*/
@@ -285,7 +350,7 @@ function sessionHandler(stream, isAcceptor){
                         var resendmsg = msgs[k];
                         resendmsg["43"] = "Y";
                         resendmsg["122"] = resendmsg["SendingTime"];
-                        self.toSender(resendmsg);
+                        self.write(resendmsg);
                     }*/
                     //handle resendrequest; break;
                     break;
@@ -310,7 +375,7 @@ function sessionHandler(stream, isAcceptor){
                 //handle seqreset; break;
                 case "5":
                     //handle logout; break;
-                    self.toSender({
+                    self.write({
                         "35": "5"
                     }); /*write a logout ack right back*/
                     break;
@@ -341,21 +406,24 @@ function sessionHandler(stream, isAcceptor){
                         self.trafficFile = fs.openSync(fileName,'a+');
                         fs.write(self.trafficFile, 'in:' + msg+'\n');
                     
-                        self.toSender(fix);
+                        self.write(fix);
                     }
                     sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
+                    
+                    self.emit('logon', self.targetCompID);
                         
                     break;
                 default:
             }
             
             //====================================Step 10: Forward to application========================
-            //TODO
+            self.emit('data', fix);
 
         }
     }
 
 }
+sys.inherits(sessionHandler, events.EventEmitter);
 
 function convertToMap(msg){
     var fix = {};
