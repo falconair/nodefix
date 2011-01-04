@@ -14,34 +14,40 @@ var SIZEOFTAG10 = 8;
 var buffer = "";
 
 function sessionHandler(stream, isAcceptor){
-	
+    
 
-	this.fixVersion = "";
-	this.senderCompID = "";
-	this.targetCompID = "";
-	
-	this.outgoingSeqNum = 1;
-	this.incomingSeqNum = 1;
-	
-	this.heartbeatDuration = 30;
-	
-	this.isLoggedIn = false;
-	this.isResendRequested = false;
-	
-	this.timeOfLastOutgoing;
-	this.timeOfLastIncoming;
-	
-	this.trafficFile = null;
-	
-	
-	this.buffer = "";
-	self = this;
-	
-	this.toSender = function(msg){
-		
-		if(self.fixVersion === "") self.fixVersion = msg["8"];
-		if(self.senderCompID === "") self.senderCompID = msg["49"];
-		if(self.targetCompID === "") self.targetCompID = msg["56"];
+    this.fixVersion = "";
+    this.senderCompID = "";
+    this.targetCompID = "";
+    
+    this.outgoingSeqNum = 1;
+    this.incomingSeqNum = 1;
+    
+    this.heartbeatDuration = 30;
+    
+    this.isLoggedIn = false;
+    this.isResendRequested = false;
+    
+    this.timeOfLastOutgoing;
+    this.timeOfLastIncoming;
+    
+    this.trafficFile = null;
+    
+    
+    this.buffer = "";
+    self = this;
+    
+    this.toSender = function(msg){
+        
+        if(self.fixVersion === "") self.fixVersion = msg["8"];
+        if(self.senderCompID === "") self.senderCompID = msg["49"];
+        if(self.targetCompID === "") self.targetCompID = msg["56"];
+        
+        if(!isAcceptor){
+            var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
+            self.trafficFile = fs.openSync(fileName,'a+');
+            //fs.write(self.trafficFile, msg+'\n');
+        }
 
         delete msg["8"]; //fixversion
         delete msg["9"]; //bodylength
@@ -82,269 +88,272 @@ function sessionHandler(stream, isAcceptor){
         outmsg += "10=" + checksum(outmsg) + SOHCHAR;
         
         sys.log("FIX out: " + outmsg);
+        fs.write(self.trafficFile, 'out:' + outmsg+'\n');
         self.timeOfLastOutgoing = timestamp.getTime();
         stream.write(outmsg);
-	}
-	
-	this.onData = function(data){
-	    sys.log("Raw message received: "+data);
-	    buffer += data;
-	    
-	    while(buffer.length > 0){
-	        //====================================Step 1: Extract complete FIX message====================================
+    }
+    
+    this.onData = function(data){
+        sys.log("Raw message received: "+data);
+        buffer += data;
+        
+        while(buffer.length > 0){
+            //====================================Step 1: Extract complete FIX message====================================
 
-	        //If we don't have enough data to start extracting body length, wait for more data
-	        if (buffer.length <= ENDOFTAG8) {
-	            return;
-	        }
+            //If we don't have enough data to start extracting body length, wait for more data
+            if (buffer.length <= ENDOFTAG8) {
+                return;
+            }
 
-	        var _idxOfEndOfTag9Str = buffer.substring(ENDOFTAG8).indexOf(SOHCHAR);
-	        var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str, 10) + ENDOFTAG8;
+            var _idxOfEndOfTag9Str = buffer.substring(ENDOFTAG8).indexOf(SOHCHAR);
+            var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str, 10) + ENDOFTAG8;
 
-	        if (isNaN(idxOfEndOfTag9)) {
-	            sys.log("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: " 
-	                + buffer.toString());
-	            stream.end();
-	            return;
-	        }
-
-
-	        //If we don't have enough data to stop extracting body length AND we have received a lot of data
-	        //then perhaps there is a problem with how the message is formatted and the session should be killed
-	        if (idxOfEndOfTag9 < 0 && buffer.length > 100) {
-	            sys.log("[ERROR] Over 100 character received but body length still not extractable.  Message misformed: " 
-	                + databuffer.toString());
-	            stream.end();
-	            return;
-	        }
+            if (isNaN(idxOfEndOfTag9)) {
+                sys.log("[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: " 
+                    + buffer.toString());
+                stream.end();
+                return;
+            }
 
 
-	        //If we don't have enough data to stop extracting body length, wait for more data
-	        if (idxOfEndOfTag9 < 0) {
-	            return;
-	        }
-
-	        var _bodyLengthStr = buffer.substring(STARTOFTAG9VAL, idxOfEndOfTag9);
-	        var bodyLength = parseInt(_bodyLengthStr, 10);
-	        if (isNaN(bodyLength)) {
-	            sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed: bodyLength='" 
-	                + _bodyLengthStr + "', msg=" + buffer.toString());
-	            stream.end();
-	            return;
-	        }
-
-	        var msgLength = bodyLength + idxOfEndOfTag9 + SIZEOFTAG10 ;
-
-	        //If we don't have enough data for the whole message, wait for more data
-	        if (buffer.length < msgLength) {
-	            return;
-	        }
-
-	        //Message received!
-	        var msg = buffer.substring(0, msgLength);
-	        if (msgLength == buffer.length) {
-	            buffer = "";
-	        }
-	        else {
-	            var remainingBuffer = buffer.substring(msgLength);
-	            buffer = remainingBuffer;
-	        }
-
-	        sys.log("FIX in: " + msg);
-
-	        //====================================Step 2: Validate message====================================
-
-	        var calculatedChecksum = checksum(msg.substr(0, msg.length - 7));
-	        var extractedChecksum = msg.substr(msg.length - 4, 3);
-
-	        if (calculatedChecksum !== extractedChecksum) {
-	            sys.log("[WARNING] Discarding message because body length or checksum are wrong (expected checksum: " 
-	                + calculatedChecksum + ", received checksum: " + extractedChecksum + "): [" + msg + "]");
-	            return;
-	        }
-
-	        //====================================Step 3: Convert to map====================================
-
-	        var fix = convertToMap(msg);
-	        self.timeOfLastIncoming = new Date().getTime();
-
-	        //============================Step 4: Confirm all required fields are available====================================
-	        //TODO do this differently
-
-	        //============================Step 5: Confirm first message is logon and it has a heartbeat========================
-
-	        var msgType = fix["35"];
-	        
-	        if(!self.isLoggedIn && msgType != "A"){
-	            sys.log("[ERROR] Logon message expected, received message of type " + msgType + ", [" + msg + "]");
-	            stream.end();
-	            return;
-	        }
-
-	        if (msgType == "A" && fix["108"] === undefined) {
-	            sys.log("[ERROR] Logon does not have tag 108 (heartbeat) ");
-	            stream.end();
-	            return;
-	        }
-	        
-
-	        //====================================Step 6: Confirm incoming sequence numbers========================
-	        var _seqNum = parseInt(fix["34"], 10);
-	        if(fix["35"]==="4" /*seq reset*/ && (fix["123"] === undefined || fix["123"] === "N")){
-	            sys.log("Requence Reset request received: " + msg);
-	            var resetseqno = parseInt(fix["36"],10);
-	            if(resetseqno <= self.incomingSeqnum){
-	            //TODO: Reject, sequence number may only be incremented
-	            }
-	            else{
-	                self.incomingSeqNum = resetseqno;
-	            }
-	        }
-	        if (self.isLoggedIn && _seqNum == self.incomingSeqNum) {
-	            self.incomingSeqNum++;
-	            self.resendRequested = false;
-	        }
-	        else if (self.isLoggedIn && _seqNum < self.incomingSeqNum) {
-	            var posdup = fix["43"];
-	            if(posdup !== undefined && posdup === "Y"){
-	                sys.log("This posdup message's seqno has already been processed. Ignoring: "+msg);
-	            }
-	            sys.log("[ERROR] Incoming sequence number lower than expected. No way to recover:"+msg);
-	            stream.end();
-	            return;
-	        }
-	        else if (self.isLoggedIn && _seqNum > self.incomingSeqNum) {
-	            //Missing messages, write resend request and don't process any more messages
-	            //until the rewrite request is processed
-	            //set flag saying "waiting for rewrite"
-	            if(self.resendRequested !== true){
-	                self.resendRequested = true;
-	                self.toSender({
-	                    "35":2,
-	                    "7":self.incomingSeqNum,
-	                    "8":0
-	                });
-	            }
-	        }
-
-	        //====================================Step 7: Confirm compids and fix version are correct========================
-
-	        var incomingFixVersion = fix["8"];
-	        var incomingsenderCompID = fix["56"];
-	        var incomingTargetCompID = fix["49"];
-
-	        if (self.isLoggedIn && 
-	            (self.fixVersion != incomingFixVersion || 
-	                self.senderCompID != incomingsenderCompID || 
-	                self.targetCompID != incomingTargetCompID)){
-	                
-	                sys.log("[WARNING] Incoming fix version (" + 
-	                    incomingFixVersion + 
-	                    "), sender compid (" + 
-	                    incomingsenderCompID + 
-	                    ") or target compid (" + 
-	                    incomingTargetCompID + 
-	                    ") did not match expected values (" + 
-	                    self.fixVersion + "," + self.senderCompID + "," + self.targetCompID + ")"); /*write session reject*/
-	        }
-	        
-
-	        //====================================Step 8: Record incoming message (for crash resync)========================
-	        //TODO
-	        
-	        sys.log("Parsed FIX in: "+fix);
+            //If we don't have enough data to stop extracting body length AND we have received a lot of data
+            //then perhaps there is a problem with how the message is formatted and the session should be killed
+            if (idxOfEndOfTag9 < 0 && buffer.length > 100) {
+                sys.log("[ERROR] Over 100 character received but body length still not extractable.  Message misformed: " 
+                    + databuffer.toString());
+                stream.end();
+                return;
+            }
 
 
-	        //====================================Step 9: Handle session logic========================
+            //If we don't have enough data to stop extracting body length, wait for more data
+            if (idxOfEndOfTag9 < 0) {
+                return;
+            }
 
-	        switch (msgType) {
-	            case "0":
-	                //handle heartbeat; break;
-	                break;
-	            case "1":
-	                //handle testrequest; break;
-	                var testReqID = fix["112"];
-	                self.toSender({
-	                    "35": "0",
-	                    "112": testReqID
-	                }); /*write heartbeat*/
-	                break;
-	            case "2":
-	                var beginSeqNo = parseInt(fix["7"],10);
-	                var endSeqNo = parseInt(fix["16"],10);
-	                self.outgoingSeqNum = beginSeqNo;
-	                /*var outmsgs = getOutMessages(self.targetCompID, beginSeqNo, endSeqNo);
-	                for(var k in outmsgs){
-	                    var resendmsg = msgs[k];
-	                    resendmsg["43"] = "Y";
-	                    resendmsg["122"] = resendmsg["SendingTime"];
-	                    self.toSender(resendmsg);
-	                }*/
-	                //handle resendrequest; break;
-	                break;
-	            case "3":
-	                //handle sessionreject; break;
-	                break;
-	            case "4":
-	                //Gap fill mode
-	                if(fix["123"] === "Y"){
-	                    var newSeqNo = parseInt(fix["36"],10);
-	                        
-	                    if(newSeqNo <= incomingSeqNo){
-	                    //TODO: Reject, sequence number may only be incremented
-	                    }
-	                    else{
-	                        incomingSeqNo = newSeqNo;
-	                    }
-	                }
-	                break;
-	            //Reset mode
-	            //Reset mode is handled in step 6, when confirming incoming seqnums
-	            //handle seqreset; break;
-	            case "5":
-	                //handle logout; break;
-	                self.toSender({
-	                    "35": "5"
-	                }); /*write a logout ack right back*/
-	                break;
-	            case "A":
-	                //handle logon; break;
-	                //fixVersion = fix["8"];
-	                //senderCompID = fix["56"];
-	                //targetCompID = fix["49"];
+            var _bodyLengthStr = buffer.substring(STARTOFTAG9VAL, idxOfEndOfTag9);
+            var bodyLength = parseInt(_bodyLengthStr, 10);
+            if (isNaN(bodyLength)) {
+                sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed: bodyLength='" 
+                    + _bodyLengthStr + "', msg=" + buffer.toString());
+                stream.end();
+                return;
+            }
 
-	                if(self.fixVersion === "") self.fixVersion = fix["8"];
-            		if(self.senderCompID === "") self.senderCompID = fix["49"];
-            		if(self.targetCompID === "") self.targetCompID = fix["56"];
+            var msgLength = bodyLength + idxOfEndOfTag9 + SIZEOFTAG10 ;
 
-	                //create data store
-	                var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
-	                self.trafficFile = fs.openSync(fileName,'a+');
-	                fs.write(self.trafficFile, msg+'\n');
-	                //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
-	                //datastore.set("incoming-"+incomingSeqNo,msg);
+            //If we don't have enough data for the whole message, wait for more data
+            if (buffer.length < msgLength) {
+                return;
+            }
 
-	                self.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
-	                self.isLoggedIn = true;
-	                //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
-	                //heartbeatIntervalIDs.push(intervalID);
-	                //this.emit("logon", targetCompID,stream);
-	                //ctx.sendNext({eventType:"logon", data:self.targetCompID});
-	                
-	                if(isAcceptor){
-	                    self.toSender(fix);
-	                }
-	                sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
-	                    
-	                break;
-	            default:
-	        }
-	        
-	        //====================================Step 10: Forward to application========================
-	        //TODO
+            //Message received!
+            var msg = buffer.substring(0, msgLength);
+            if (msgLength == buffer.length) {
+                buffer = "";
+            }
+            else {
+                var remainingBuffer = buffer.substring(msgLength);
+                buffer = remainingBuffer;
+            }
 
-	    }
-	}
+            sys.log("FIX in: " + msg);
+
+            //====================================Step 2: Validate message====================================
+
+            var calculatedChecksum = checksum(msg.substr(0, msg.length - 7));
+            var extractedChecksum = msg.substr(msg.length - 4, 3);
+
+            if (calculatedChecksum !== extractedChecksum) {
+                sys.log("[WARNING] Discarding message because body length or checksum are wrong (expected checksum: " 
+                    + calculatedChecksum + ", received checksum: " + extractedChecksum + "): [" + msg + "]");
+                return;
+            }
+
+            //====================================Step 3: Convert to map====================================
+
+            var fix = convertToMap(msg);
+            self.timeOfLastIncoming = new Date().getTime();
+
+            //============================Step 4: Confirm all required fields are available====================================
+            //TODO do this differently
+
+            //============================Step 5: Confirm first message is logon and it has a heartbeat========================
+
+            var msgType = fix["35"];
+            
+            if(!self.isLoggedIn && msgType != "A"){
+                sys.log("[ERROR] Logon message expected, received message of type " + msgType + ", [" + msg + "]");
+                stream.end();
+                return;
+            }
+
+            if (msgType == "A" && fix["108"] === undefined) {
+                sys.log("[ERROR] Logon does not have tag 108 (heartbeat) ");
+                stream.end();
+                return;
+            }
+            
+
+            //====================================Step 6: Confirm incoming sequence numbers========================
+            var _seqNum = parseInt(fix["34"], 10);
+            if(fix["35"]==="4" /*seq reset*/ && (fix["123"] === undefined || fix["123"] === "N")){
+                sys.log("Requence Reset request received: " + msg);
+                var resetseqno = parseInt(fix["36"],10);
+                if(resetseqno <= self.incomingSeqnum){
+                //TODO: Reject, sequence number may only be incremented
+                }
+                else{
+                    self.incomingSeqNum = resetseqno;
+                }
+            }
+            if (self.isLoggedIn && _seqNum == self.incomingSeqNum) {
+                self.incomingSeqNum++;
+                self.resendRequested = false;
+            }
+            else if (self.isLoggedIn && _seqNum < self.incomingSeqNum) {
+                var posdup = fix["43"];
+                if(posdup !== undefined && posdup === "Y"){
+                    sys.log("This posdup message's seqno has already been processed. Ignoring: "+msg);
+                }
+                sys.log("[ERROR] Incoming sequence number lower than expected. No way to recover:"+msg);
+                stream.end();
+                return;
+            }
+            else if (self.isLoggedIn && _seqNum > self.incomingSeqNum) {
+                //Missing messages, write resend request and don't process any more messages
+                //until the rewrite request is processed
+                //set flag saying "waiting for rewrite"
+                if(self.resendRequested !== true){
+                    self.resendRequested = true;
+                    self.toSender({
+                        "35":2,
+                        "7":self.incomingSeqNum,
+                        "8":0
+                    });
+                }
+            }
+
+            //====================================Step 7: Confirm compids and fix version are correct========================
+
+            var incomingFixVersion = fix["8"];
+            var incomingsenderCompID = fix["56"];
+            var incomingTargetCompID = fix["49"];
+
+            if (self.isLoggedIn && 
+                (self.fixVersion != incomingFixVersion || 
+                    self.senderCompID != incomingsenderCompID || 
+                    self.targetCompID != incomingTargetCompID)){
+                    
+                    sys.log("[WARNING] Incoming fix version (" + 
+                        incomingFixVersion + 
+                        "), sender compid (" + 
+                        incomingsenderCompID + 
+                        ") or target compid (" + 
+                        incomingTargetCompID + 
+                        ") did not match expected values (" + 
+                        self.fixVersion + "," + self.senderCompID + "," + self.targetCompID + ")"); /*write session reject*/
+            }
+            
+
+            //====================================Step 8: Record incoming message (for crash resync)========================
+            if(fix["35"] !== "A"){//if logon, we'll write this msg in the logon handling section
+                fs.write(self.trafficFile, 'in:' + msg+'\n');
+            }
+
+
+            //====================================Step 9: Handle session logic========================
+
+            switch (msgType) {
+                case "0":
+                    //handle heartbeat; break;
+                    break;
+                case "1":
+                    //handle testrequest; break;
+                    var testReqID = fix["112"];
+                    self.toSender({
+                        "35": "0",
+                        "112": testReqID
+                    }); /*write heartbeat*/
+                    break;
+                case "2":
+                    var beginSeqNo = parseInt(fix["7"],10);
+                    var endSeqNo = parseInt(fix["16"],10);
+                    self.outgoingSeqNum = beginSeqNo;
+                    /*var outmsgs = getOutMessages(self.targetCompID, beginSeqNo, endSeqNo);
+                    for(var k in outmsgs){
+                        var resendmsg = msgs[k];
+                        resendmsg["43"] = "Y";
+                        resendmsg["122"] = resendmsg["SendingTime"];
+                        self.toSender(resendmsg);
+                    }*/
+                    //handle resendrequest; break;
+                    break;
+                case "3":
+                    //handle sessionreject; break;
+                    break;
+                case "4":
+                    //Gap fill mode
+                    if(fix["123"] === "Y"){
+                        var newSeqNo = parseInt(fix["36"],10);
+                            
+                        if(newSeqNo <= incomingSeqNo){
+                        //TODO: Reject, sequence number may only be incremented
+                        }
+                        else{
+                            incomingSeqNo = newSeqNo;
+                        }
+                    }
+                    break;
+                //Reset mode
+                //Reset mode is handled in step 6, when confirming incoming seqnums
+                //handle seqreset; break;
+                case "5":
+                    //handle logout; break;
+                    self.toSender({
+                        "35": "5"
+                    }); /*write a logout ack right back*/
+                    break;
+                case "A":
+                    //handle logon; break;
+                    //fixVersion = fix["8"];
+                    //senderCompID = fix["56"];
+                    //targetCompID = fix["49"];
+
+                    if(self.fixVersion === "") self.fixVersion = fix["8"];
+                    if(self.senderCompID === "") self.senderCompID = fix["49"];
+                    if(self.targetCompID === "") self.targetCompID = fix["56"];
+
+                    //create data store
+                    //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
+                    //datastore.set("incoming-"+incomingSeqNo,msg);
+
+                    self.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
+                    self.isLoggedIn = true;
+                    //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
+                    //heartbeatIntervalIDs.push(intervalID);
+                    //this.emit("logon", targetCompID,stream);
+                    //ctx.sendNext({eventType:"logon", data:self.targetCompID});
+                    
+                    console.log("isAcceptor:"+isAcceptor);
+                    if(isAcceptor){
+                        var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
+                        self.trafficFile = fs.openSync(fileName,'a+');
+                        fs.write(self.trafficFile, 'in:' + msg+'\n');
+                    
+                        self.toSender(fix);
+                    }
+                    sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
+                        
+                    break;
+                default:
+            }
+            
+            //====================================Step 10: Forward to application========================
+            //TODO
+
+        }
+    }
 
 }
 
@@ -353,9 +362,9 @@ function convertToMap(msg){
     var keyvals = msg.split(SOHCHAR);
     for (var kv in Object.keys(keyvals)) {
         var kvpair = keyvals[kv].split("=");
-	    fix[kvpair[0]] = kvpair[1];
-	}
-	return fix;
+        fix[kvpair[0]] = kvpair[1];
+    }
+    return fix;
 
 }
 
