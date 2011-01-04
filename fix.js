@@ -11,23 +11,26 @@ exports.createServer = function( func ){
 
 function Server(func){
      events.EventEmitter.call(this);
-     
-     this.session = null;
+
+     this.sessions = {};
      var self = this;
      
      this.stream = net.createServer(function(stream){
+        
+        var session = new FIX(stream, true);
         stream.on('connect', function(){ 
-            self.session = new FIX(stream, true);
             self.emit('connect'); 
-            self.session.on('data', function(data){ self.emit('data', data); });
-            func(self.session);
+            session.on('data', function(data){ self.emit('data', data); });
+            session.on('logon', function(id){ self.sessions[id] = session; });
+            func(session);
         });
-        stream.on('data', function(data){ self.session.onData(data); });
+        stream.on('data', function(data){ session.onData(data); });
         
         
      });
      
      this.listen = function(port, host){ self.stream.listen(port, host); };
+     this.write = function(targetCompID, data){ self.sessions[id].write(data); };
 }
 sys.inherits(Server, events.EventEmitter);
 
@@ -37,11 +40,6 @@ exports.createConnection = function(fixVersion, senderCompID, targetCompID, port
 }
 
 function Client(fixVersion, senderCompID, targetCompID, port, host){
-    this.fixVersion = fixVersion;
-    this.senderCompID = senderCompID;
-    this.targetCompID = targetCompID;
-    this.port = port;
-    this.host = host;
     
     this.session = null;
     var self = this;
