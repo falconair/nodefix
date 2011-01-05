@@ -120,8 +120,21 @@ function FIX(stream, isAcceptor){
         
         if(!isAcceptor){
             var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
+            
+            if(path.existsSync(fileName)){
+                sys.log("Reading existing data file "+fileName);
+                var rawFileContents = fs.readFileSync(fileName, "ASCII");
+                var fileContents = rawFileContents.split('\n');
+                        
+                for(var i = 0; i < fileContents.length; i++){
+                    var map = convertToMap(fileContents[i]);
+                    if(map["49"] === self.senderCompID){ self.outgoingSeqNum = parseInt(map["34"],10)+1; }
+                    if(map["56"] === self.senderCompID){ self.incomingSeqNum = parseInt(map["34"],10)+1; }
+                }
+            }
+                
             self.trafficFile = fs.openSync(fileName,'a+');
-            //fs.write(self.trafficFile, msg+'\n');
+
         }
 
         delete msg["8"]; //fixversion
@@ -140,7 +153,7 @@ function FIX(stream, isAcceptor){
         headermsgarr.push("52=" , getUTCTimeStamp(timestamp) , SOHCHAR);
         headermsgarr.push("49=" , (self.senderCompID) , SOHCHAR);
         headermsgarr.push("56=" , (self.targetCompID) , SOHCHAR);
-        headermsgarr.push("34=" , (self.outgoingSeqNum++) , SOHCHAR);
+        headermsgarr.push("34=" , (self.outgoingSeqNum) , SOHCHAR);
         
 
         for (var tag in msg) {
@@ -166,6 +179,7 @@ function FIX(stream, isAcceptor){
         fs.write(self.trafficFile, outmsg+'\n');
         self.timeOfLastOutgoing = timestamp.getTime();
         stream.write(outmsg);
+        self.outgoingSeqNum++;
     }
     
     //+++++++++++++++++++++++++++++++++++++++onData++++++++++++++++++++++++++++++++++++
@@ -297,7 +311,6 @@ function FIX(stream, isAcceptor){
                 
                         
                 self.trafficFile = fs.openSync(fileName,'a+');
-                fs.write(self.trafficFile, msg+'\n');
                 
             }
 
@@ -305,11 +318,11 @@ function FIX(stream, isAcceptor){
             //====================================Step 7: Confirm incoming sequence numbers========================
             var _seqNum = parseInt(fix["34"], 10);
             
-            if (self.isLoggedIn && _seqNum === self.incomingSeqNum) {
+            if (_seqNum === self.incomingSeqNum) {
                 self.incomingSeqNum++;
                 self.resendRequested = false;
             }
-            else if (self.isLoggedIn && _seqNum < self.incomingSeqNum) {
+            else if (_seqNum < self.incomingSeqNum) {
                 var posdup = fix["43"];
                 if(posdup !== undefined && posdup === "Y"){
                     sys.log("This posdup message's seqno has already been processed. Ignoring: "+msg);
@@ -318,12 +331,13 @@ function FIX(stream, isAcceptor){
                 stream.end();
                 return;
             }
-            else if (self.isLoggedIn && _seqNum > self.incomingSeqNum) {
+            else if (_seqNum > self.incomingSeqNum) {
                 //Missing messages, write resend request and don't process any more messages
                 //until the rewrite request is processed
                 //set flag saying "waiting for rewrite"
                 if(self.resendRequested !== true){
                     self.resendRequested = true;
+                    sys.log("[WARN] Incoming seqnum ("+_seqNum+") higher than expected ("+self.incomingSeqNum+"), sending resend request");
                     self.write({
                         "35":2,
                         "7":self.incomingSeqNum,
@@ -357,25 +371,25 @@ function FIX(stream, isAcceptor){
 
             //====================================Step 9: Ack Logon========================
 
-            if(isAcceptor){
-                //ack logon
-                self.write(fix);
-            }
+            if(!self.resendRequested){
+                if(isAcceptor){
+                    //ack logon
+                    self.write(fix);
+                }
             
-            self.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
-            self.isLoggedIn = true;
-            //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
-            //heartbeatIntervalIDs.push(intervalID);
+                self.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
+                self.isLoggedIn = true;
+                //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
+                //heartbeatIntervalIDs.push(intervalID);
 
-            sys.log(self.senderCompID + " logged on from " + stream.remoteAddress + 
-                " with seqnums " + self.incomingSeqNum + "," + self.outgoingSeqNum);
+                sys.log(self.targetCompID + " logged on from " + stream.remoteAddress + 
+                    " with seqnums " + self.incomingSeqNum + "," + self.outgoingSeqNum);
                     
-            self.emit('logon', self.targetCompID);
+                self.emit('logon', self.targetCompID);
+            }
 
             //====================================Step 10: Record incoming message (for crash resync)========================
-            if(fix["35"] !== "A"){//if logon, we'll write this msg in the logon handling section
-                fs.write(self.trafficFile, msg+'\n');
-            }
+            fs.write(self.trafficFile, msg+'\n');
 
 
             //====================================Step 11: Handle session logic========================
