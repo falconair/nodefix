@@ -2,6 +2,7 @@ var sys = require('sys');
 var fs = require('fs');
 var net = require('net');
 var events = require('events');
+var path = require('path');
 
 
 //-----------------------------Expose server API-----------------------------
@@ -99,12 +100,23 @@ function FIX(stream, isAcceptor){
     
     this.buffer = "";
     self = this;
+
+    //+++++++++++++++++++++++++++++++++++++++write++++++++++++++++++++++++++++++++++++    
+    this.write = function(msgraw){
     
-    this.write = function(msg){
+        //defensive copy
+        var msg = {};
+        for(var tag in msgraw){
+            if(msgraw.hasOwnProperty(tag)) msg[tag] = msgraw[tag];
+        }
         
-        if(self.fixVersion === "") self.fixVersion = msg["8"];
-        if(self.senderCompID === "") self.senderCompID = msg["49"];
-        if(self.targetCompID === "") self.targetCompID = msg["56"];
+
+        if(!isAcceptor && (self.fixVersion === "" || self.senderCompID === "" || self.targetCompID === "")){
+            self.fixVersion = msg["8"];
+            self.senderCompID = msg["49"];
+            self.targetCompID = msg["56"];
+            sys.log("Setting compd ids in 'write' ("+self.fixVersion+","+self.senderCompID+","+self.targetCompID+")");
+        }
         
         if(!isAcceptor){
             var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
@@ -126,8 +138,8 @@ function FIX(stream, isAcceptor){
         var trailermsgarr = [];
         
         headermsgarr.push("52=" , getUTCTimeStamp(timestamp) , SOHCHAR);
-        headermsgarr.push("56=" , (self.senderCompID) , SOHCHAR);
-        headermsgarr.push("49=" , (self.targetCompID) , SOHCHAR);
+        headermsgarr.push("49=" , (self.senderCompID) , SOHCHAR);
+        headermsgarr.push("56=" , (self.targetCompID) , SOHCHAR);
         headermsgarr.push("34=" , (self.outgoingSeqNum++) , SOHCHAR);
         
 
@@ -151,11 +163,12 @@ function FIX(stream, isAcceptor){
         outmsg += "10=" + checksum(outmsg) + SOHCHAR;
         
         sys.log("FIX out: " + outmsg);
-        fs.write(self.trafficFile, 'out:' + outmsg+'\n');
+        fs.write(self.trafficFile, outmsg+'\n');
         self.timeOfLastOutgoing = timestamp.getTime();
         stream.write(outmsg);
     }
     
+    //+++++++++++++++++++++++++++++++++++++++onData++++++++++++++++++++++++++++++++++++
     this.onData = function(data){
 
         buffer += data;
@@ -257,20 +270,42 @@ function FIX(stream, isAcceptor){
                 return;
             }
             
+            //============================Step 6: Process Logon========================
 
-            //====================================Step 6: Confirm incoming sequence numbers========================
-            var _seqNum = parseInt(fix["34"], 10);
-            if(fix["35"]==="4" /*seq reset*/ && (fix["123"] === undefined || fix["123"] === "N")){
-                sys.log("Requence Reset request received: " + msg);
-                var resetseqno = parseInt(fix["36"],10);
-                if(resetseqno <= self.incomingSeqnum){
-                //TODO: Reject, sequence number may only be incremented
+                    
+            if(isAcceptor){
+                self.fixVersion = fix["8"];
+                self.senderCompID = fix["56"];
+                self.targetCompID = fix["49"];
+                
+                sys.log("Setting compd ids in 'onData' ("+self.fixVersion+","+self.senderCompID+","+self.targetCompID+")");
+
+                //create data store
+                var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
+                  
+                if(path.existsSync(fileName)){
+                    sys.log("Reading existing data file "+fileName);
+                    var rawFileContents = fs.readFileSync(fileName, "ASCII");
+                    var fileContents = rawFileContents.split('\n');
+                        
+                    for(var i = 0; i < fileContents.length; i++){
+                        var map = convertToMap(fileContents[i]);
+                        if(map["49"] === self.senderCompID){ self.outgoingSeqNum = parseInt(map["34"],10)+1; }
+                        if(map["56"] === self.senderCompID){ self.incomingSeqNum = parseInt(map["34"],10)+1; }
+                    }
                 }
-                else{
-                    self.incomingSeqNum = resetseqno;
-                }
+                
+                        
+                self.trafficFile = fs.openSync(fileName,'a+');
+                fs.write(self.trafficFile, msg+'\n');
+                
             }
-            if (self.isLoggedIn && _seqNum == self.incomingSeqNum) {
+
+
+            //====================================Step 7: Confirm incoming sequence numbers========================
+            var _seqNum = parseInt(fix["34"], 10);
+            
+            if (self.isLoggedIn && _seqNum === self.incomingSeqNum) {
                 self.incomingSeqNum++;
                 self.resendRequested = false;
             }
@@ -279,7 +314,7 @@ function FIX(stream, isAcceptor){
                 if(posdup !== undefined && posdup === "Y"){
                     sys.log("This posdup message's seqno has already been processed. Ignoring: "+msg);
                 }
-                sys.log("[ERROR] Incoming sequence number lower than expected. No way to recover:"+msg);
+                sys.log("[ERROR] Incoming sequence ("+_seqNum+") number lower than expected ("+self.incomingSeqNum+"). No way to recover:"+msg);
                 stream.end();
                 return;
             }
@@ -297,16 +332,17 @@ function FIX(stream, isAcceptor){
                 }
             }
 
-            //====================================Step 7: Confirm compids and fix version are correct========================
+            //====================================Step 8: Confirm compids and fix version are correct========================
 
             var incomingFixVersion = fix["8"];
-            var incomingsenderCompID = fix["56"];
-            var incomingTargetCompID = fix["49"];
+            var incomingsenderCompID = fix["49"];
+            var incomingTargetCompID = fix["56"];
+            
 
             if (self.isLoggedIn && 
                 (self.fixVersion != incomingFixVersion || 
-                    self.senderCompID != incomingsenderCompID || 
-                    self.targetCompID != incomingTargetCompID)){
+                    self.senderCompID != incomingTargetCompID || 
+                    self.targetCompID != incomingsenderCompID)){
                     
                     sys.log("[WARNING] Incoming fix version (" + 
                         incomingFixVersion + 
@@ -319,13 +355,30 @@ function FIX(stream, isAcceptor){
             }
             
 
-            //====================================Step 8: Record incoming message (for crash resync)========================
+            //====================================Step 9: Ack Logon========================
+
+            if(isAcceptor){
+                //ack logon
+                self.write(fix);
+            }
+            
+            self.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
+            self.isLoggedIn = true;
+            //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
+            //heartbeatIntervalIDs.push(intervalID);
+
+            sys.log(self.senderCompID + " logged on from " + stream.remoteAddress + 
+                " with seqnums " + self.incomingSeqNum + "," + self.outgoingSeqNum);
+                    
+            self.emit('logon', self.targetCompID);
+
+            //====================================Step 10: Record incoming message (for crash resync)========================
             if(fix["35"] !== "A"){//if logon, we'll write this msg in the logon handling section
-                fs.write(self.trafficFile, 'in:' + msg+'\n');
+                fs.write(self.trafficFile, msg+'\n');
             }
 
 
-            //====================================Step 9: Handle session logic========================
+            //====================================Step 11: Handle session logic========================
 
             switch (msgType) {
                 case "0":
@@ -356,6 +409,16 @@ function FIX(stream, isAcceptor){
                     //handle sessionreject; break;
                     break;
                 case "4":
+                    if(fix["123"] === undefined || fix["123"] === "N"){
+                        sys.log("Requence Reset request received: " + msg);
+                        var resetseqno = parseInt(fix["36"],10);
+                        if(resetseqno <= self.incomingSeqnum){
+                            //TODO: Reject, sequence number may only be incremented
+                        }
+                        else{
+                            self.incomingSeqNum = resetseqno;
+                        }
+                    }
                     //Gap fill mode
                     if(fix["123"] === "Y"){
                         var newSeqNo = parseInt(fix["36"],10);
@@ -369,7 +432,6 @@ function FIX(stream, isAcceptor){
                     }
                     break;
                 //Reset mode
-                //Reset mode is handled in step 6, when confirming incoming seqnums
                 //handle seqreset; break;
                 case "5":
                     //handle logout; break;
@@ -379,42 +441,14 @@ function FIX(stream, isAcceptor){
                     break;
                 case "A":
                     //handle logon; break;
-                    //fixVersion = fix["8"];
-                    //senderCompID = fix["56"];
-                    //targetCompID = fix["49"];
-
-                    if(self.fixVersion === "") self.fixVersion = fix["8"];
-                    if(self.senderCompID === "") self.senderCompID = fix["49"];
-                    if(self.targetCompID === "") self.targetCompID = fix["56"];
-
-                    //create data store
-                    //datastore = dirtyStore('./data/' + senderCompID + '-' + targetCompID + '-' + fixVersion + '.dat');
-                    //datastore.set("incoming-"+incomingSeqNo,msg);
-
-                    self.heartbeatDuration = parseInt(fix["108"], 10) * 1000;
-                    self.isLoggedIn = true;
-                    //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
-                    //heartbeatIntervalIDs.push(intervalID);
-                    //this.emit("logon", targetCompID,stream);
-                    //ctx.sendNext({eventType:"logon", data:self.targetCompID});
+                    //TODO Logon should be handleed before seqnum check!
                     
-                    console.log("isAcceptor:"+isAcceptor);
-                    if(isAcceptor){
-                        var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
-                        self.trafficFile = fs.openSync(fileName,'a+');
-                        fs.write(self.trafficFile, 'in:' + msg+'\n');
-                    
-                        self.write(fix);
-                    }
-                    sys.log(fix["49"] + " logged on from " + stream.remoteAddress);
-                    
-                    self.emit('logon', self.targetCompID);
                         
                     break;
                 default:
             }
             
-            //====================================Step 10: Forward to application========================
+            //====================================Step 12: Forward to application========================
             self.emit('data', fix);
 
         }
