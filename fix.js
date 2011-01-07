@@ -22,6 +22,8 @@ function Server(func){
         stream.on('connect', function(){ 
             self.emit('connect'); 
             session.on('data', function(data){ self.emit('data', data); });
+            session.on('error', function(exception){ self.emit('error', exception); });
+            session.on('end', function(){ self.emit('end'); });
             session.on('logon', function(id){ self.sessions[id] = session; });
             func(session);
         });
@@ -60,6 +62,8 @@ function Client(fixVersion, senderCompID, targetCompID, port, host){
         self.emit('connect'); 
     });
     stream.on('data', function(data){ self.session.onData(data); });
+    stream.on('end', function(){ self.emit('end'); });
+    stream.on('error', function(exception){ self.emit('error', exception); });
     
     this.write = function(data){ self.session.write(data); };
 }
