@@ -7,7 +7,8 @@ var path = require('path');
 
 //-----------------------------Expose server API-----------------------------
 exports.createServer = function( func ){
-    return new Server(func);
+    var server = new Server(func);
+    return server;
 }
 
 function Server(func){
@@ -24,7 +25,7 @@ function Server(func){
             session.on('data', function(data){ self.emit('data', data); });
             session.on('error', function(exception){ self.emit('error', exception); });
             session.on('end', function(){ self.emit('end'); });
-            session.on('logon', function(id){ self.sessions[id] = session; });
+            session.on('logon', function(sender,target){ self.sessions[sender+"-"+target] = session; self.emit('logon',sender,target); });
             func(session);
         });
         stream.on('data', function(data){ session.onData(data); });
@@ -389,7 +390,7 @@ function FIX(stream, isAcceptor){
                 sys.log(self.targetCompID + " logged on from " + stream.remoteAddress + 
                     " with seqnums " + self.incomingSeqNum + "," + self.outgoingSeqNum);
                     
-                self.emit('logon', self.targetCompID);
+                self.emit('logon', self.senderCompID, self.targetCompID);
             }
 
             //====================================Step 10: Record incoming message (for crash resync)========================
