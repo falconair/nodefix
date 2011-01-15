@@ -23,9 +23,14 @@ function Server(func){
         stream.on('connect', function(){ 
             self.emit('connect'); 
             session.on('data', function(data){ self.emit('data', data); });
+            session.on('incomingdata', function(data){ self.emit('incomingdata', data); });
+            session.on('outgoingdata', function(data){ self.emit('outgoingdata', data); });
             session.on('error', function(exception){ self.emit('error', exception); });
             session.on('end', function(){ self.emit('end'); });
-            session.on('logon', function(sender,target){ self.sessions[sender+"-"+target] = session; self.emit('logon',sender,target); });
+            session.on('logon', function(sender,target){ 
+                self.sessions[sender+"-"+target] = session; 
+                self.emit('logon',sender,target); 
+            });
             func(session);
         });
         stream.on('data', function(data){ session.onData(data); });
@@ -55,6 +60,8 @@ function Client(fixVersion, senderCompID, targetCompID, port, host){
         self.emit('connect'); 
         self.session = new FIX(stream, false);
         self.session.on('data', function(data){ self.emit('data',data); });
+        self.session.on('incomingmsg', function(data){ self.emit('incomingmsg',data); });
+        self.session.on('incomingmsg', function(data){ self.emit('incomingmsg',data); });
         self.session.write({"8":fixVersion, 
             "56":targetCompID, 
             "49":senderCompID, 
@@ -81,7 +88,6 @@ var SIZEOFTAG10 = 8;
 var buffer = "";
 
 function FIX(stream, isAcceptor){
-    console.log("isAcceptor:"+isAcceptor);
     
     events.EventEmitter.call(this);
 
@@ -169,10 +175,10 @@ function FIX(stream, isAcceptor){
         msg["34"] = self.outgoingSeqNum; //seqnum
 
         
-        headermsgarr.push(msg["52"] , SOHCHAR);
-        headermsgarr.push(msg["49"] , SOHCHAR);
-        headermsgarr.push(msg["56"] , SOHCHAR);
-        headermsgarr.push(msg["34"] , SOHCHAR);
+        headermsgarr.push('52=' + msg["52"] , SOHCHAR);
+        headermsgarr.push('49=' + msg["49"] , SOHCHAR);
+        headermsgarr.push('56=' + msg["56"] , SOHCHAR);
+        headermsgarr.push('34=' + msg["34"] , SOHCHAR);
         
 
         for (var tag in msg) {
@@ -192,7 +198,7 @@ function FIX(stream, isAcceptor){
         var bodymsg = bodymsgarr.join("");
         
         var outmsgarr = [];
-        //outmsgarr.push( "8=" , self.fixVersion , SOHCHAR);
+        outmsgarr.push( "8=" , msg["8"] , SOHCHAR);
         outmsgarr.push( "9=" , (headermsg.length + bodymsg.length + trailermsg.length) , SOHCHAR);
         outmsgarr.push( headermsg);
         outmsgarr.push( bodymsg);
