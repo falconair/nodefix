@@ -52,6 +52,7 @@ function Client(fixVersion, senderCompID, targetCompID, port, host){
     
     var stream = net.createConnection(port,host);
     stream.on('connect', function(){
+        self.emit('connect'); 
         self.session = new FIX(stream, false);
         self.session.on('data', function(data){ self.emit('data',data); });
         self.session.write({"8":fixVersion, 
@@ -60,7 +61,6 @@ function Client(fixVersion, senderCompID, targetCompID, port, host){
             "35":"A", 
             "90":"0", 
             "108":"30"});
-        self.emit('connect'); 
     });
     stream.on('data', function(data){ self.session.onData(data); });
     stream.on('end', function(){ self.emit('end'); });
@@ -142,6 +142,7 @@ function FIX(stream, isAcceptor){
 
         }
 
+        /*
         delete msg["8"]; //fixversion
         delete msg["9"]; //bodylength
         delete msg["10"]; //checksum
@@ -149,20 +150,41 @@ function FIX(stream, isAcceptor){
         delete msg["49"]; //sendercompid
         delete msg["56"]; //targetcompid
         delete msg["34"]; //seqnum
+        */
+        delete msg["9"]; //bodylength
+        delete msg["10"]; //checksum
+        
         
         var timestamp = new Date();
         var headermsgarr = [];
         var bodymsgarr = [];
         var trailermsgarr = [];
+
+        msg["8"] = self.fixVersion; //fixversion
+        //msg["9"]; //bodylength
+        //msg["10"]; //checksum
+        msg["52"] = getUTCTimeStamp(timestamp); //timestamp
+        msg["49"] = self.senderCompID; //sendercompid
+        msg["56"] = self.targetCompID; //targetcompid
+        msg["34"] = self.outgoingSeqNum; //seqnum
+
         
-        headermsgarr.push("52=" , getUTCTimeStamp(timestamp) , SOHCHAR);
-        headermsgarr.push("49=" , (self.senderCompID) , SOHCHAR);
-        headermsgarr.push("56=" , (self.targetCompID) , SOHCHAR);
-        headermsgarr.push("34=" , (self.outgoingSeqNum) , SOHCHAR);
+        headermsgarr.push(msg["52"] , SOHCHAR);
+        headermsgarr.push(msg["49"] , SOHCHAR);
+        headermsgarr.push(msg["56"] , SOHCHAR);
+        headermsgarr.push(msg["34"] , SOHCHAR);
         
 
         for (var tag in msg) {
-            if(msg.hasOwnProperty(tag)) bodymsgarr.push( tag , "=" , msg[tag] , SOHCHAR);
+            if(msg.hasOwnProperty(tag) 
+                && tag !== 8 
+                && tag !== 9 
+                && tag !== 10 
+                && tag !== 52 
+                && tag !== 49 
+                && tag !== 56 
+                && tag !== 34 
+                ) bodymsgarr.push( tag , "=" , msg[tag] , SOHCHAR);
         }
         
         var headermsg = headermsgarr.join("");
@@ -170,7 +192,7 @@ function FIX(stream, isAcceptor){
         var bodymsg = bodymsgarr.join("");
         
         var outmsgarr = [];
-        outmsgarr.push( "8=" , self.fixVersion , SOHCHAR);
+        //outmsgarr.push( "8=" , self.fixVersion , SOHCHAR);
         outmsgarr.push( "9=" , (headermsg.length + bodymsg.length + trailermsg.length) , SOHCHAR);
         outmsgarr.push( headermsg);
         outmsgarr.push( bodymsg);
@@ -183,6 +205,7 @@ function FIX(stream, isAcceptor){
         sys.log("FIX out: " + outmsg);
         fs.write(self.trafficFile, outmsg+'\n');
         self.timeOfLastOutgoing = timestamp.getTime();
+        self.emit('outgoingmsg',msg);
         stream.write(outmsg);
         self.outgoingSeqNum++;
     }
@@ -268,6 +291,7 @@ function FIX(stream, isAcceptor){
             //====================================Step 3: Convert to map====================================
 
             var fix = convertToMap(msg);
+            self.emit('incomingmsg',fix);
             self.timeOfLastIncoming = new Date().getTime();
 
             //============================Step 4: Confirm all required fields are available====================================
