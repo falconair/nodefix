@@ -86,6 +86,7 @@ function Client(logonmsg, port, host) {
     stream.on('error', function(exception) { self.emit('error', exception); });
 
     this.write = function(data) { self.session.write(data); };
+    this.logoff = function(logoffReaso){ self.session.write({35:5, 58:logoffReason}) };
 }
 sys.inherits(Client, events.EventEmitter);
 
