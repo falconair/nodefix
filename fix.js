@@ -111,6 +111,8 @@ function FIX(stream, isAcceptor) {
     this.incomingSeqNum = 1;
 
     this.heartbeatDuration = 30;
+    this.heartbeatIntervalID;
+    this.testRequestID = 1;
 
     this.isLoggedIn = false;
     this.isResendRequested = false;
@@ -426,7 +428,7 @@ function FIX(stream, isAcceptor) {
 
                 self.heartbeatDuration = parseInt(fix['108'], 10) * 1000;
                 self.isLoggedIn = true;
-                //heartbeatIntervalID = setInterval(heartbeatCallback, self.heartbeatDuration);
+                self.heartbeatIntervalID = setInterval(self.heartbeatCallback, self.heartbeatDuration);
                 //heartbeatIntervalIDs.push(intervalID);
 
                 sys.log(self.targetCompID + ' logged on from ' + stream.remoteAddress +
@@ -499,7 +501,12 @@ function FIX(stream, isAcceptor) {
                     self.write({
                         '35': '5'
                     });
+                    clearInterval(self.heartbeatIntervalID);
                     self.emit('logoff', self.senderCompID, self.targetCompID);
+                    if(!isAcceptor){
+                        stream.end();
+                    }
+
                     /*write a logout ack right back*/
                     break;
                 case 'A':
@@ -514,6 +521,18 @@ function FIX(stream, isAcceptor) {
             //====================================Step 12: Forward to application========================
             self.emit('data', fix);
 
+        }
+    }
+    
+    this.heartbeatCallback = function(){
+        var currentTime = new Date().getTime();
+        
+        if((currentTime - self.timeOfLastOutgoing) >  self.heartbeatDuration){
+            self.write({'35':'0'});
+        }
+        
+        if((currentTime - self.timeOfLastIncoming) > self.heartbeatDuration * 1.5){
+            self.write({'35':'1', '112':self.testRequestID++});//112 = testrequestid
         }
     }
 
