@@ -15,9 +15,13 @@ function Server(func){
      events.EventEmitter.call(this);
 
      this.sessions = {};
+     
      var self = this;
      
      this.stream = net.createServer(function(stream){
+     
+        this.senderCompID = null;
+        this.targetCompID = null;
         
         var session = new FIX(stream, true);
         stream.on('connect', function(){ 
@@ -26,13 +30,20 @@ function Server(func){
             session.on('incomingdata', function(data){ self.emit('incomingdata', data); });
             session.on('outgoingdata', function(data){ self.emit('outgoingdata', data); });
             session.on('error', function(exception){ self.emit('error', exception); });
-            session.on('end', function(){ self.emit('end'); });
+
             session.on('logon', function(sender,target){ 
                 self.sessions[sender+"-"+target] = session; 
+                self.senderCompID = sender;
+                self.targetCompID = target;
                 self.emit('logon',sender,target); 
+            });
+            session.on('logoff', function(sender,target){ 
+                delete self.sessions[sender+"-"+target];  
+                self.emit('logoff',sender,target); 
             });
             func(session);
         });
+        stream.on('end', function(){ self.emit('end', this.senderCompID, this.targetCompID); });//TODO Client doesn't see this!
         stream.on('data', function(data){ session.onData(data); });
         
         
@@ -62,6 +73,8 @@ function Client(fixVersion, senderCompID, targetCompID, port, host){
         self.session.on('data', function(data){ self.emit('data',data); });
         self.session.on('incomingmsg', function(data){ self.emit('incomingmsg',data); });
         self.session.on('incomingmsg', function(data){ self.emit('incomingmsg',data); });
+        self.session.on('logon', function(sender,target){ self.emit('logon',sender,target); });
+        self.session.on('logoff', function(sender,target){ self.emit('logoff',sender,target); });
         self.session.write({"8":fixVersion, 
             "56":targetCompID, 
             "49":senderCompID, 
@@ -486,7 +499,9 @@ function FIX(stream, isAcceptor){
                     //handle logout; break;
                     self.write({
                         "35": "5"
-                    }); /*write a logout ack right back*/
+                    }); 
+                    self.emit('logoff', self.senderCompID, self.targetCompID);
+                    /*write a logout ack right back*/
                     break;
                 case "A":
                     //handle logon; break;
