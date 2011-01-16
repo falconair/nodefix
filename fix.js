@@ -50,7 +50,10 @@ function Server(func) {
      });
 
      this.listen = function(port, host) { self.stream.listen(port, host); };
-     this.write = function(targetCompID, data) { self.sessions[id].write(data); };
+     this.write = function(targetCompID, data) { self.sessions[targetCompID].write(data); };
+     this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({35:5, 58:logoffReason}); };
+     this.kill = function(targetCompID, reason){ self.sessions[targetCompID].end(); };
+
 }
 sys.inherits(Server, events.EventEmitter);
 
@@ -86,7 +89,7 @@ function Client(logonmsg, port, host) {
     stream.on('error', function(exception) { self.emit('error', exception); });
 
     this.write = function(data) { self.session.write(data); };
-    this.logoff = function(logoffReaso){ self.session.write({35:5, 58:logoffReason}) };
+    this.logoff = function(logoffReason){ self.session.write({35:5, 58:logoffReason}) };
 }
 sys.inherits(Client, events.EventEmitter);
 
