@@ -56,10 +56,14 @@ sys.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
 exports.createConnection = function(fixVersion, senderCompID, targetCompID, port, host) {
-    return new Client(fixVersion, senderCompID, targetCompID, port, host);
+    return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '30'}, port, host);
 };
 
-function Client(fixVersion, senderCompID, targetCompID, port, host) {
+exports.createConnectionWithLogonMsg = function(logonmsg, port, host) {
+    return new Client(logonmsg, port, host);
+};
+
+function Client(logonmsg, port, host) {
 
     this.session = null;
     var self = this;
@@ -75,12 +79,7 @@ function Client(fixVersion, senderCompID, targetCompID, port, host) {
         self.session.on('incomingmsg', function(data) { self.emit('incomingmsg', data); });
         self.session.on('logon', function(sender,target) { self.emit('logon', sender, target); });
         self.session.on('logoff', function(sender,target) { self.emit('logoff', sender, target); });
-        self.session.write({'8': fixVersion,
-            '56': targetCompID,
-            '49': senderCompID,
-            '35': 'A',
-            '90': '0',
-            '108': '30'});
+        self.session.write(logonmsg);
     });
     stream.on('data', function(data) { self.session.onData(data); });
     stream.on('end', function() { self.emit('end'); });
