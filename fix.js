@@ -79,13 +79,13 @@ function Client(logonmsg, port, host) {
         self.session = new FIX(stream, false);
         self.session.on('data', function(data) { self.emit('data', data); });
         self.session.on('incomingmsg', function(data) { self.emit('incomingmsg', data); });
-        self.session.on('incomingmsg', function(data) { self.emit('incomingmsg', data); });
+        self.session.on('outgoingmsg', function(data) { self.emit('outgoingmsg', data); });
         self.session.on('logon', function(sender,target) { self.emit('logon', sender, target); });
         self.session.on('logoff', function(sender,target) { self.emit('logoff', sender, target); });
         self.session.write(logonmsg);
     });
     stream.on('data', function(data) { self.session.onData(data); });
-    stream.on('end', function() { self.emit('end'); });
+    stream.on('end', function() { self.emit('end');  });
     stream.on('error', function(exception) { self.emit('error', exception); });
 
     this.write = function(data) { self.session.write(data); };
@@ -148,11 +148,11 @@ function FIX(stream, isAcceptor) {
         }
 
         //If initiator, data-store needs to be loaded at this spot
-        if (!isAcceptor) {
+        if (!isAcceptor && self.trafficFile === null) {
             var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
 
             if (path.existsSync(fileName)) {
-                sys.log('Reading existing data file '+ fileName);
+                sys.log('Writer Reading existing data file '+ fileName);
                 var rawFileContents = fs.readFileSync(fileName, 'ASCII');
                 var fileContents = rawFileContents.split('\n');
 
@@ -315,7 +315,7 @@ function FIX(stream, isAcceptor) {
 
             var msgType = fix['35'];
 
-            if (!self.isLoggedIn && msgType != 'A') {
+            if (!self.isLoggedIn && msgType !== 'A') {
                 sys.log('[ERROR] Logon message expected, received message of type ' + msgType + ', [' + msg + ']');
                 stream.end();
                 return;
@@ -330,7 +330,7 @@ function FIX(stream, isAcceptor) {
             //============================Step 6: Process Logon========================
 
 
-            if (isAcceptor) {
+            if (!self.isLoggedIn && msgType === 'A' && isAcceptor) {
                 self.fixVersion = fix['8'];
                 self.senderCompID = fix['56'];
                 self.targetCompID = fix['49'];
@@ -341,7 +341,7 @@ function FIX(stream, isAcceptor) {
                 var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
 
                 if (path.existsSync(fileName)) {
-                    sys.log('Reading existing data file '+ fileName);
+                    sys.log('Reader Reading existing data file '+ fileName);
                     var rawFileContents = fs.readFileSync(fileName, 'ASCII');
                     var fileContents = rawFileContents.split('\n');
 
@@ -414,7 +414,7 @@ function FIX(stream, isAcceptor) {
 
             //====================================Step 9: Ack Logon========================
 
-            if (!self.resendRequested) {
+            if (!self.isLoggedIn && msgType === 'A' /*&& !self.resendRequested*/) {
                 if (isAcceptor) {
                     //ack logon
                     self.write(fix);
@@ -527,6 +527,10 @@ function FIX(stream, isAcceptor) {
         
         if((currentTime - self.timeOfLastIncoming) > self.heartbeatDuration * 1.5){
             self.write({'35':'1', '112':self.testRequestID++});//112 = testrequestid
+            sys.log('Sending test request because last msg recvd at '+self.timeOfLastIncoming
+                +', current time ' + currentTime
+                +', diff ' + (currentTime - self.timeOfLastIncoming)
+                +', heartbeat '+self.heartbeatDuration);
         }
     }
 
