@@ -147,6 +147,7 @@ function FIX(stream, isAcceptor) {
             sys.log("Setting compd ids in 'write' (" + self.fixVersion + ','+ self.senderCompID + ','+ self.targetCompID + ')');
         }
 
+        //If initiator, data-store needs to be loaded at this spot
         if (!isAcceptor) {
             var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
 
@@ -166,15 +167,6 @@ function FIX(stream, isAcceptor) {
 
         }
 
-        /*
-        delete msg["8"]; //fixversion
-        delete msg["9"]; //bodylength
-        delete msg["10"]; //checksum
-        delete msg["52"]; //timestamp
-        delete msg["49"]; //sendercompid
-        delete msg["56"]; //targetcompid
-        delete msg["34"]; //seqnum
-        */
         delete msg['9']; //bodylength
         delete msg['10']; //checksum
 
@@ -185,8 +177,6 @@ function FIX(stream, isAcceptor) {
         var trailermsgarr = [];
 
         msg['8'] = self.fixVersion; //fixversion
-        //msg["9"]; //bodylength
-        //msg["10"]; //checksum
         msg['52'] = getUTCTimeStamp(timestamp); //timestamp
         msg['49'] = self.senderCompID; //sendercompid
         msg['56'] = self.targetCompID; //targetcompid
@@ -588,25 +578,15 @@ function getUTCTimeStamp(datetime) {
     var millis = timestamp.getUTCMilliseconds();
 
 
-    if (month < 10) {
-        month = '0' + month;
-    }
+    if (month < 10) { month = '0' + month;}
 
-    if (day < 10) {
-        day = '0' + day;
-    }
+    if (day < 10) { day = '0' + day;}
 
-    if (hours < 10) {
-        hours = '0' + hours;
-    }
+    if (hours < 10) { hours = '0' + hours;}
 
-    if (minutes < 10) {
-        minutes = '0' + minutes;
-    }
+    if (minutes < 10) { minutes = '0' + minutes;}
 
-    if (seconds < 10) {
-        seconds = '0' + seconds;
-    }
+    if (seconds < 10) { seconds = '0' + seconds;}
 
     if (millis < 10) {
         millis = '00' + millis;
