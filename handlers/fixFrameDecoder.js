@@ -74,4 +74,8 @@ function fixFrameDecoder(){
             ctx.sendNext(msg);
         }
     }
+    
+    this.outgoing = function(ctx, event){
+        ctx.stream.write(event);
+    }
 }

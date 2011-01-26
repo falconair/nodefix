@@ -1,4 +1,4 @@
-var sys = require('sys');
+/*var sys = require('sys');
 var fix = require('./fix.js');
 
 fix.createServer(function(session){
@@ -10,3 +10,20 @@ fix.createServer(function(session){
     session.on("outgoingmsg", function(data){ console.log("EVENT outgoingmsg: "+ JSON.stringify(data)); });
 
 }).listen(56000, "localhost");
+*/
+
+var net = require('net');
+var pipe = require('./lib/nodepipe.js');
+
+net.createServer(function(stream) {
+
+
+        stream.on('connect', function() {
+            var p = pipe.makePipe(stream);
+            p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
+            p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
+            p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+        });
+
+
+}).listen(1234,'localhost');

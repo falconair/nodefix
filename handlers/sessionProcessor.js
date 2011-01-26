@@ -1,4 +1,9 @@
-function sessionProcessor(){
+exports.newSessionProcessor = function(isInitiator) {
+    return new sessionProcessor(isInitiator);
+};
+
+
+function sessionProcessor(isInitiator){
     this.incoming = function(ctx, event){
         var fix = event;
         
@@ -150,5 +155,9 @@ function sessionProcessor(){
                 break;
             default:
         }
+    }
+    
+    this.outgoing = function(ctx, event){
+        ctx.sendNext(event);
     }
 }

@@ -5,6 +5,9 @@ exports.newLogonManager = function(isInitiator) {
 var path = require('path');
 var fs = require('fs');
 
+//static vars
+var SOHCHAR = String.fromCharCode(1);
+
 function logonManager(isInitiator){
 
     this.fileStream = null;
@@ -127,12 +130,8 @@ function logonManager(isInitiator){
     
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||OUTGOING
     this.outgoing = function(ctx, event){
-        //defensive copy
-        var fix = {};
-        for (var tag in event) {
-            if (event.hasOwnProperty(tag)) fix[tag] = event[tag];
-        }
-        
+
+        var fix = event;
         var msgType = fix['35'];
         
         //if logon (which means this is an initiator session)
@@ -146,7 +145,7 @@ function logonManager(isInitiator){
 
             var heartbeatInMilliSeconds = fix[108] || '30';
             
-            var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
+            var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
             
             path.exists(fileName, function(exists){
                 if(exists){//If file exists
@@ -184,9 +183,10 @@ function logonManager(isInitiator){
                                 };
                         
                             self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
-                            self.fileStream.write(event + '\n'); // Write logon msg to disk storage
+                            var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+                            self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
                             
-                            ctx.sendNext(fix); 
+                            ctx.sendNext(outmsg); 
                         }
                     });
                 }
@@ -208,9 +208,10 @@ function logonManager(isInitiator){
                         };
                 
                     self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
-                    self.fileStream.write(event + '\n'); // Write logon msg to disk storage
+                    var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+                    self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
                     
-                    ctx.sendNext(fix);                
+                    ctx.sendNext(outmsg);                
                 }
                 
             });
@@ -240,5 +241,121 @@ function convertToMap(msg) {
     }
     return fix;
 
+}
+
+function convertToFIX(msg, fixVersion, timeStamp, senderCompID, targetCompID, outgoingSeqNum){
+    //defensive copy
+    var msg = {};
+    for (var tag in msg) {
+        if (msg.hasOwnProperty(tag)) msg[tag] = msg[tag];
+    }
+    
+    delete msg['9']; //bodylength
+    delete msg['10']; //checksum
+
+
+    var timestamp = new Date();
+    var headermsgarr = [];
+    var bodymsgarr = [];
+    var trailermsgarr = [];
+
+    msg['8'] = fixVersion; //fixversion
+    msg['52'] = timeStamp; //timestamp
+    msg['49'] = senderCompID; //sendercompid
+    msg['56'] = targetCompID; //targetcompid
+    msg['34'] = outgoingSeqNum; //seqnum
+
+
+    headermsgarr.push('52=' + msg['52'] , SOHCHAR);
+    headermsgarr.push('49=' + msg['49'] , SOHCHAR);
+    headermsgarr.push('56=' + msg['56'] , SOHCHAR);
+    headermsgarr.push('34=' + msg['34'] , SOHCHAR);
+
+
+    for (var tag in msg) {
+        if (msg.hasOwnProperty(tag)
+            && tag !== 8
+            && tag !== 9
+            && tag !== 10
+            && tag !== 52
+            && tag !== 49
+            && tag !== 56
+            && tag !== 34
+            ) bodymsgarr.push(tag, '=' , msg[tag] , SOHCHAR);
+    }
+
+    var headermsg = headermsgarr.join('');
+    var trailermsg = trailermsgarr.join('');
+    var bodymsg = bodymsgarr.join('');
+
+    var outmsgarr = [];
+    outmsgarr.push('8=' , msg['8'] , SOHCHAR);
+    outmsgarr.push('9=' , (headermsg.length + bodymsg.length + trailermsg.length) , SOHCHAR);
+    outmsgarr.push(headermsg);
+    outmsgarr.push(bodymsg);
+    outmsgarr.push(trailermsg);
+
+    var outmsg = outmsgarr.join('');
+
+    outmsg += '10=' + checksum(outmsg) + SOHCHAR;
+        
+    return outmsg;
+
+}
+
+function checksum(str) {
+    var chksm = 0;
+    for (var i = 0; i < str.length; i++) {
+        chksm += str.charCodeAt(i);
+    }
+
+    chksm = chksm % 256;
+
+    var checksumstr = '';
+    if (chksm < 10) {
+        checksumstr = '00' + (chksm + '');
+    }
+    else if (chksm >= 10 && chksm < 100) {
+        checksumstr = '0' + (chksm + '');
+    }
+    else {
+        checksumstr = '' + (chksm + '');
+    }
+
+    return checksumstr;
+}
+
+function getUTCTimeStamp(datetime) {
+    var timestamp = datetime || new Date();
+
+    var year = timestamp.getUTCFullYear();
+    var month = timestamp.getUTCMonth();
+    var day = timestamp.getUTCDate();
+    var hours = timestamp.getUTCHours();
+    var minutes = timestamp.getUTCMinutes();
+    var seconds = timestamp.getUTCSeconds();
+    var millis = timestamp.getUTCMilliseconds();
+
+
+    if (month < 10) { month = '0' + month;}
+
+    if (day < 10) { day = '0' + day;}
+
+    if (hours < 10) { hours = '0' + hours;}
+
+    if (minutes < 10) { minutes = '0' + minutes;}
+
+    if (seconds < 10) { seconds = '0' + seconds;}
+
+    if (millis < 10) {
+        millis = '00' + millis;
+    } else if (millis < 100) {
+        millis = '0' + millis;
+    }
+
+
+    var ts = [year, month, day, '-' , hours, ':' , minutes, ':' , seconds, '.' , millis].join('');
+
+    return ts;
 }
 
