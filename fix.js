@@ -3,6 +3,7 @@ var fs = require('fs');
 var net = require('net');
 var events = require('events');
 var path = require('path');
+var pipe = require('./lib/nodepipe.js');
 
 
 //-----------------------------Expose server API-----------------------------
@@ -27,13 +28,15 @@ function Server(func) {
         stream.on('connect', function() {
             self.emit('connect');
             
-            var p = pipe.makePipe(stream);
-            p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-            p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
-            p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingdata',event); }});
-            p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
-            p.addHandler({incoming:function(ctx,event){ 
-                self.emit('incomingdata',event);
+            session.p = pipe.makePipe(stream);
+            //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
+            session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
+            //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
+            session.p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
+            session.p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingmsg',event); ctx.sendNext(event); }});
+            session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+            session.p.addHandler({incoming:function(ctx,event){ 
+                self.emit('incomingmsg',event);
                 
                 if(event['35'] === 'A'){//if logon
                     session.senderCompID = event['49'];
@@ -46,9 +49,11 @@ function Server(func) {
                     delete self.sessions[session.senderCompID + '-' + session.targetCompID];
                     self.emit('logoff', session.senderCompID, session.targetCompID);
                 }
+
+                ctx.sendNext(event);
             }});
         });
-        stream.on('data', function(data) { p.pushIncoming(data); });
+        stream.on('data', function(data) { session.p.pushIncoming(data); });
         
 
 
@@ -72,40 +77,28 @@ exports.createConnectionWithLogonMsg = function(logonmsg, port, host) {
 };
 
 function Client(logonmsg, port, host) {
+    events.EventEmitter.call(this);
 
     this.session = null;
     var self = this;
 
-    events.EventEmitter.call(this);
-
     var stream = net.createConnection(port, host);
-    stream.on('connect', function() {
-        var p = pipe.makePipe(stream);
-        p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-        p.addHandler(require('./handlers/logonManager.js').newLogonManager(true));
-        p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
-        
-        p.pushOutgoing({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '30'});
-    });
-    stream.on('data', function(data) { p.pushIncoming(data); });
 
+    this.p = pipe.makePipe(stream);
+    this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
+    this.p.addHandler({outgoing:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
+    this.p.addHandler(require('./handlers/logonManager.js').newLogonManager(true));
+    this.p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingmsg',event); ctx.sendNext(event);}});
+    this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
+    this.p.addHandler({incoming:function(ctx,event){ self.emit('incomingmsg',event); ctx.sendNext(event); }});
+    
     stream.on('connect', function() {
         self.emit('connect');
-        self.session = new FIX(stream, false);
-        self.session.on('data', function(data) { self.emit('data', data); });
-        self.session.on('incomingmsg', function(data) { self.emit('incomingmsg', data); });
-        self.session.on('outgoingmsg', function(data) { self.emit('outgoingmsg', data); });
-        self.session.on('logon', function(sender,target) { self.emit('logon', sender, target); });
-        self.session.on('logoff', function(sender,target) { self.emit('logoff', sender, target); });
-        self.session.write(logonmsg);
+        self.p.pushOutgoing(logonmsg);
     });
-    stream.on('data', function(data) { self.session.onData(data); });
-    stream.on('end', function() { self.emit('end');  });
-    stream.on('error', function(exception) { self.emit('error', exception); });
+    stream.on('data', function(data) { self.p.pushIncoming(data); });
 
-    this.write = function(data) { self.session.write(data); };
-    this.logoff = function(logoffReason){ self.session.write({35:5, 58:logoffReason}) };
+    this.write = function(data) { self.p.pushOutgoing(data); };
+    this.logoff = function(logoffReason){ self.p.pushOutgoing({35:5, 58:logoffReason}) };
 }
 sys.inherits(Client, events.EventEmitter);
-
-

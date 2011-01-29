@@ -2,8 +2,10 @@ exports.newSessionProcessor = function(isInitiator) {
     return new sessionProcessor(isInitiator);
 };
 
+var sys = require('sys');
 
 function sessionProcessor(isInitiator){
+    var isAcceptor = !isInitiator;
     this.incoming = function(ctx, event){
         var fix = event;
         
@@ -59,6 +61,7 @@ function sessionProcessor(isInitiator){
         }
         
         //====================================Step 9: Ack Logon========================
+        var msgType = fix['35'];
 
         if (!ctx.state.session.isLoggedIn && msgType === 'A' /*&& !self.resendRequested*/) {
             if (isAcceptor) {
@@ -68,10 +71,10 @@ function sessionProcessor(isInitiator){
 
             //ctx.state.session.heartbeatDuration = parseInt(fix['108'], 10) * 1000;
             ctx.state.session.isLoggedIn = true;
-            ctx.state.session.heartbeatIntervalID = setInterval(self.heartbeatCallback, ctx.state.session.heartbeatDuration);
+            ctx.state.session.heartbeatIntervalID = setInterval(this.heartbeatCallback, ctx.state.session.heartbeatDuration);
             //heartbeatIntervalIDs.push(intervalID);
 
-            sys.log(ctx.state.session.targetCompID + ' logged on from ' + stream.remoteAddress +
+            sys.log(ctx.state.session.targetCompID + ' logged on from ' + ctx.state.session.remoteAddress +
                 ' with seqnums ' + ctx.state.session.incomingSeqNum + ',' + ctx.state.session.outgoingSeqNum);
 
             //TODO handle this outside of pipe
@@ -155,6 +158,8 @@ function sessionProcessor(isInitiator){
                 break;
             default:
         }
+
+        ctx.sendNext(fix);
     }
     
     this.outgoing = function(ctx, event){

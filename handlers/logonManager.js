@@ -4,6 +4,7 @@ exports.newLogonManager = function(isInitiator) {
 
 var path = require('path');
 var fs = require('fs');
+var sys = require('sys');
 
 //static vars
 var SOHCHAR = String.fromCharCode(1);
@@ -15,6 +16,7 @@ function logonManager(isInitiator){
 
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||INCOMING
     this.incoming = function(ctx, event){
+        var msg = event;
         //====================================Step 2: Validate message====================================
 
         var calculatedChecksum = checksum(msg.substr(0, msg.length - 7));
@@ -77,6 +79,7 @@ function logonManager(isInitiator){
                                 'isResendRequestee':false,
                                 //'timeOfLastOutgoing':null,
                                 'isInitiator':isInitiator,
+                                'remoteAddress':"",
                                 'timeOfLastIncoming':new Date().getTime()
                                 };
                         
@@ -101,6 +104,7 @@ function logonManager(isInitiator){
                         'isResendRequestee':false,
                         //'timeOfLastOutgoing':null,
                         'isInitiator':isInitiator,
+                        'remoteAddress':"",
                         'timeOfLastIncoming':new Date().getTime()
                         };
                 
@@ -133,7 +137,7 @@ function logonManager(isInitiator){
 
         var fix = event;
         var msgType = fix['35'];
-        
+
         //if logon (which means this is an initiator session)
         if(msgType === 'A' && isInitiator){
             var fixVersion = fix['8'];
@@ -178,7 +182,8 @@ function logonManager(isInitiator){
                                 'isLoggedIn':false,
                                 'isResendRequestee':false,
                                 'timeOfLastOutgoing':new Date().getTime(),
-                                'isInitiator':isInitiator//,
+                                'isInitiator':isInitiator,
+                                'remoteAddress':""//,
                                 //'timeOfLastIncoming':null
                                 };
                         
@@ -203,10 +208,11 @@ function logonManager(isInitiator){
                         'isLoggedIn':false,
                         'isResendRequestee':false,
                         'timeOfLastOutgoing':new Date().getTime(),
-                        'isInitiator':isInitiator//,
+                        'isInitiator':isInitiator,
+                        'remoteAddress':""//,
                         //'timeOfLastIncoming':null
                         };
-                
+
                     self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
                     var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
                     self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
@@ -223,7 +229,10 @@ function logonManager(isInitiator){
         }
         else{
             self.fileStream.write(event + '\n');
-            ctx.sendNext(fix);
+            var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+            self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
+                    
+            ctx.sendNext(outmsg);
         }
         
 
@@ -243,11 +252,12 @@ function convertToMap(msg) {
 
 }
 
-function convertToFIX(msg, fixVersion, timeStamp, senderCompID, targetCompID, outgoingSeqNum){
+function convertToFIX(msgraw, fixVersion, timeStamp, senderCompID, targetCompID, outgoingSeqNum){
+    //sys.log('c2F:'+JSON.stringify(msgraw));
     //defensive copy
     var msg = {};
-    for (var tag in msg) {
-        if (msg.hasOwnProperty(tag)) msg[tag] = msg[tag];
+    for (var tag in msgraw) {
+        if (msgraw.hasOwnProperty(tag)) msg[tag] = msgraw[tag];
     }
     
     delete msg['9']; //bodylength

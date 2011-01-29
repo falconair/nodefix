@@ -10,21 +10,23 @@ var SIZEOFTAG10 = 8;
 
 function fixFrameDecoder(){
     this.buffer = '';
+    var self = this;
     this.incoming = function(ctx, event){
-        while (buffer.length > 0) {
+        self.buffer = self.buffer + event;
+        while (self.buffer.length > 0) {
             //====================================Step 1: Extract complete FIX message====================================
 
             //If we don't have enough data to start extracting body length, wait for more data
-            if (buffer.length <= ENDOFTAG8) {
+            if (self.buffer.length <= ENDOFTAG8) {
                 return;
             }
 
-            var _idxOfEndOfTag9Str = buffer.substring(ENDOFTAG8).indexOf(SOHCHAR);
+            var _idxOfEndOfTag9Str = self.buffer.substring(ENDOFTAG8).indexOf(SOHCHAR);
             var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str, 10) + ENDOFTAG8;
 
             if (isNaN(idxOfEndOfTag9)) {
                 sys.log('[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: '
-                    + buffer.toString());
+                    + self.buffer.toString());
                 stream.end();
                 return;
             }
@@ -32,7 +34,7 @@ function fixFrameDecoder(){
 
             //If we don't have enough data to stop extracting body length AND we have received a lot of data
             //then perhaps there is a problem with how the message is formatted and the session should be killed
-            if (idxOfEndOfTag9 < 0 && buffer.length > 100) {
+            if (idxOfEndOfTag9 < 0 && self.buffer.length > 100) {
                 sys.log('[ERROR] Over 100 character received but body length still not extractable.  Message misformed: '
                     + databuffer.toString());
                 stream.end();
@@ -45,11 +47,11 @@ function fixFrameDecoder(){
                 return;
             }
 
-            var _bodyLengthStr = buffer.substring(STARTOFTAG9VAL, idxOfEndOfTag9);
+            var _bodyLengthStr = self.buffer.substring(STARTOFTAG9VAL, idxOfEndOfTag9);
             var bodyLength = parseInt(_bodyLengthStr, 10);
             if (isNaN(bodyLength)) {
                 sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed: bodyLength='"
-                    + _bodyLengthStr + "', msg=" + buffer.toString());
+                    + _bodyLengthStr + "', msg=" + self.buffer.toString());
                 stream.end();
                 return;
             }
@@ -57,18 +59,18 @@ function fixFrameDecoder(){
             var msgLength = bodyLength + idxOfEndOfTag9 + SIZEOFTAG10;
 
             //If we don't have enough data for the whole message, wait for more data
-            if (buffer.length < msgLength) {
+            if (self.buffer.length < msgLength) {
                 return;
             }
 
             //Message received!
-            var msg = buffer.substring(0, msgLength);
-            if (msgLength == buffer.length) {
-                buffer = '';
+            var msg = self.buffer.substring(0, msgLength);
+            if (msgLength == self.buffer.length) {
+                self.buffer = '';
             }
             else {
-                var remainingBuffer = buffer.substring(msgLength);
-                buffer = remainingBuffer;
+                var remainingBuffer = self.buffer.substring(msgLength);
+                self.buffer = remainingBuffer;
             }
             
             ctx.sendNext(msg);
