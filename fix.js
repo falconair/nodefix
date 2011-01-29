@@ -21,15 +21,17 @@ function Server(func) {
 
      this.stream = net.createServer(function(stream) {
 
+        var session = this;
+
         this.senderCompID = null;
         this.targetCompID = null;
-        this. p = null;
+        this.p = null;
         this.sessionEmitter = function(){
             events.EventEmitter.call(this);
+            this.write = function(data){session.p.pushOutgoing(data);};
         }
-        sys.inherits(sessionEmitter,events.EventEmitter);
+        sys.inherits(this.sessionEmitter,events.EventEmitter);
 
-        var session = this;
 
         stream.on('connect', function() {
             self.emit('connect');
@@ -39,21 +41,21 @@ function Server(func) {
             session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
             //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
-            session.p.addHandler({outgoing:function(ctx,event){ self.sessionEmitter.emit('outgoingmsg',event); ctx.sendNext(event); }});
+            session.p.addHandler({outgoing:function(ctx,event){ session.sessionEmitter.emit('outgoingmsg',event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
             session.p.addHandler({incoming:function(ctx,event){ 
-                self.sessionEmitter.emit('incomingmsg',event);
+                session.sessionEmitter.emit('incomingmsg',event);
                 
                 if(event['35'] === 'A'){//if logon
                     session.senderCompID = event['49'];
                     session.targetCompID = event['56'];
                     self.sessions[session.senderCompID + '-' + session.targetCompID] = session;
-                    self.sessionEmitter.emit('logon', session.senderCompID, session.targetCompID);
+                    session.sessionEmitter.emit('logon', session.senderCompID, session.targetCompID);
                 }
                 
                 if(event['35'] === '5'){
                     delete self.sessions[session.senderCompID + '-' + session.targetCompID];
-                    self.sessionEmitter.emit('logoff', session.senderCompID, session.targetCompID);
+                    session.sessionEmitter.emit('logoff', session.senderCompID, session.targetCompID);
                 }
 
                 ctx.sendNext(event);
@@ -61,7 +63,7 @@ function Server(func) {
         });
         stream.on('data', function(data) { session.p.pushIncoming(data); });
         
-        func(self.sessionEmitter);
+        func(session.sessionEmitter);
 
      });
 
