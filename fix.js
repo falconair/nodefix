@@ -26,15 +26,17 @@ function Server(func) {
         this.senderCompID = null;
         this.targetCompID = null;
         this.p = null;
-        this.sessionEmitter = function(){
+        function SessionEmitterObj(){
             events.EventEmitter.call(this);
             this.write = function(data){session.p.pushOutgoing(data);};
         }
-        sys.inherits(this.sessionEmitter,events.EventEmitter);
+        sys.inherits(SessionEmitterObj,events.EventEmitter);
+
+        this.sessionEmitter = new SessionEmitterObj();
 
 
         stream.on('connect', function() {
-            self.emit('connect');
+            session.sessionEmitter.emit('connect');
             
             session.p = pipe.makePipe(stream);
             //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
