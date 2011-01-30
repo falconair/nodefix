@@ -78,6 +78,7 @@ function fixFrameDecoder(){
     }
     
     this.outgoing = function(ctx, event){
+        ctx.state.fileStream.write(event + '\n');
         ctx.stream.write(event);
     }
 }

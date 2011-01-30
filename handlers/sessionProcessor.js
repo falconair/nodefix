@@ -52,12 +52,12 @@ function sessionProcessor(isInitiator){
                 ctx.state.session.senderCompID != incomingTargetCompID ||
                 ctx.state.session.targetCompID != incomingsenderCompID)) {
 
-                sys.log('[WARNING] Incoming fix version (' + incomingFixVersion +
+                sys.log('[ERROR] Incoming fix version (' + incomingFixVersion +
                     '), sender compid (' + incomingsenderCompID +
                     ') or target compid (' + incomingTargetCompID +
                     ') did not match expected values (' +
                     ctx.state.session.fixVersion + ',' + ctx.state.session.senderCompID + ',' + ctx.state.session.targetCompID + ')'); 
-                    //TODO write session reject
+                    ctx.stream.end();
         }
         
         //====================================Step 9: Ack Logon========================

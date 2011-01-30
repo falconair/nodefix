@@ -45,9 +45,60 @@ function logonManager(isInitiator){
 
             var heartbeatInMilliSeconds = fix[108] || '30';
             
-            var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
-            
-            path.exists(fileName, function(exists){
+            var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
+            sys.log('Attempting to read file '+fileName);
+
+            openOrCreateFile(
+                fileName,
+                {
+                    errorCallback:function(error){
+                        sys.log('[ERROR] Error while reading file '+fileName+' to recover session. Ending session. '+err);
+                        ctx.stream.end();
+                        //return;
+                    },
+                    contentsCallback:function(data){
+                        console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                            
+                        var transactions = data.split('\n');
+                        for(var i=0; i<transactions.length; i++){
+                            var tmap = convertToMap(transactions[i]);
+                            console.log('debug existing file read:'+JSON.stringify(tmap));
+                            if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
+                                outgoingSeqNum = tmap[34];
+                                console.log('debug outgoingseqNum:'+outgoingSeqNum);
+                            }
+                            if(tmap[49] === targetCompID){ //incoming msg
+                                incomingSeqNum = tmap[34];
+                                console.log('debug incomingseqNum:'+incomingSeqNum);
+                            }
+                        }
+
+                        console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                        
+                        ctx.state['session'] = {
+                            'fixVersion':fixVersion, 
+                            'senderCompID':senderCompID, 
+                            'targetCompID':targetCompID,
+                            'incomingSeqNum':incomingSeqNum,
+                            'outgoingSeqNum':outgoingSeqNum,
+                            'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
+                            'testRequestID':1,
+                            'isLoggedIn':false,
+                            'isResendRequested':false,
+                            //'timeOfLastOutgoing':null,
+                            'isInitiator':isInitiator,
+                            'remoteAddress':"N/A",
+                            'timeOfLastIncoming':new Date().getTime()
+                        };
+
+                        ctx.sendNext(fix);
+                    },
+                    fileStreamCallback:function(fileStream){
+                        ctx.state.fileStream = fileStream;
+                    }
+                }
+            );
+            /*path.exists(fileName, function(exists){
                 if(exists){//If file exists
                     fs.readFile(fileName, encoding='ascii', function(err, data){
                         if(err){
@@ -56,16 +107,23 @@ function logonManager(isInitiator){
                             return;
                         }
                         else{
+                            console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                            
                             var transactions = data.split('\n');
                             for(var i=0; i<transactions.length; i++){
                                 var tmap = convertToMap(transactions[i]);
+                                console.log('debug existing file read:'+JSON.stringify(tmap));
                                 if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
                                     outgoingSeqNum = tmap[34];
+                                    console.log('debug outgoingseqNum:'+outgoingSeqNum);
                                 }
-                                else{ //incoming msg
+                                if(tmap[49] === targetCompID){ //incoming msg
                                     incomingSeqNum = tmap[34];
+                                    console.log('debug incomingseqNum:'+incomingSeqNum);
                                 }
                             }
+
+                            console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
                             
                             ctx.state['session'] = {
                                 'fixVersion':fixVersion, 
@@ -76,15 +134,15 @@ function logonManager(isInitiator){
                                 'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
                                 'testRequestID':1,
                                 'isLoggedIn':false,
-                                'isResendRequestee':false,
+                                'isResendRequested':false,
                                 //'timeOfLastOutgoing':null,
                                 'isInitiator':isInitiator,
-                                'remoteAddress':"",
+                                'remoteAddress':"N/A",
                                 'timeOfLastIncoming':new Date().getTime()
                                 };
                         
-                            self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
-                            self.fileStream.write(event + '\n'); // Write logon msg to disk storage
+                            ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
+                            //self.fileStream.write(event + '\n'); // Write logon msg to disk storage
                             
                             ctx.sendNext(fix); 
                         }
@@ -101,24 +159,24 @@ function logonManager(isInitiator){
                         'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
                         'testRequestID':1,
                         'isLoggedIn':false,
-                        'isResendRequestee':false,
+                        'isResendRequested':false,
                         //'timeOfLastOutgoing':null,
                         'isInitiator':isInitiator,
-                        'remoteAddress':"",
+                        'remoteAddress':"N/A",
                         'timeOfLastIncoming':new Date().getTime()
                         };
                 
-                    self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
-                    self.fileStream.write(event + '\n'); // Write logon msg to disk storage
+                    ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
+                    //self.fileStream.write(event + '\n'); // Write logon msg to disk storage
                     
                     ctx.sendNext(fix);                
                 }
                 
-            });
+            });*/
         }
         else if(msgType === 'A' && isInitiator){
             ctx.state['session']['isLoggedIn'] = true;
-            self.fileStream.write(event + '\n');
+            //self.fileStream.write(event + '\n');
             ctx.sendNext(fix);
         }
         else if(!ctx.state['session'] || !ctx.state['session'].isLoggedIn){
@@ -127,7 +185,7 @@ function logonManager(isInitiator){
             return;
         }
         else{
-            self.fileStream.write(event + '\n');
+            //self.fileStream.write(event + '\n');
             ctx.sendNext(fix);
         }
     }
@@ -151,7 +209,57 @@ function logonManager(isInitiator){
             
             var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
             
-            path.exists(fileName, function(exists){
+            openOrCreateFile(
+                fileName,
+                {
+                    errorCallback:function(error){
+                        sys.log('[ERROR] Error while reading file '+fileName+' to recover session. Ending session. '+err);
+                        ctx.stream.end();
+                        //return;
+                    },
+                    contentsCallback:function(data){
+                        console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                            
+                        var transactions = data.split('\n');
+                        for(var i=0; i<transactions.length; i++){
+                            var tmap = convertToMap(transactions[i]);
+                            console.log('debug existing file read:'+JSON.stringify(tmap));
+                            if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
+                                outgoingSeqNum = tmap[34];
+                                console.log('debug outgoingseqNum:'+outgoingSeqNum);
+                            }
+                            if(tmap[49] === targetCompID){ //incoming msg
+                                incomingSeqNum = tmap[34];
+                                console.log('debug incomingseqNum:'+incomingSeqNum);
+                            }
+                        }
+
+                        console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                        
+                        ctx.state['session'] = {
+                            'fixVersion':fixVersion, 
+                            'senderCompID':senderCompID, 
+                            'targetCompID':targetCompID,
+                            'incomingSeqNum':incomingSeqNum,
+                            'outgoingSeqNum':outgoingSeqNum,
+                            'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
+                            'testRequestID':1,
+                            'isLoggedIn':false,
+                            'isResendRequested':false,
+                            //'timeOfLastOutgoing':null,
+                            'isInitiator':isInitiator,
+                            'remoteAddress':"N/A",
+                            'timeOfLastIncoming':new Date().getTime()
+                        };
+                        var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+                        ctx.sendNext(outmsg);
+                    },
+                    fileStreamCallback:function(fileStream){
+                        ctx.state.fileStream = fileStream;
+                    }
+                }
+            );
+            /*path.exists(fileName, function(exists){
                 if(exists){//If file exists
                     fs.readFile(fileName, encoding='ascii', function(err, data){
                         if(err){
@@ -180,16 +288,16 @@ function logonManager(isInitiator){
                                 'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10),
                                 'testRequestID':1,
                                 'isLoggedIn':false,
-                                'isResendRequestee':false,
+                                'isResendRequested':false,
                                 'timeOfLastOutgoing':new Date().getTime(),
                                 'isInitiator':isInitiator,
                                 'remoteAddress':""//,
                                 //'timeOfLastIncoming':null
                                 };
                         
-                            self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
+                            ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
                             var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
-                            self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
+                            //self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
                             
                             ctx.sendNext(outmsg); 
                         }
@@ -206,21 +314,21 @@ function logonManager(isInitiator){
                         'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10),
                         'testRequestID':1,
                         'isLoggedIn':false,
-                        'isResendRequestee':false,
+                        'isResendRequested':false,
                         'timeOfLastOutgoing':new Date().getTime(),
                         'isInitiator':isInitiator,
                         'remoteAddress':""//,
                         //'timeOfLastIncoming':null
                         };
 
-                    self.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
+                    ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
                     var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
-                    self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
+                    //self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
                     
                     ctx.sendNext(outmsg);                
                 }
                 
-            });
+            });*/
         }
         else if((!ctx.state['session'] || !ctx.state['session'].isLoggedIn) && msgType !== 'A'){
             sys.log('[ERROR] First message must be logon. '+msg);
@@ -228,9 +336,14 @@ function logonManager(isInitiator){
             return;
         }
         else{
-            self.fileStream.write(event + '\n');
+            
+            var fixVersion = fix['8'];
+            var senderCompID = fix['49'];
+            var targetCompID = fix['56'];
+            var incomingSeqNum = fix['34'];
+
             var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
-            self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
+            //self.fileStream.write(outmsg + '\n'); // Write logon msg to disk storage
                     
             ctx.sendNext(outmsg);
         }
@@ -367,5 +480,28 @@ function getUTCTimeStamp(datetime) {
     var ts = [year, month, day, '-' , hours, ':' , minutes, ':' , seconds, '.' , millis].join('');
 
     return ts;
+}
+
+//parameters: file name, {fileStreamcallback, contentscallback, errorcallback}
+function openOrCreateFile(fileName, callbacks){
+    path.exists(fileName, function(exists){
+        if(exists){//If file exists
+            fs.readFile(fileName, encoding='ascii', function(err, data){
+                if(err){
+                    if(callbacks.errorCallback){
+                        callbacks.errorCallback(err);
+                    }
+                }
+                else{
+                    if(callbacks.contentsCallback){
+                        callbacks.contentsCallback(data);
+                    }
+                }
+            });
+        }
+    });
+    if(callbacks.fileStreamCallback){
+            callbacks.fileStreamCallback(fs.createWriteStream(fileName, {'flags':'a'}));
+    }
 }
 
