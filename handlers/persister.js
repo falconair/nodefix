@@ -62,24 +62,18 @@ function persister(isInitiator){
                     //console.log('debug actual error:'+err);
                 }
                 else{
-                    //console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
-                            
                     var transactions = data.split('\n');
                     for(var i=0; i<transactions.length; i++){
                         var tmap = convertToMap(transactions[i]);
-                        //console.log('debug existing file read:'+JSON.stringify(tmap));
+
                         if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
                             outgoingSeqNum = parseInt(tmap[34],10) +1;
-                            //console.log('debug outgoingseqNum:'+outgoingSeqNum);
                         }
                         if(tmap[49] === targetCompID){ //incoming msg
                             incomingSeqNum = parseInt(tmap[34],10) +1;
-                            //console.log('debug incomingseqNum:'+incomingSeqNum);
                         }
                     }
 
-                    //console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
-                    
                     ctx.state.session.incomingSeqNum = incomingSeqNum;
                     ctx.state.session.outgoingSeqNum = outgoingSeqNum;
 

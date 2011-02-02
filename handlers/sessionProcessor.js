@@ -100,6 +100,28 @@ function sessionProcessor(isInitiator){
                 var beginSeqNo = parseInt(fix['7'], 10);
                 var endSeqNo = parseInt(fix['16'], 10);
                 ctx.state.session.outgoingSeqNum = beginSeqNo;
+                fs.readFile(fileName, encoding='ascii', function(err,data){
+                    if(err){
+                        //console.log('debug: file doesnt exist, but must due to createWriteStream call');
+                        //console.log('debug actual error:'+err);
+                    }
+                    else{
+                        var transactions = data.split('\n');
+                        for(var i=0; i<transactions.length; i++){
+                            var tmap = convertToMap(transactions[i]);
+
+                            var seqno = parseInt(tmap[34],10);
+                            if(seqno >= beginSeqNo && seqno <= endSeqNo){
+                                ctx.sendPrev(tmap);
+                            }
+                        }
+
+
+                    }
+
+                    ctx.state.fileStream.write(raw + '\n');
+                    ctx.sendNext(fix);
+                });
                 /*var outmsgs = getOutMessages(self.targetCompID, beginSeqNo, endSeqNo);
                 for(var k in outmsgs){
                     var resendmsg = msgs[k];
