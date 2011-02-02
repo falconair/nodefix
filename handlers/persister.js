@@ -32,7 +32,7 @@ function persister(isInitiator){
             var targetCompID = fix['49'];
                         
             var incomingSeqNum = 1;
-            var outgoingSeqNum = 1;
+            var outgoingSeqNum = 0;
 
             var heartbeatInMilliSeconds = fix[108] || '30';
 

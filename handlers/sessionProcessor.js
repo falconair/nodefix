@@ -7,6 +7,7 @@ var sys = require('sys');
 function sessionProcessor(isInitiator){
     var isAcceptor = !isInitiator;
     var self = this;
+    self.testRequestID = 1;
 
     this.incoming = function(ctx, event){
         self.incomingCtx = ctx;
@@ -16,7 +17,7 @@ function sessionProcessor(isInitiator){
         var msgType = fix['35'];
         if(msgType !== 'A' && !ctx.state.session.isLoggedIn){
             sys.log('[ERROR] First message must be logon:'+JSON.stringify(fix));
-            stream.end();
+            ctx.stream.end();
             return;
         }
 
@@ -33,7 +34,7 @@ function sessionProcessor(isInitiator){
                 sys.log("This posdup message's seqno has already been processed. Ignoring: " + JSON.stringify(fix));
             }
             sys.log('[ERROR] Incoming sequence ('+ _seqNum + ') number lower than expected ('+ ctx.state.session.incomingSeqNum + '). No way to recover:'+ JSON.stringify(fix));
-            stream.end();
+            ctx.stream.end();
             return;
         }
         else if (_seqNum > ctx.state.session.incomingSeqNum) {
@@ -43,6 +44,9 @@ function sessionProcessor(isInitiator){
             if (ctx.state.session.isResendRequested !== true) {
                 ctx.state.session.isResendRequested = true;
                 sys.log('[WARN] Incoming seqnum ('+ _seqNum + ') higher than expected ('+ ctx.state.session.incomingSeqNum + '), sending resend request');
+
+                //ctx.state.session.outgoingSeqNum ++;
+
                 ctx.sendPrev({
                     '35': 2,
                     '7': ctx.state.session.incomingSeqNum,
@@ -69,6 +73,7 @@ function sessionProcessor(isInitiator){
                     ') did not match expected values (' +
                     ctx.state.session.fixVersion + ',' + ctx.state.session.senderCompID + ',' + ctx.state.session.targetCompID + ')'); 
                     ctx.stream.end();
+                    return;
         }
         
         //====================================Step 9: Ack Logon========================
@@ -84,6 +89,8 @@ function sessionProcessor(isInitiator){
             case '1':
                 //handle testrequest; break;
                 var testReqID = fix['112'];
+                //ctx.state.session.outgoingSeqNum ++;
+
                 ctx.sendPrev({
                     '35': '0',
                     '112': testReqID
@@ -132,6 +139,8 @@ function sessionProcessor(isInitiator){
             //handle seqreset; break;
             case '5':
                 //handle logout; break;
+                //ctx.state.session.outgoingSeqNum ++;
+
                 ctx.sendPrev({
                     '35': '5'
                 });
@@ -139,7 +148,8 @@ function sessionProcessor(isInitiator){
                 //TODO handle this outside of pipe
                 //self.emit('logoff', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
                 if(!isAcceptor){
-                    stream.end();
+                    ctx.stream.end();
+                    return;
                 }
 
                 /*write a logout ack right back*/
@@ -148,10 +158,12 @@ function sessionProcessor(isInitiator){
                 //handle logon; break;
                 if (!ctx.state.session.isLoggedIn  /*&& !self.resendRequested*/) {
                     ctx.state.session.isLoggedIn = true;
-                    self.heartbeatIntervalID = setInterval(self.heartbeatCallback, ctx.state.session.heartbeatDuration);
+                    self.heartbeatIntervalID = setInterval(self.heartbeatCallback, ctx.state.session.heartbeatDuration/2);
                     ctx.stream.on('end', function(){clearInterval(self.heartbeatIntervalID);});
                     if (isAcceptor) {
                         //ack logon
+                        //ctx.state.session.outgoingSeqNum ++;
+
                         ctx.sendPrev(fix);
                     }
                 }
@@ -163,23 +175,29 @@ function sessionProcessor(isInitiator){
         ctx.sendNext(fix);
     }
 
+    this.outgoing = function(ctx, event){
+        //if(ctx.state.session && ctx.state.session.outgoingSeqNum){ctx.state.session.outgoingSeqNum ++;}
+        ctx.sendNext(event);
+    }
+
     this.heartbeatCallback = function(){
         var currentTime = new Date().getTime();
         
         if((currentTime - self.incomingCtx.state.session.timeOfLastOutgoing) >  self.incomingCtx.state.session.heartbeatDuration){
+            //self.incomingCtx.state.session.outgoingSeqNum ++;
+
             self.incomingCtx.sendPrev({'35':'0'});
         }
         
         if((currentTime - self.incomingCtx.state.session.timeOfLastIncoming) > self.incomingCtx.state.session.heartbeatDuration * 1.5){
+            //ctx.state.session.outgoingSeqNum ++;
+
             self.incomingCtx.sendPrev({'35':'1', '112':self.testRequestID++});//112 = testrequestid
-            sys.log('Sending test request because last msg recvd at '+self.timeOfLastIncoming
+            sys.log('Sending test request because last msg recvd at '+self.incomingCtx.state.session.timeOfLastIncoming
                 +', current time ' + currentTime
                 +', diff ' + (currentTime - self.incomingCtx.state.session.timeOfLastIncoming)
                 +', heartbeat '+self.incomingCtx.state.session.heartbeatDuration);
         }
     }
     
-    this.outgoing = function(ctx, event){
-        ctx.sendNext(event);
-    }
 }

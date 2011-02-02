@@ -110,9 +110,9 @@ function Client(logonmsg, port, host) {
      //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
     this.p.addHandler(require('./handlers/persister.js').newPersister(true));
+    this.p.addHandler({incoming:function(ctx,event){ self.emit('incomingmsg',event); ctx.sendNext(event); }});
     this.p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingmsg',event); ctx.sendNext(event);}});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
-    this.p.addHandler({incoming:function(ctx,event){ self.emit('incomingmsg',event); ctx.sendNext(event); }});
     
     stream.on('connect', function() {
         self.emit('connect');
