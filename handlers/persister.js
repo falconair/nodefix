@@ -89,6 +89,11 @@ function persister(isInitiator){
                 ctx.sendNext(fix);
             });
         }
+        else /*if(ctx.state.session && ctx.state.session.isLoggedIn)*/{
+            ctx.state.session.timeOfLastIncoming = new Date().getTime();
+            ctx.state.fileStream.write(raw + '\n');
+            ctx.sendNext(fix);
+        }
     }
     
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||OUTGOING
@@ -119,10 +124,10 @@ function persister(isInitiator){
                 'testRequestID':1,
                 'isLoggedIn':false,
                 'isResendRequested':false,
-                //'timeOfLastOutgoing':null,
+                'timeOfLastOutgoing':new Date().getTime(),
                 'isInitiator':isInitiator,
-                'remoteAddress':"N/A",
-                'timeOfLastIncoming':new Date().getTime()
+                'remoteAddress':"N/A"
+                //'timeOfLastIncoming':new Date().getTime()
             };
             
             var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
@@ -161,6 +166,13 @@ function persister(isInitiator){
                 ctx.state.fileStream.write(outmsg+'\n');
                 ctx.sendNext(outmsg);
             });
+        }
+        else{
+            var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+
+            ctx.state.session.timeOfLastOutgoing = new Date().getTime();
+            ctx.state.fileStream.write(outmsg+'\n');
+            ctx.sendNext(outmsg);
         }
     }
 }

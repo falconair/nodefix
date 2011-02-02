@@ -9,6 +9,14 @@ function sessionProcessor(isInitiator){
     this.incoming = function(ctx, event){
         var fix = event;
         
+        //====================================Step 6: Confirm first msg is logon========================
+        var msgType = fix['35'];
+        if(msgType !== 'A' && !ctx.state.session.isLoggedIn){
+            sys.log('[ERROR] First message must be logon:'+JSON.stringify(fix));
+            stream.end();
+            return;
+        }
+
         //====================================Step 7: Confirm incoming sequence numbers========================
         var _seqNum = parseInt(fix['34'], 10);
 
@@ -61,25 +69,8 @@ function sessionProcessor(isInitiator){
         }
         
         //====================================Step 9: Ack Logon========================
-        var msgType = fix['35'];
+        //var msgType = fix['35'];
 
-        if (!ctx.state.session.isLoggedIn && msgType === 'A' /*&& !self.resendRequested*/) {
-            if (isAcceptor) {
-                //ack logon
-                ctx.sendPrev(fix);
-            }
-
-            //ctx.state.session.heartbeatDuration = parseInt(fix['108'], 10) * 1000;
-            ctx.state.session.isLoggedIn = true;
-            ctx.state.session.heartbeatIntervalID = setInterval(this.heartbeatCallback, ctx.state.session.heartbeatDuration);
-            //heartbeatIntervalIDs.push(intervalID);
-
-            //sys.log(ctx.state.session.targetCompID + ' logged on from ' + ctx.state.session.remoteAddress +
-            //    ' with seqnums ' + ctx.state.session.incomingSeqNum + ',' + ctx.state.session.outgoingSeqNum);
-
-            //TODO handle this outside of pipe
-            //self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
-        }
 
         //====================================Step 11: Handle session logic========================
 
@@ -152,8 +143,13 @@ function sessionProcessor(isInitiator){
                 break;
             case 'A':
                 //handle logon; break;
-                //TODO Logon should be handleed before seqnum check!
-
+                if (!ctx.state.session.isLoggedIn  /*&& !self.resendRequested*/) {
+                    ctx.state.session.isLoggedIn = true;
+                    if (isAcceptor) {
+                        //ack logon
+                        ctx.sendPrev(fix);
+                    }
+                }
 
                 break;
             default:
