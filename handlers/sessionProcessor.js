@@ -6,7 +6,10 @@ var sys = require('sys');
 
 function sessionProcessor(isInitiator){
     var isAcceptor = !isInitiator;
+    var self = this;
+
     this.incoming = function(ctx, event){
+        self.incomingCtx = ctx;
         var fix = event;
         
         //====================================Step 6: Confirm first msg is logon========================
@@ -27,9 +30,9 @@ function sessionProcessor(isInitiator){
         else if (_seqNum < ctx.state.session.incomingSeqNum) {
             var posdup = fix['43'];
             if (posdup !== undefined && posdup === 'Y') {
-                sys.log("This posdup message's seqno has already been processed. Ignoring: " + msg);
+                sys.log("This posdup message's seqno has already been processed. Ignoring: " + JSON.stringify(fix));
             }
-            sys.log('[ERROR] Incoming sequence ('+ _seqNum + ') number lower than expected ('+ ctx.state.session.incomingSeqNum + '). No way to recover:'+ msg);
+            sys.log('[ERROR] Incoming sequence ('+ _seqNum + ') number lower than expected ('+ ctx.state.session.incomingSeqNum + '). No way to recover:'+ JSON.stringify(fix));
             stream.end();
             return;
         }
@@ -104,7 +107,7 @@ function sessionProcessor(isInitiator){
                 break;
             case '4':
                 if (fix['123'] === undefined || fix['123'] === 'N') {
-                    sys.log('Requence Reset request received: ' + msg);
+                    sys.log('Requence Reset request received: ' + JSON.stringify(fix));
                     var resetseqno = parseInt(fix['36'], 10);
                     if (resetseqno <= ctx.state.session.incomingSeqnum) {
                         //TODO: Reject, sequence number may only be incremented
@@ -145,6 +148,8 @@ function sessionProcessor(isInitiator){
                 //handle logon; break;
                 if (!ctx.state.session.isLoggedIn  /*&& !self.resendRequested*/) {
                     ctx.state.session.isLoggedIn = true;
+                    self.heartbeatIntervalID = setInterval(self.heartbeatCallback, ctx.state.session.heartbeatDuration);
+                    ctx.stream.on('end', function(){clearInterval(self.heartbeatIntervalID);});
                     if (isAcceptor) {
                         //ack logon
                         ctx.sendPrev(fix);
@@ -156,6 +161,22 @@ function sessionProcessor(isInitiator){
         }
 
         ctx.sendNext(fix);
+    }
+
+    this.heartbeatCallback = function(){
+        var currentTime = new Date().getTime();
+        
+        if((currentTime - self.incomingCtx.state.session.timeOfLastOutgoing) >  self.incomingCtx.state.session.heartbeatDuration){
+            self.incomingCtx.sendPrev({'35':'0'});
+        }
+        
+        if((currentTime - self.incomingCtx.state.session.timeOfLastIncoming) > self.incomingCtx.state.session.heartbeatDuration * 1.5){
+            self.incomingCtx.sendPrev({'35':'1', '112':self.testRequestID++});//112 = testrequestid
+            sys.log('Sending test request because last msg recvd at '+self.timeOfLastIncoming
+                +', current time ' + currentTime
+                +', diff ' + (currentTime - self.incomingCtx.state.session.timeOfLastIncoming)
+                +', heartbeat '+self.incomingCtx.state.session.heartbeatDuration);
+        }
     }
     
     this.outgoing = function(ctx, event){

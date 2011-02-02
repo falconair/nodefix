@@ -58,27 +58,27 @@ function persister(isInitiator){
             ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
             fs.readFile(fileName, encoding='ascii', function(err,data){
                 if(err){
-                    console.log('debug: file doesnt exist, but must due to createWriteStream call');
-                    console.log('debug actual error:'+err);
+                    //console.log('debug: file doesnt exist, but must due to createWriteStream call');
+                    //console.log('debug actual error:'+err);
                 }
                 else{
-                    console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                    //console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
                             
                     var transactions = data.split('\n');
                     for(var i=0; i<transactions.length; i++){
                         var tmap = convertToMap(transactions[i]);
-                        console.log('debug existing file read:'+JSON.stringify(tmap));
+                        //console.log('debug existing file read:'+JSON.stringify(tmap));
                         if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
                             outgoingSeqNum = parseInt(tmap[34],10) +1;
-                            console.log('debug outgoingseqNum:'+outgoingSeqNum);
+                            //console.log('debug outgoingseqNum:'+outgoingSeqNum);
                         }
                         if(tmap[49] === targetCompID){ //incoming msg
                             incomingSeqNum = parseInt(tmap[34],10) +1;
-                            console.log('debug incomingseqNum:'+incomingSeqNum);
+                            //console.log('debug incomingseqNum:'+incomingSeqNum);
                         }
                     }
 
-                    console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                    //console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
                     
                     ctx.state.session.incomingSeqNum = incomingSeqNum;
                     ctx.state.session.outgoingSeqNum = outgoingSeqNum;
@@ -135,26 +135,26 @@ function persister(isInitiator){
             ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
             fs.readFile(fileName, encoding='ascii', function(err,data){
                 if(err){
-                    console.log('DEBUG: file doesnt exist, but must due to createWriteStream call');
+                    //console.log('DEBUG: file doesnt exist, but must due to createWriteStream call');
                 }
                 else{
-                    console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                    //console.log('debug: before reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
                             
                     var transactions = data.split('\n');
                     for(var i=0; i<transactions.length; i++){
                         var tmap = convertToMap(transactions[i]);
-                        console.log('debug existing file read:'+JSON.stringify(tmap));
+                        //console.log('debug existing file read:'+JSON.stringify(tmap));
                         if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
                             outgoingSeqNum = parseInt(tmap[34],10)+1;
-                            console.log('debug outgoingseqNum:'+outgoingSeqNum);
+                            //console.log('debug outgoingseqNum:'+outgoingSeqNum);
                         }
                         if(tmap[49] === targetCompID){ //incoming msg
                             incomingSeqNum = parseInt(tmap[34],10)+1;
-                            console.log('debug incomingseqNum:'+incomingSeqNum);
+                            //console.log('debug incomingseqNum:'+incomingSeqNum);
                         }
                     }
 
-                    console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
+                    //console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
                     
                     ctx.state.session.incomingSeqNum = incomingSeqNum;
                     ctx.state.session.outgoingSeqNum = outgoingSeqNum;
@@ -168,7 +168,8 @@ function persister(isInitiator){
             });
         }
         else{
-            var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+            ctx.state.session.outgoingSeqNum ++;
+            var outmsg = convertToFIX(event,ctx.state.session.fixVersion, getUTCTimeStamp(new Date()), ctx.state.session.senderCompID, ctx.state.session.targetCompID, ctx.state.session.outgoingSeqNum);
 
             ctx.state.session.timeOfLastOutgoing = new Date().getTime();
             ctx.state.fileStream.write(outmsg+'\n');

@@ -1,5 +1,5 @@
-exports.newMsgValidator = function(isInitiator) {
-    return new msgValidator(isInitiator);
+exports.newMsgValidator = function() {
+    return new msgValidator();
 };
 
 var path = require('path');
@@ -9,7 +9,7 @@ var sys = require('sys');
 //static vars
 var SOHCHAR = String.fromCharCode(1);
 
-function msgValidator(isInitiator){
+function msgValidator(){
 
     this.fileStream = null;
     var self = this;
@@ -34,16 +34,6 @@ function msgValidator(isInitiator){
         
 }
 
-function convertToMap(msg) {
-    var fix = {};
-    var keyvals = msg.split(SOHCHAR);
-    for (var kv in Object.keys(keyvals)) {
-        var kvpair = keyvals[kv].split('=');
-        fix[kvpair[0]] = kvpair[1];
-    }
-    return fix;
-
-}
 
 function checksum(str) {
     var chksm = 0;

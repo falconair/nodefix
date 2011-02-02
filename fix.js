@@ -39,12 +39,17 @@ function Server(func) {
             session.sessionEmitter.emit('connect');
             
             session.p = pipe.makePipe(stream);
-            //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
+             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug1:'+event); ctx.sendNext(event); }});
+             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-            //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
-            //session.p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
-            session.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator(false));
+             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug2:'+event); ctx.sendNext(event); }});
+             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug2:'+event); ctx.sendNext(event); }});
+            session.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
+             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug3:'+event); ctx.sendNext(event); }});
+             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug3:'+event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/persister.js').newPersister(false));
+             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug4:'+event); ctx.sendNext(event); }});
+             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug4:'+event); ctx.sendNext(event); }});
             session.p.addHandler({incoming:function(ctx,event){ 
                 session.sessionEmitter.emit('incomingmsg',event);
                 
@@ -82,7 +87,7 @@ sys.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
 exports.createConnection = function(fixVersion, senderCompID, targetCompID, port, host) {
-    return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '30'}, port, host);
+    return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host);
 };
 
 exports.createConnectionWithLogonMsg = function(logonmsg, port, host) {
@@ -98,9 +103,12 @@ function Client(logonmsg, port, host) {
     var stream = net.createConnection(port, host);
 
     this.p = pipe.makePipe(stream);
+     //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug0:'+event); ctx.sendNext(event); }});
+     //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-    //this.p.addHandler({outgoing:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
-    //this.p.addHandler(require('./handlers/logonManager.js').newLogonManager(true));
+     //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug1:'+event); ctx.sendNext(event); }});
+     //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
+    this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
     this.p.addHandler(require('./handlers/persister.js').newPersister(true));
     this.p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingmsg',event); ctx.sendNext(event);}});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
