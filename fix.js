@@ -42,9 +42,9 @@ function Server(func) {
             //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
             //session.p.addHandler({incoming:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
-            session.p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
-            session.p.addHandler({outgoing:function(ctx,event){ session.sessionEmitter.emit('outgoingmsg',event); ctx.sendNext(event); }});
-            session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+            //session.p.addHandler(require('./handlers/logonManager.js').newLogonManager(false));
+            session.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator(false));
+            session.p.addHandler(require('./handlers/persister.js').newPersister(false));
             session.p.addHandler({incoming:function(ctx,event){ 
                 session.sessionEmitter.emit('incomingmsg',event);
                 
@@ -62,6 +62,9 @@ function Server(func) {
 
                 ctx.sendNext(event);
             }});
+            session.p.addHandler({outgoing:function(ctx,event){ session.sessionEmitter.emit('outgoingmsg',event); ctx.sendNext(event); }});
+            session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+            
         });
         stream.on('data', function(data) { session.p.pushIncoming(data); });
         
@@ -96,8 +99,9 @@ function Client(logonmsg, port, host) {
 
     this.p = pipe.makePipe(stream);
     this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-    this.p.addHandler({outgoing:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
-    this.p.addHandler(require('./handlers/logonManager.js').newLogonManager(true));
+    //this.p.addHandler({outgoing:function(ctx,event){ sys.log(event); ctx.sendNext(event); }});
+    //this.p.addHandler(require('./handlers/logonManager.js').newLogonManager(true));
+    this.p.addHandler(require('./handlers/persister.js').newPersister(true));
     this.p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingmsg',event); ctx.sendNext(event);}});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
     this.p.addHandler({incoming:function(ctx,event){ self.emit('incomingmsg',event); ctx.sendNext(event); }});

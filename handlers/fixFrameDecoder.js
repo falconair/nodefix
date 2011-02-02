@@ -72,13 +72,13 @@ function fixFrameDecoder(){
                 var remainingBuffer = self.buffer.substring(msgLength);
                 self.buffer = remainingBuffer;
             }
-            
+
             ctx.sendNext(msg);
         }
     }
     
     this.outgoing = function(ctx, event){
-        ctx.state.fileStream.write(event + '\n');
+        //ctx.state.fileStream.write(event + '\n');
         ctx.stream.write(event);
     }
 }

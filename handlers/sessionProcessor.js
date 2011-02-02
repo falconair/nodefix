@@ -32,9 +32,9 @@ function sessionProcessor(isInitiator){
             if (ctx.state.session.isResendRequested !== true) {
                 ctx.state.session.isResendRequested = true;
                 sys.log('[WARN] Incoming seqnum ('+ _seqNum + ') higher than expected ('+ ctx.state.session.incomingSeqNum + '), sending resend request');
-                self.sendPrev({
+                ctx.sendPrev({
                     '35': 2,
-                    '7': self.incomingSeqNum,
+                    '7': ctx.state.session.incomingSeqNum,
                     '8': 0
                 });
             }
@@ -74,8 +74,8 @@ function sessionProcessor(isInitiator){
             ctx.state.session.heartbeatIntervalID = setInterval(this.heartbeatCallback, ctx.state.session.heartbeatDuration);
             //heartbeatIntervalIDs.push(intervalID);
 
-            sys.log(ctx.state.session.targetCompID + ' logged on from ' + ctx.state.session.remoteAddress +
-                ' with seqnums ' + ctx.state.session.incomingSeqNum + ',' + ctx.state.session.outgoingSeqNum);
+            //sys.log(ctx.state.session.targetCompID + ' logged on from ' + ctx.state.session.remoteAddress +
+            //    ' with seqnums ' + ctx.state.session.incomingSeqNum + ',' + ctx.state.session.outgoingSeqNum);
 
             //TODO handle this outside of pipe
             //self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
