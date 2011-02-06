@@ -16,7 +16,11 @@ function msgValidator(){
 
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||INCOMING
     this.incoming = function(ctx, event){
-        var msg = event;
+        if(event.type !== 'data'){
+            ctx.sendNext(event);
+            return;
+        }
+        var msg = event.data;
         //====================================Step 2: Validate message====================================
 
         var calculatedChecksum = checksum(msg.substr(0, msg.length - 7));

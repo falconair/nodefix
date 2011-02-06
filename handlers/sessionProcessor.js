@@ -11,8 +11,13 @@ function sessionProcessor(isInitiator){
     self.testRequestID = 1;
 
     this.incoming = function(ctx, event){
+        if(event.type !== 'data'){
+            ctx.sendNext(event);
+            return;
+        }
+        
         self.incomingCtx = ctx;
-        var fix = event;
+        var fix = event.data;
         
         //====================================Step 6: Confirm first msg is logon========================
         var msgType = fix['35'];
@@ -49,9 +54,12 @@ function sessionProcessor(isInitiator){
                 //ctx.state.session.outgoingSeqNum ++;
 
                 ctx.sendPrev({
-                    '35': 2,
-                    '7': ctx.state.session.incomingSeqNum,
-                    '8': 0
+                    data:{
+                        '35': 2,
+                        '7': ctx.state.session.incomingSeqNum,
+                        '8': 0
+                    },
+                    type:'data'
                 });
             }
         }
@@ -92,9 +100,11 @@ function sessionProcessor(isInitiator){
                 var testReqID = fix['112'];
                 //ctx.state.session.outgoingSeqNum ++;
 
-                ctx.sendPrev({
-                    '35': '0',
-                    '112': testReqID
+                ctx.sendPrev({data:{
+                        '35': '0',
+                        '112': testReqID
+                    },
+                    type:'data'
                 }); /*write heartbeat*/
                 break;
             case '2':
@@ -117,7 +127,7 @@ function sessionProcessor(isInitiator){
 
                             var seqno = parseInt(tmap[34],10);
                             if(seqno >= beginSeqNo && seqno <= endSeqNo){
-                                ctx.sendPrev(tmap);
+                                ctx.sendPrev({data:tmap, type:'data'});
                             }
                         }
 
@@ -166,9 +176,10 @@ function sessionProcessor(isInitiator){
                 //handle logout; break;
                 //ctx.state.session.outgoingSeqNum ++;
 
-                ctx.sendPrev({
+                ctx.sendPrev({data:{
                     '35': '5'
-                });
+                },
+                type:'data'});
                 clearInterval(self.heartbeatIntervalID);
                 //TODO handle this outside of pipe
                 //self.emit('logoff', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
@@ -189,7 +200,7 @@ function sessionProcessor(isInitiator){
                         //ack logon
                         //ctx.state.session.outgoingSeqNum ++;
 
-                        ctx.sendPrev(fix);
+                        ctx.sendPrev({data:fix, type:'data'});
                     }
                 }
 
@@ -197,11 +208,11 @@ function sessionProcessor(isInitiator){
             default:
         }
 
-        ctx.sendNext(fix);
+        ctx.sendNext({data:fix, type:'data'});
     }
 
     this.outgoing = function(ctx, event){
-        //if(ctx.state.session && ctx.state.session.outgoingSeqNum){ctx.state.session.outgoingSeqNum ++;}
+        
         ctx.sendNext(event);
     }
 
@@ -211,13 +222,13 @@ function sessionProcessor(isInitiator){
         if((currentTime - self.incomingCtx.state.session.timeOfLastOutgoing) >  self.incomingCtx.state.session.heartbeatDuration){
             //self.incomingCtx.state.session.outgoingSeqNum ++;
 
-            self.incomingCtx.sendPrev({'35':'0'});
+            self.incomingCtx.sendPrev({data:{'35':'0'}, type:'data'});
         }
         
         if((currentTime - self.incomingCtx.state.session.timeOfLastIncoming) > self.incomingCtx.state.session.heartbeatDuration * 1.5){
             //ctx.state.session.outgoingSeqNum ++;
 
-            self.incomingCtx.sendPrev({'35':'1', '112':self.testRequestID++});//112 = testrequestid
+            self.incomingCtx.sendPrev({data:{'35':'1', '112':self.testRequestID++}, type:'data'});//112 = testrequestid
             sys.log('Sending test request because last msg recvd at '+self.incomingCtx.state.session.timeOfLastIncoming
                 +', current time ' + currentTime
                 +', diff ' + (currentTime - self.incomingCtx.state.session.timeOfLastIncoming)

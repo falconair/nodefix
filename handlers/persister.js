@@ -16,11 +16,16 @@ function persister(isInitiator){
 
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||INCOMING
     this.incoming = function(ctx, event){
+    
+        if(event.type !== 'data'){
+            ctx.sendNext(event);
+            return;
+        }
 
         //====================================Step 3: Convert to map====================================
-        var fix = convertToMap(event);
+        var fix = convertToMap(event.data);
 
-        var raw = event;
+        var raw = event.data;
 
         //====================================Step 4: Create Data Store==========================
         var msgType = fix['35'];
@@ -80,21 +85,25 @@ function persister(isInitiator){
                 }
 
                 ctx.state.fileStream.write(raw + '\n');
-                ctx.sendNext(fix);
+                ctx.sendNext({data:fix, type:'data'});
             });
         }
         else /*if(ctx.state.session && ctx.state.session.isLoggedIn)*/{
             ctx.state.session.timeOfLastIncoming = new Date().getTime();
             ctx.state.fileStream.write(raw + '\n');
-            ctx.sendNext(fix);
+            ctx.sendNext({data:fix, type:'data'});
         }
     }
     
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||OUTGOING
     this.outgoing = function(ctx, event){
 
+        if(event.type !== 'data'){
+            ctx.sendNext(event);
+            return;
+        }
 
-        var fix = event;
+        var fix = event.data;
         var msgType = fix['35'];
 
         //if logon (which means this is an initiator session)
@@ -155,17 +164,17 @@ function persister(isInitiator){
 
                 }
 
-                var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+                var outmsg = convertToFIX(fix,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
 
                 ctx.state.session.outgoingSeqNum ++;
 
                 ctx.state.fileStream.write(outmsg+'\n');
-                ctx.sendNext(outmsg);
+                ctx.sendNext({data:outmsg, type:'data'});
             });
         }
         else{
             
-            var outmsg = convertToFIX(event,ctx.state.session.fixVersion, 
+            var outmsg = convertToFIX(fix,ctx.state.session.fixVersion, 
                 getUTCTimeStamp(new Date()), 
                 ctx.state.session.senderCompID, 
                 ctx.state.session.targetCompID, 
@@ -175,7 +184,7 @@ function persister(isInitiator){
 
             ctx.state.session.timeOfLastOutgoing = new Date().getTime();
             ctx.state.fileStream.write(outmsg+'\n');
-            ctx.sendNext(outmsg);
+            ctx.sendNext({data:outmsg, type:'data'});
         }
     }
 }

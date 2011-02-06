@@ -28,7 +28,7 @@ function Server(func) {
         this.p = null;
         function SessionEmitterObj(){
             events.EventEmitter.call(this);
-            this.write = function(data){session.p.pushOutgoing(data);};
+            this.write = function(data){session.p.pushOutgoing({data:data, type:'data'});};
         }
         sys.inherits(SessionEmitterObj,events.EventEmitter);
 
@@ -50,28 +50,38 @@ function Server(func) {
             session.p.addHandler(require('./handlers/persister.js').newPersister(false));
              //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug4:'+event); ctx.sendNext(event); }});
              //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug4:'+event); ctx.sendNext(event); }});
-            session.p.addHandler({incoming:function(ctx,event){ 
-                session.sessionEmitter.emit('incomingmsg',event);
+
+            session.p.addHandler({incoming:function(ctx,event){
+                if(event.type !== 'data'){
+                    ctx.sendNext(event);
+                    return;
+                }
+                session.sessionEmitter.emit('incomingmsg',event.data);
                 
-                if(event['35'] === 'A'){//if logon
-                    session.senderCompID = event['49'];
-                    session.targetCompID = event['56'];
+                if(event.data['35'] === 'A'){//if logon
+                    session.senderCompID = event.data['49'];
+                    session.targetCompID = event.data['56'];
                     self.sessions[session.senderCompID + '-' + session.targetCompID] = session;
                     session.sessionEmitter.emit('logon', session.senderCompID, session.targetCompID);
                 }
                 
-                if(event['35'] === '5'){
+                if(event.data['35'] === '5'){
                     delete self.sessions[session.senderCompID + '-' + session.targetCompID];
                     session.sessionEmitter.emit('logoff', session.senderCompID, session.targetCompID);
                 }
 
                 ctx.sendNext(event);
             }});
-            session.p.addHandler({outgoing:function(ctx,event){ session.sessionEmitter.emit('outgoingmsg',event); ctx.sendNext(event); }});
+            session.p.addHandler({outgoing:function(ctx,event){ 
+                if(event.type==='data'){
+                    session.sessionEmitter.emit('outgoingmsg',event);
+                } 
+                ctx.sendNext(event); 
+            }});
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
             
         });
-        stream.on('data', function(data) { session.p.pushIncoming(data); });
+        stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
         
         func(session.sessionEmitter);
 
@@ -110,15 +120,25 @@ function Client(logonmsg, port, host) {
      //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
     this.p.addHandler(require('./handlers/persister.js').newPersister(true));
-    this.p.addHandler({incoming:function(ctx,event){ self.emit('incomingmsg',event); ctx.sendNext(event); }});
-    this.p.addHandler({outgoing:function(ctx,event){ self.emit('outgoingmsg',event); ctx.sendNext(event);}});
+    this.p.addHandler({incoming:function(ctx,event){ 
+        if(event.type==='data'){
+            self.emit('incomingmsg',event.data);
+        } 
+        ctx.sendNext(event); 
+    }});
+    this.p.addHandler({outgoing:function(ctx,event){ 
+        if(event.type==='data'){
+            self.emit('outgoingmsg',event.data);
+        } 
+        ctx.sendNext(event);
+    }});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
     
     stream.on('connect', function() {
         self.emit('connect');
-        self.p.pushOutgoing(logonmsg);
+        self.p.pushOutgoing({data:logonmsg, type:'data'});
     });
-    stream.on('data', function(data) { self.p.pushIncoming(data); });
+    stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
 
     this.write = function(data) { self.p.pushOutgoing(data); };
     this.logoff = function(logoffReason){ self.p.pushOutgoing({35:5, 58:logoffReason}) };

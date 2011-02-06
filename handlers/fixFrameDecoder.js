@@ -12,7 +12,11 @@ function fixFrameDecoder(){
     this.buffer = '';
     var self = this;
     this.incoming = function(ctx, event){
-        self.buffer = self.buffer + event;
+        if(event.type !== 'data'){
+            ctx.sendNext(event);
+            return;
+        }
+        self.buffer = self.buffer + event.data;
         while (self.buffer.length > 0) {
             //====================================Step 1: Extract complete FIX message====================================
 
@@ -73,12 +77,16 @@ function fixFrameDecoder(){
                 self.buffer = remainingBuffer;
             }
 
-            ctx.sendNext(msg);
+            ctx.sendNext({data:msg, type:'data'});
         }
     }
     
     this.outgoing = function(ctx, event){
-        //ctx.state.fileStream.write(event + '\n');
-        ctx.stream.write(event);
+        if(event.type !== 'data'){
+            ctx.sendNext(event);
+            return;
+        }
+        ctx.stream.write(event.data);
+        ctx.sendNext(event);
     }
 }
