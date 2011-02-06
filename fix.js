@@ -12,6 +12,10 @@ exports.clearSession = function(fixVersion, senderCompID, targetCompID, callback
     fs.unlink(fileName,callback);
 }
 
+exports.inactiveSessions = function(callback){
+    fs.readdir('./traffic', callback);
+}
+
 //-----------------------------Expose server API-----------------------------
 exports.createServer = function(func ) {
     var server = new Server(func);
