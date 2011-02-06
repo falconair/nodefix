@@ -3,6 +3,7 @@ exports.newSessionProcessor = function(isInitiator) {
 };
 
 var sys = require('sys');
+var fs = require('fs');
 
 function sessionProcessor(isInitiator){
     var isAcceptor = !isInitiator;
@@ -100,6 +101,10 @@ function sessionProcessor(isInitiator){
                 var beginSeqNo = parseInt(fix['7'], 10);
                 var endSeqNo = parseInt(fix['16'], 10);
                 ctx.state.session.outgoingSeqNum = beginSeqNo;
+                var fileName = './traffic/' 
+                    + ctx.state.session.fixVersion + '-' 
+                    + ctx.state.session.senderCompID + '-' 
+                    + ctx.state.session.targetCompID + '.log';
                 fs.readFile(fileName, encoding='ascii', function(err,data){
                     if(err){
                         //console.log('debug: file doesnt exist, but must due to createWriteStream call');
@@ -119,8 +124,6 @@ function sessionProcessor(isInitiator){
 
                     }
 
-                    ctx.state.fileStream.write(raw + '\n');
-                    ctx.sendNext(fix);
                 });
                 /*var outmsgs = getOutMessages(self.targetCompID, beginSeqNo, endSeqNo);
                 for(var k in outmsgs){
@@ -222,4 +225,17 @@ function sessionProcessor(isInitiator){
         }
     }
     
+}
+
+//TODO refactor, this is already defined in persister.js
+var SOHCHAR = String.fromCharCode(1);
+function convertToMap(msg) {
+    var fix = {};
+    var keyvals = msg.split(SOHCHAR);
+    for (var kv in Object.keys(keyvals)) {
+        var kvpair = keyvals[kv].split('=');
+        fix[kvpair[0]] = kvpair[1];
+    }
+    return fix;
+
 }
