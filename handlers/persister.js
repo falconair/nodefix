@@ -164,7 +164,13 @@ function persister(isInitiator){
 
                 }
 
-                var outmsg = convertToFIX(fix,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
+                var outmsg = convertToFIX(
+                    fix,
+                    fixVersion, 
+                    getUTCTimeStamp(new Date()), 
+                    senderCompID, 
+                    targetCompID, 
+                    outgoingSeqNum);
 
                 ctx.state.session.outgoingSeqNum ++;
 

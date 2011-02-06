@@ -47,6 +47,12 @@ function Server(func) {
             session.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
              //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug3:'+event); ctx.sendNext(event); }});
              //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug3:'+event); ctx.sendNext(event); }});
+            session.p.addHandler({outgoing:function(ctx,event){ 
+                if(event.type==='data'){
+                    session.sessionEmitter.emit('outgoingmsg',convertToMap(event.data));
+                } 
+                ctx.sendNext(event); 
+            }});
             session.p.addHandler(require('./handlers/persister.js').newPersister(false));
              //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug4:'+event); ctx.sendNext(event); }});
              //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug4:'+event); ctx.sendNext(event); }});
@@ -71,12 +77,6 @@ function Server(func) {
                 }
 
                 ctx.sendNext(event);
-            }});
-            session.p.addHandler({outgoing:function(ctx,event){ 
-                if(event.type==='data'){
-                    session.sessionEmitter.emit('outgoingmsg',event);
-                } 
-                ctx.sendNext(event); 
             }});
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
             
@@ -119,18 +119,18 @@ function Client(logonmsg, port, host) {
      //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug1:'+event); ctx.sendNext(event); }});
      //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
+    this.p.addHandler({outgoing:function(ctx,event){ 
+        if(event.type==='data'){
+            self.emit('outgoingmsg',convertToMap(event.data));
+        } 
+        ctx.sendNext(event);
+    }});
     this.p.addHandler(require('./handlers/persister.js').newPersister(true));
     this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='data'){
             self.emit('incomingmsg',event.data);
         } 
         ctx.sendNext(event); 
-    }});
-    this.p.addHandler({outgoing:function(ctx,event){ 
-        if(event.type==='data'){
-            self.emit('outgoingmsg',event.data);
-        } 
-        ctx.sendNext(event);
     }});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
     
@@ -144,3 +144,17 @@ function Client(logonmsg, port, host) {
     this.logoff = function(logoffReason){ self.p.pushOutgoing({35:5, 58:logoffReason}) };
 }
 sys.inherits(Client, events.EventEmitter);
+
+//TODO refactor, this is alraedy implemented in persister.js
+//TODO refactor, this is already defined in persister.js
+var SOHCHAR = String.fromCharCode(1);
+function convertToMap(msg) {
+    var fix = {};
+    var keyvals = msg.split(SOHCHAR);
+    for (var kv in Object.keys(keyvals)) {
+        var kvpair = keyvals[kv].split('=');
+        fix[kvpair[0]] = kvpair[1];
+    }
+    return fix;
+
+}

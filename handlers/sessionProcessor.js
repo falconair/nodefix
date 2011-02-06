@@ -5,6 +5,10 @@ exports.newSessionProcessor = function(isInitiator) {
 var sys = require('sys');
 var fs = require('fs');
 
+//TODO refactor, this is already defined in persister.js
+var SOHCHAR = String.fromCharCode(1);
+
+
 function sessionProcessor(isInitiator){
     var isAcceptor = !isInitiator;
     var self = this;
@@ -194,14 +198,19 @@ function sessionProcessor(isInitiator){
                 //handle logon; break;
                 if (!ctx.state.session.isLoggedIn  /*&& !self.resendRequested*/) {
                     ctx.state.session.isLoggedIn = true;
+
                     self.heartbeatIntervalID = setInterval(self.heartbeatCallback, ctx.state.session.heartbeatDuration/2);
                     ctx.stream.on('end', function(){clearInterval(self.heartbeatIntervalID);});
+
                     if (isAcceptor) {
                         //ack logon
                         //ctx.state.session.outgoingSeqNum ++;
 
                         ctx.sendPrev({data:fix, type:'data'});
                     }
+                    
+                    //ctx.sendNext({data:loggedIn, type:'admin'});
+
                 }
 
                 break;
@@ -238,8 +247,8 @@ function sessionProcessor(isInitiator){
     
 }
 
+
 //TODO refactor, this is already defined in persister.js
-var SOHCHAR = String.fromCharCode(1);
 function convertToMap(msg) {
     var fix = {};
     var keyvals = msg.split(SOHCHAR);
