@@ -32,7 +32,7 @@ function persister(isInitiator){
             var targetCompID = fix['49'];
                         
             var incomingSeqNum = 1;
-            var outgoingSeqNum = 0;
+            var outgoingSeqNum = 1;
 
             var heartbeatInMilliSeconds = fix[108] || '30';
 
@@ -157,13 +157,21 @@ function persister(isInitiator){
 
                 var outmsg = convertToFIX(event,fixVersion, getUTCTimeStamp(new Date()), senderCompID, targetCompID, outgoingSeqNum);
 
+                ctx.state.session.outgoingSeqNum ++;
+
                 ctx.state.fileStream.write(outmsg+'\n');
                 ctx.sendNext(outmsg);
             });
         }
         else{
+            
+            var outmsg = convertToFIX(event,ctx.state.session.fixVersion, 
+                getUTCTimeStamp(new Date()), 
+                ctx.state.session.senderCompID, 
+                ctx.state.session.targetCompID, 
+                ctx.state.session.outgoingSeqNum);
+
             ctx.state.session.outgoingSeqNum ++;
-            var outmsg = convertToFIX(event,ctx.state.session.fixVersion, getUTCTimeStamp(new Date()), ctx.state.session.senderCompID, ctx.state.session.targetCompID, ctx.state.session.outgoingSeqNum);
 
             ctx.state.session.timeOfLastOutgoing = new Date().getTime();
             ctx.state.fileStream.write(outmsg+'\n');
