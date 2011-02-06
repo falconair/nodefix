@@ -114,7 +114,7 @@ function Server(func) {
                 var transactions = data.split('\n');
                 callback(null,transactions);
             }
-        }
+        });
     };
 
 
@@ -172,11 +172,12 @@ function Client(logonmsg, port, host) {
     
     stream.on('connect', function() {
         self.emit('connect');
+        self.p.pushOutgoing({data:logonmsg, type:'data'});
     });
     stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
 
     this.write = function(data) { self.p.pushOutgoing(data); };
-    this.logoon = function(logoffReason){ self.p.pushOutgoing({data:logonmsg, type:'data'}); };
+    //this.logoon = function(){ self.p.pushOutgoing({data:logonmsg, type:'data'}); };
     this.logoff = function(logoffReason){ self.p.pushOutgoing({data:{35:5, 58:logoffReason}, type:'data'}) };
     this.getMessages = function(callback){
         var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
@@ -188,7 +189,7 @@ function Client(logonmsg, port, host) {
                 var transactions = data.split('\n');
                 callback(null,transactions);
             }
-        }
+        });
     };
 }
 sys.inherits(Client, events.EventEmitter);
