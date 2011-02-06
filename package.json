@@ -8,7 +8,7 @@
     "handlers": "./handlers",
   },
   "dependencies":{
-    "pipe": "0.0.1"
+    "pipe": "0.0.2"
   },
   "main": "./fix",
   "engines": {
