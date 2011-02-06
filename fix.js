@@ -104,7 +104,7 @@ function Server(func) {
      this.write = function(targetCompID, data) { self.sessions[targetCompID].write({data:data, type:'data'}); };
      this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({data:{35:5, 58:logoffReason}, type:'data'}); };
      this.kill = function(targetCompID, reason){ self.sessions[targetCompID].end(); };
-     this.getMessages = function(callback){
+     /*this.getMessages = function(callback){
         var fileName = './traffic/' + session.fixVersion + '-' + session.senderCompID + '-' + session.targetCompID + '.log';
         fs.readFile(fileName, encoding='ascii', function(err,data){
             if(err){
@@ -115,7 +115,7 @@ function Server(func) {
                 callback(null,transactions);
             }
         });
-    };
+    };*/
 
 
 }
@@ -179,7 +179,7 @@ function Client(logonmsg, port, host) {
     this.write = function(data) { self.p.pushOutgoing(data); };
     //this.logoon = function(){ self.p.pushOutgoing({data:logonmsg, type:'data'}); };
     this.logoff = function(logoffReason){ self.p.pushOutgoing({data:{35:5, 58:logoffReason}, type:'data'}) };
-    this.getMessages = function(callback){
+    /*this.getMessages = function(callback){
         var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
         fs.readFile(fileName, encoding='ascii', function(err,data){
             if(err){
@@ -190,7 +190,7 @@ function Client(logonmsg, port, host) {
                 callback(null,transactions);
             }
         });
-    };
+    };*/
 }
 sys.inherits(Client, events.EventEmitter);
 
