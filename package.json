@@ -5,7 +5,9 @@
   "homepage": "https://github.com/falconair/nodefix",
   "author": "Shahbaz Chaudhary <shahbazc@gmail.com>",
   "directories": {
-    "lib": ""
+    "lib": "./lib",
+    "handlers": "./handlers",
+    "main": "./fix"
   },
   "engines": {
     "node": "0.2.5"
