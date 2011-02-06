@@ -52,7 +52,10 @@ function Server(func) {
             session.p.addHandler({outgoing:function(ctx,event){ 
                 if(event.type==='data'){
                     session.sessionEmitter.emit('outgoingmsg',convertToMap(event.data));
-                } 
+                }
+                else if(event.type==='resync'){
+                    session.sessionEmitter.emit('outgoingresync',event.data);
+                }
                 ctx.sendNext(event); 
             }});
             session.p.addHandler(require('./handlers/persister.js').newPersister(false));
@@ -60,17 +63,12 @@ function Server(func) {
              //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug4:'+event); ctx.sendNext(event); }});
 
             session.p.addHandler({incoming:function(ctx,event){
-                if(event.type !== 'data'){
-                    ctx.sendNext(event);
-                    return;
+                if(event.type === 'data'){
+                    session.sessionEmitter.emit('incomingmsg',event.data);
                 }
-                session.sessionEmitter.emit('incomingmsg',event.data);
-                
-                
-                /*if(event.data['35'] === '5'){
-                    delete self.sessions[session.senderCompID + '-' + session.targetCompID];
-                    session.sessionEmitter.emit('logoff', session.senderCompID, session.targetCompID);
-                }*/
+                else if(event.type==='resync'){
+                    self.emit('incomingresync',event.data);
+                }
 
                 ctx.sendNext(event);
             }});
