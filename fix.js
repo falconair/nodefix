@@ -149,20 +149,29 @@ function Client(logonmsg, port, host) {
      //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug1:'+event); ctx.sendNext(event); }});
      //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
+
     this.p.addHandler({outgoing:function(ctx,event){ 
         if(event.type==='data'){
             self.emit('outgoingmsg',convertToMap(event.data));
-        } 
+        }
+        else if(event.type==='resync'){
+            self.emit('outgoingresync',event.data);
+        }
         ctx.sendNext(event);
     }});
     this.p.addHandler(require('./handlers/persister.js').newPersister(true));
+
     this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='data'){
             self.emit('incomingmsg',event.data);
-        } 
+        }
+        else if(event.type==='resync'){
+            self.emit('incomingresync', event.data);
+        }
         ctx.sendNext(event); 
     }});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
+
     this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='admin' && event.data==='logon'){
             self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
