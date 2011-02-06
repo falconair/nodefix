@@ -73,9 +73,11 @@ function persister(isInitiator){
 
                         if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
                             outgoingSeqNum = parseInt(tmap[34],10) +1;
+                            ctx.sendPrev({data:tmap, type:'resync'});
                         }
                         if(tmap[49] === targetCompID){ //incoming msg
                             incomingSeqNum = parseInt(tmap[34],10) +1;
+                            ctx.sendNext({data:tmap, type:'resync'});
                         }
                     }
 
@@ -149,11 +151,11 @@ function persister(isInitiator){
                         //console.log('debug existing file read:'+JSON.stringify(tmap));
                         if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
                             outgoingSeqNum = parseInt(tmap[34],10)+1;
-                            //console.log('debug outgoingseqNum:'+outgoingSeqNum);
+                            ctx.sendNext({data:tmap, type:'resync'});
                         }
                         if(tmap[49] === targetCompID){ //incoming msg
                             incomingSeqNum = parseInt(tmap[34],10)+1;
-                            //console.log('debug incomingseqNum:'+incomingSeqNum);
+                            ctx.sendPrev({data:tmap, type:'resync'});
                         }
                     }
 
