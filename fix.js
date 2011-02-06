@@ -25,6 +25,8 @@ function Server(func) {
 
         this.senderCompID = null;
         this.targetCompID = null;
+        this.fixVersion = null;
+        
         this.p = null;
         function SessionEmitterObj(){
             events.EventEmitter.call(this);
@@ -75,6 +77,10 @@ function Server(func) {
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'admin' && event.data === 'logon'){
+                    session.senderCompID = ctx.state.session.senderCompID;
+                    session.targetCompID = ctx.state.session.targetCompID;
+                    session.fixVersion = ctx.state.session.fixVersion;
+
                     session.sessionEmitter.emit('logon',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
                     ctx.sendNext(event);
                     return;
@@ -95,9 +101,22 @@ function Server(func) {
      });
 
      this.listen = function(port, host) { self.stream.listen(port, host); };
-     this.write = function(targetCompID, data) { self.sessions[targetCompID].write(data); };
-     this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({35:5, 58:logoffReason}); };
+     this.write = function(targetCompID, data) { self.sessions[targetCompID].write({data:data, type:'data'}); };
+     this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({data:{35:5, 58:logoffReason}, type:'data'}); };
      this.kill = function(targetCompID, reason){ self.sessions[targetCompID].end(); };
+     this.getMessages = function(callback){
+        var fileName = './traffic/' + session.fixVersion + '-' + session.senderCompID + '-' + session.targetCompID + '.log';
+        fs.readFile(fileName, encoding='ascii', function(err,data){
+            if(err){
+                callback(err,null);
+            }
+            else{
+                var transactions = data.split('\n');
+                callback(null,transactions);
+            }
+        }
+    };
+
 
 }
 sys.inherits(Server, events.EventEmitter);
