@@ -6,6 +6,12 @@ var path = require('path');
 var pipe = require('pipe');
 
 
+//-----------------------------Expose reset API-----------------------------
+exports.clearSession = function(fixVersion, senderCompID, targetCompID, callback){
+    var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
+    fs.unlink(fileName,callback);
+}
+
 //-----------------------------Expose server API-----------------------------
 exports.createServer = function(func ) {
     var server = new Server(func);
