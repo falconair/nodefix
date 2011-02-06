@@ -5,8 +5,10 @@
   "homepage": "https://github.com/falconair/nodefix",
   "author": "Shahbaz Chaudhary <shahbazc@gmail.com>",
   "directories": {
-    "lib": "./lib",
     "handlers": "./handlers",
+  },
+  "dependencies":{
+    "pipe": "0.0.1"
   },
   "main": "./fix",
   "engines": {
