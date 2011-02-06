@@ -209,7 +209,7 @@ function sessionProcessor(isInitiator){
                         ctx.sendPrev({data:fix, type:'data'});
                     }
                     
-                    //ctx.sendNext({data:loggedIn, type:'admin'});
+                    ctx.sendNext({data:"logon", type:'admin'});
 
                 }
 

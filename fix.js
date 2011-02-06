@@ -64,12 +64,12 @@ function Server(func) {
                 }
                 session.sessionEmitter.emit('incomingmsg',event.data);
                 
-                if(event.data['35'] === 'A'){//if logon
+                /*if(event.data['35'] === 'A'){//if logon
                     session.senderCompID = event.data['49'];
                     session.targetCompID = event.data['56'];
                     self.sessions[session.senderCompID + '-' + session.targetCompID] = session;
                     session.sessionEmitter.emit('logon', session.senderCompID, session.targetCompID);
-                }
+                }*/
                 
                 if(event.data['35'] === '5'){
                     delete self.sessions[session.senderCompID + '-' + session.targetCompID];
@@ -79,6 +79,14 @@ function Server(func) {
                 ctx.sendNext(event);
             }});
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+            session.p.addHandler({incoming:function(ctx,event){
+                if(event.type === 'admin' && event.data === 'logon'){
+                    session.sessionEmitter.emit('logon',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
+                    ctx.sendNext(event);
+                    return;
+                }
+
+            }});
             
         });
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
@@ -133,6 +141,12 @@ function Client(logonmsg, port, host) {
         ctx.sendNext(event); 
     }});
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
+    this.p.addHandler({incoming:function(ctx,event){ 
+        if(event.type==='admin' && event.data==='logon'){
+            self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
+        } 
+        ctx.sendNext(event); 
+    }});
     
     stream.on('connect', function() {
         self.emit('connect');
