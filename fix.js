@@ -3,7 +3,7 @@ var fs = require('fs');
 var net = require('net');
 var events = require('events');
 var path = require('path');
-var pipe = require('./lib/nodepipe.js');
+var pipe = require('pipe');
 
 
 //-----------------------------Expose server API-----------------------------
