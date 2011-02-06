@@ -149,12 +149,12 @@ function Client(logonmsg, port, host) {
     
     stream.on('connect', function() {
         self.emit('connect');
-        self.p.pushOutgoing({data:logonmsg, type:'data'});
     });
     stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
 
     this.write = function(data) { self.p.pushOutgoing(data); };
-    this.logoff = function(logoffReason){ self.p.pushOutgoing({35:5, 58:logoffReason}) };
+    this.logoon = function(logoffReason){ self.p.pushOutgoing({data:logonmsg, type:'data'}); };
+    this.logoff = function(logoffReason){ self.p.pushOutgoing({data:{35:5, 58:logoffReason}, type:'data'}) };
 }
 sys.inherits(Client, events.EventEmitter);
 
