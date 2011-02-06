@@ -185,8 +185,9 @@ function sessionProcessor(isInitiator){
                 },
                 type:'data'});
                 clearInterval(self.heartbeatIntervalID);
-                //TODO handle this outside of pipe
-                //self.emit('logoff', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
+
+                ctx.sendNext({data:"logoff", type:'admin'});
+
                 if(!isAcceptor){
                     ctx.stream.end();
                     return;

@@ -64,17 +64,11 @@ function Server(func) {
                 }
                 session.sessionEmitter.emit('incomingmsg',event.data);
                 
-                /*if(event.data['35'] === 'A'){//if logon
-                    session.senderCompID = event.data['49'];
-                    session.targetCompID = event.data['56'];
-                    self.sessions[session.senderCompID + '-' + session.targetCompID] = session;
-                    session.sessionEmitter.emit('logon', session.senderCompID, session.targetCompID);
-                }*/
                 
-                if(event.data['35'] === '5'){
+                /*if(event.data['35'] === '5'){
                     delete self.sessions[session.senderCompID + '-' + session.targetCompID];
                     session.sessionEmitter.emit('logoff', session.senderCompID, session.targetCompID);
-                }
+                }*/
 
                 ctx.sendNext(event);
             }});
@@ -82,6 +76,11 @@ function Server(func) {
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'admin' && event.data === 'logon'){
                     session.sessionEmitter.emit('logon',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
+                    ctx.sendNext(event);
+                    return;
+                }
+                else if(event.type === 'admin' && event.data === 'logoff'){
+                    session.sessionEmitter.emit('logoff',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
                     ctx.sendNext(event);
                     return;
                 }
