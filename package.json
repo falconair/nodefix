@@ -7,8 +7,8 @@
   "directories": {
     "lib": "./lib",
     "handlers": "./handlers",
-    "main": "./fix"
   },
+  "main": "./fix",
   "engines": {
     "node": "0.2.5"
   }
