@@ -6,14 +6,30 @@ var path = require('path');
 var pipe = require('pipe');
 
 
-//-----------------------------Expose reset API-----------------------------
+//-----------------------------Expose inactive session API-----------------------------
 exports.clearSession = function(fixVersion, senderCompID, targetCompID, callback){
     var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
     fs.unlink(fileName,callback);
 }
 
 exports.inactiveSessions = function(callback){
-    fs.readdir('./traffic', callback);
+    fs.readdir('./traffic', function(err,files){
+        if(err){
+            callback(err,null);
+        }
+        else{
+            var sessions = [];
+            for(var i = 0; i < files.length; i++){
+                var s = files[i].split('-');
+                var fixVersion = s[0].replace('./traffic/','');
+                var senderCompID = s[1];
+                var targetCompID = s[2].replace('.log','');
+                sessions.add({fixVersion:fixVersion, senderCompID:senderCompID, targetCompID:targetCompID});
+                
+                callback(null,sessions);
+            }
+        }
+    });
 }
 
 //-----------------------------Expose server API-----------------------------
