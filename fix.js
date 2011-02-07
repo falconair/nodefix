@@ -24,7 +24,7 @@ exports.inactiveSessions = function(callback){
                 var fixVersion = s[0].replace('./traffic/','');
                 var senderCompID = s[1];
                 var targetCompID = s[2].replace('.log','');
-                sessions.add({fixVersion:fixVersion, senderCompID:senderCompID, targetCompID:targetCompID});
+                sessions.push({fixVersion:fixVersion, senderCompID:senderCompID, targetCompID:targetCompID});
                 
                 callback(null,sessions);
             }
