@@ -110,6 +110,9 @@ function Server(func) {
                 else if(event.type === 'session' && event.data === 'logoff'){
                     session.sessionEmitter.emit('logoff',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
                 }
+                else if(event.type==='error'){
+                    session.sessionEmitter.emit('error', event.data);
+                }
                 
                 ctx.sendNext(event);
 
@@ -200,6 +203,9 @@ function Client(logonmsg, port, host) {
         }
         else if(event.type==='session' && event.data==='logoff'){
             self.emit('logoff', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
+        }
+        else if(event.type==='error'){
+            self.emit('error', event.data);
         }
         ctx.sendNext(event); 
     }});
