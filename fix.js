@@ -100,20 +100,18 @@ function Server(func) {
             }});
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
             session.p.addHandler({incoming:function(ctx,event){
-                if(event.type === 'admin' && event.data === 'logon'){
+                if(event.type === 'session' && event.data === 'logon'){
                     session.senderCompID = ctx.state.session.senderCompID;
                     session.targetCompID = ctx.state.session.targetCompID;
                     session.fixVersion = ctx.state.session.fixVersion;
 
                     session.sessionEmitter.emit('logon',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
-                    ctx.sendNext(event);
-                    return;
                 }
-                else if(event.type === 'admin' && event.data === 'logoff'){
+                else if(event.type === 'session' && event.data === 'logoff'){
                     session.sessionEmitter.emit('logoff',ctx.state.session.senderCompID,ctx.state.session.targetCompID);
-                    ctx.sendNext(event);
-                    return;
                 }
+                
+                ctx.sendNext(event);
 
             }});
             
@@ -197,9 +195,12 @@ function Client(logonmsg, port, host) {
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
 
     this.p.addHandler({incoming:function(ctx,event){ 
-        if(event.type==='admin' && event.data==='logon'){
+        if(event.type==='session' && event.data==='logon'){
             self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
-        } 
+        }
+        else if(event.type==='session' && event.data==='logoff'){
+            self.emit('logoff', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
+        }
         ctx.sendNext(event); 
     }});
     

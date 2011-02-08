@@ -200,7 +200,7 @@ function sessionProcessor(isInitiator){
                 type:'data'});
                 clearInterval(self.heartbeatIntervalID);
 
-                ctx.sendNext({data:"logoff", type:'admin'});
+                ctx.sendNext({data:"logoff", type:'session'});
 
                 if(!isAcceptor){
                     ctx.stream.end();
@@ -224,7 +224,7 @@ function sessionProcessor(isInitiator){
                         ctx.sendPrev({data:fix, type:'data'});
                     }
                     
-                    ctx.sendNext({data:"logon", type:'admin'});
+                    ctx.sendNext({data:"logon", type:'session'});
 
                 }
 
