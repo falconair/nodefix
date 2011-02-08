@@ -27,8 +27,10 @@ function msgValidator(){
         var extractedChecksum = msg.substr(msg.length - 4, 3);
 
         if (calculatedChecksum !== extractedChecksum) {
-            sys.log('[WARNING] Discarding message because body length or checksum are wrong (expected checksum: '
-                + calculatedChecksum + ', received checksum: ' + extractedChecksum + '): [' + msg + ']');
+            var error = '[WARNING] Discarding message because body length or checksum are wrong (expected checksum: '
+                + calculatedChecksum + ', received checksum: ' + extractedChecksum + '): [' + msg + ']'
+            sys.log(error);
+            ctx.sendnext({data:error, type:'error'});
             return;
         }
 

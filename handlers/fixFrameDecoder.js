@@ -29,9 +29,11 @@ function fixFrameDecoder(){
             var idxOfEndOfTag9 = parseInt(_idxOfEndOfTag9Str, 10) + ENDOFTAG8;
 
             if (isNaN(idxOfEndOfTag9)) {
-                sys.log('[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: '
-                    + self.buffer.toString());
+                var error = '[ERROR] Unable to find the location of the end of tag 9. Message probably misformed: '
+                    + self.buffer.toString();
+                sys.log(error);
                 stream.end();
+                ctx.sendNext({data:error, type:'error'});
                 return;
             }
 
@@ -39,9 +41,11 @@ function fixFrameDecoder(){
             //If we don't have enough data to stop extracting body length AND we have received a lot of data
             //then perhaps there is a problem with how the message is formatted and the session should be killed
             if (idxOfEndOfTag9 < 0 && self.buffer.length > 100) {
-                sys.log('[ERROR] Over 100 character received but body length still not extractable.  Message misformed: '
-                    + databuffer.toString());
+                var error ='[ERROR] Over 100 character received but body length still not extractable.  Message misformed: '
+                    + databuffer.toString();
+                sys.log(error);
                 stream.end();
+                ctx.sendNext({data:error, type:'error'});
                 return;
             }
 
@@ -54,9 +58,11 @@ function fixFrameDecoder(){
             var _bodyLengthStr = self.buffer.substring(STARTOFTAG9VAL, idxOfEndOfTag9);
             var bodyLength = parseInt(_bodyLengthStr, 10);
             if (isNaN(bodyLength)) {
-                sys.log("[ERROR] Unable to parse bodyLength field. Message probably misformed: bodyLength='"
-                    + _bodyLengthStr + "', msg=" + self.buffer.toString());
+                var error = "[ERROR] Unable to parse bodyLength field. Message probably misformed: bodyLength='"
+                    + _bodyLengthStr + "', msg=" + self.buffer.toString()
+                sys.log(error);
                 stream.end();
+                ctx.sendNext({data:error, type:'error'});
                 return;
             }
 

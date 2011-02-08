@@ -26,8 +26,10 @@ function sessionProcessor(isInitiator){
         //====================================Step 6: Confirm first msg is logon========================
         var msgType = fix['35'];
         if(msgType !== 'A' && !ctx.state.session.isLoggedIn){
-            sys.log('[ERROR] First message must be logon:'+JSON.stringify(fix));
+            var error = '[ERROR] First message must be logon:'+JSON.stringify(fix);
+            sys.log(error);
             ctx.stream.end();
+            ctx.sendNext({data:error, type:'error'});
             return;
         }
 
@@ -43,7 +45,13 @@ function sessionProcessor(isInitiator){
             if (posdup !== undefined && posdup === 'Y') {
                 sys.log("This posdup message's seqno has already been processed. Ignoring: " + JSON.stringify(fix));
             }
-            sys.log('[ERROR] Incoming sequence ('+ _seqNum + ') number lower than expected ('+ ctx.state.session.incomingSeqNum + '). No way to recover:'+ JSON.stringify(fix));
+            var error = '[ERROR] Incoming sequence ('
+                + _seqNum + ') number lower than expected ('
+                + ctx.state.session.incomingSeqNum + '). No way to recover:'
+                + JSON.stringify(fix);
+                
+            sys.log(error);
+            ctx.sendNext({data:error, type:'error'});
             ctx.stream.end();
             return;
         }
@@ -80,13 +88,19 @@ function sessionProcessor(isInitiator){
                 ctx.state.session.senderCompID != incomingTargetCompID ||
                 ctx.state.session.targetCompID != incomingsenderCompID)) {
 
-                sys.log('[ERROR] Incoming fix version (' + incomingFixVersion +
+                var error = '[ERROR] Incoming fix version (' + incomingFixVersion +
                     '), sender compid (' + incomingsenderCompID +
                     ') or target compid (' + incomingTargetCompID +
                     ') did not match expected values (' +
-                    ctx.state.session.fixVersion + ',' + ctx.state.session.senderCompID + ',' + ctx.state.session.targetCompID + ')'); 
-                    ctx.stream.end();
-                    return;
+                    ctx.state.session.fixVersion + ',' 
+                    + ctx.state.session.senderCompID + ',' 
+                    + ctx.state.session.targetCompID + ')'
+                
+                sys.log(error); 
+                    
+                ctx.sendNext({data:error, type:'error'});
+                ctx.stream.end();
+                return;
         }
         
         //====================================Step 9: Ack Logon========================
