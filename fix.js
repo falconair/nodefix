@@ -12,7 +12,7 @@ exports.clearSession = function(fixVersion, senderCompID, targetCompID, callback
     fs.unlink(fileName,callback);
 }
 
-exports.inactiveSessions = function(callback){
+exports.activeOrInactiveSessions = function(callback){
     fs.readdir('./traffic', function(err,files){
         if(err){
             callback(err,null);
@@ -26,8 +26,8 @@ exports.inactiveSessions = function(callback){
                 var targetCompID = s[2].replace('.log','');
                 sessions.push({fixVersion:fixVersion, senderCompID:senderCompID, targetCompID:targetCompID});
                 
-                callback(null,sessions);
             }
+            callback(null,sessions);
         }
     });
 }
