@@ -5,6 +5,8 @@ var events = require('events');
 var path = require('path');
 var pipe = require('pipe');
 
+//TODO
+//If no logon is established x seconds after connection, kill connection and notify client
 
 //-----------------------------Expose inactive session API-----------------------------
 exports.clearSession = function(fixVersion, senderCompID, targetCompID, callback){
