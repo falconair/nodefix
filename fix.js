@@ -148,15 +148,15 @@ function Server(func) {
 sys.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
-exports.createConnection = function(fixVersion, senderCompID, targetCompID, port, host) {
-    return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host);
+exports.createConnection = function(fixVersion, senderCompID, targetCompID, port, host,callback) {
+    return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host, callback);
 };
 
-exports.createConnectionWithLogonMsg = function(logonmsg, port, host) {
-    return new Client(logonmsg, port, host);
+exports.createConnectionWithLogonMsg = function(logonmsg, port, host, callback) {
+    return new Client(logonmsg, port, host, callback);
 };
 
-function Client(logonmsg, port, host) {
+function Client(logonmsg, port, host, callback) {
     events.EventEmitter.call(this);
     
     this.fixVersion = logonmsg.fixversion;
@@ -166,7 +166,7 @@ function Client(logonmsg, port, host) {
     this.session = null;
     var self = this;
 
-    var stream = net.createConnection(port, host);
+    var stream = net.createConnection(port, host, callback);
 
     this.p = pipe.makePipe(stream);
      //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug0:'+event); ctx.sendNext(event); }});
