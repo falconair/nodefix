@@ -125,7 +125,7 @@ function Server(func) {
 
      });
 
-     this.listen = function(port, host) { self.stream.listen(port, host); };
+     this.listen = function(port, host, callback) { self.stream.listen(port, host, callback); };
      this.write = function(targetCompID, data) { self.sessions[targetCompID].write({data:data, type:'data'}); };
      this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({data:{35:5, 58:logoffReason}, type:'data'}); };
      this.kill = function(targetCompID, reason){ self.sessions[targetCompID].end(); };
