@@ -38,6 +38,7 @@ exports.createServer = function(func ) {
     return server;
 };
 
+//TODO: handle error event, for example, when the listening port is already being used
 function Server(func) {
      events.EventEmitter.call(this);
 
