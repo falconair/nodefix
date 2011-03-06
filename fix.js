@@ -77,10 +77,11 @@ function Server(func) {
              //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug3:'+event); ctx.sendNext(event); }});
             session.p.addHandler({outgoing:function(ctx,event){ 
                 if(event.type==='data'){
-                    session.sessionEmitter.emit('outgoingmsg',convertToMap(event.data));
+                    var fixmap = convertToMap(event.data);
+                    session.sessionEmitter.emit('outgoingmsg',fixmap[49], fixmap[56], fixmap);
                 }
                 else if(event.type==='resync'){
-                    session.sessionEmitter.emit('outgoingresync',event.data);
+                    session.sessionEmitter.emit('outgoingresync',event.data[49], event.data[56], event.data);
                 }
                 ctx.sendNext(event); 
             }});
@@ -90,10 +91,10 @@ function Server(func) {
 
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'data'){
-                    session.sessionEmitter.emit('incomingmsg',event.data);
+                    session.sessionEmitter.emit('incomingmsg',event.data[49], event.data[56], event.data);
                 }
                 else if(event.type==='resync'){
-                    self.emit('incomingresync',event.data);
+                    self.emit('incomingresync',event.data[49], event.data[56], event.data);
                 }
 
                 ctx.sendNext(event);
@@ -177,10 +178,11 @@ function Client(logonmsg, port, host) {
 
     this.p.addHandler({outgoing:function(ctx,event){ 
         if(event.type==='data'){
-            self.emit('outgoingmsg',convertToMap(event.data));
+            var fixmap = convertToMap(event.data);
+            self.emit('outgoingmsg', fixmap[49], fixmap[56],fixmap );
         }
         else if(event.type==='resync'){
-            self.emit('outgoingresync',event.data);
+            self.emit('outgoingresync',event.data[49], event.data[56], event.data);
         }
         ctx.sendNext(event);
     }});
@@ -188,10 +190,10 @@ function Client(logonmsg, port, host) {
 
     this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='data'){
-            self.emit('incomingmsg',event.data);
+            self.emit('incomingmsg',event.data[49], event.data[56], event.data);
         }
         else if(event.type==='resync'){
-            self.emit('incomingresync', event.data);
+            self.emit('incomingresync', event.data[49], event.data[56], event.data);
         }
         ctx.sendNext(event); 
     }});
