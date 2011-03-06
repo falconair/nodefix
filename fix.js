@@ -46,7 +46,7 @@ function Server(func) {
 
      var self = this;
 
-     this.stream = net.createServer(function(stream) {
+     this.server = net.createServer(function(stream) {
 
         var session = this;
 
@@ -126,8 +126,10 @@ function Server(func) {
         func(session.sessionEmitter);
 
      });
+     
+     self.server.on('error', function(err){ self.emit('error', err); });
 
-     this.listen = function(port, host, callback) { self.stream.listen(port, host, callback); };
+     this.listen = function(port, host, callback) { self.server.listen(port, host, callback); };
      this.write = function(targetCompID, data) { self.sessions[targetCompID].write({data:data, type:'data'}); };
      this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({data:{35:5, 58:logoffReason}, type:'data'}); };
      this.kill = function(targetCompID, reason){ self.sessions[targetCompID].end(); };
