@@ -11,6 +11,14 @@ var SOHCHAR = String.fromCharCode(1);
 
 function sessionProcessor(isInitiator){
     var isAcceptor = !isInitiator;
+    
+    var checkCompIDVersion = true;
+    var sendHeartbeats = true;
+    var expectHeartbeats = true;
+    var respondToTestReqID = true;
+    var respondToLogon = true;
+    var respondToLogoff = true;
+    
     var self = this;
     self.testRequestID = 1;
 
@@ -83,7 +91,7 @@ function sessionProcessor(isInitiator){
         var incomingTargetCompID = fix['56'];
 
 
-        if (ctx.state.session.isLoggedIn &&
+        if (checkCompIDVersion && ctx.state.session.isLoggedIn &&
             (ctx.state.session.fixVersion != incomingFixVersion ||
                 ctx.state.session.senderCompID != incomingTargetCompID ||
                 ctx.state.session.targetCompID != incomingsenderCompID)) {
@@ -110,22 +118,12 @@ function sessionProcessor(isInitiator){
         //====================================Step 11: Handle session logic========================
 
         switch (msgType) {
-            case '0':
-                //handle heartbeat; break;
-                break;
-            case '1':
-                //handle testrequest; break;
+            case '1': //handle testrequest; 
                 var testReqID = fix['112'];
-                //ctx.state.session.outgoingSeqNum ++;
 
-                ctx.sendPrev({data:{
-                        '35': '0',
-                        '112': testReqID
-                    },
-                    type:'data'
-                }); /*write heartbeat*/
+                if(respondToTestReqID){ ctx.sendPrev({data:{ '35': '0', '112': testReqID }, type:'data' });} //write heartbeat
                 break;
-            case '2':
+            case '2': //handle resendrequest; 
                 var beginSeqNo = parseInt(fix['7'], 10);
                 var endSeqNo = parseInt(fix['16'], 10);
                 ctx.state.session.outgoingSeqNum = beginSeqNo;
@@ -160,12 +158,10 @@ function sessionProcessor(isInitiator){
                     resendmsg["122"] = resendmsg["SendingTime"];
                     ctx.sendPrev(resendmsg);
                 }*/
-                //handle resendrequest; break;
                 break;
-            case '3':
-                //handle sessionreject; break;
+            case '3': //handle sessionreject; break;
                 break;
-            case '4':
+            case '4': //handle seqreset
                 if (fix['123'] === undefined || fix['123'] === 'N') {
                     sys.log('Requence Reset request received: ' + JSON.stringify(fix));
                     var resetseqno = parseInt(fix['36'], 10);
@@ -188,16 +184,10 @@ function sessionProcessor(isInitiator){
                     }
                 }
                 break;
-            //Reset mode
-            //handle seqreset; break;
-            case '5':
-                //handle logout; break;
-                //ctx.state.session.outgoingSeqNum ++;
-
-                ctx.sendPrev({data:{
-                    '35': '5'
-                },
-                type:'data'});
+                //Reset mode
+            case '5': //handle logout;
+                ctx.state.session.isLoggedIn = false;
+                if(respondToLogoff){ ctx.sendPrev({data:{ '35': '5' }, type:'data'});}
                 clearInterval(self.heartbeatIntervalID);
 
                 ctx.sendNext({data:"logoff", type:'session'});
@@ -207,13 +197,12 @@ function sessionProcessor(isInitiator){
                     return;
                 }
 
-                /*write a logout ack right back*/
                 break;
-            case 'A':
-                //handle logon; break;
+            case 'A': //handle logon
                 if (!ctx.state.session.isLoggedIn  /*&& !self.resendRequested*/) {
                     ctx.state.session.isLoggedIn = true;
 
+                    //setup heartbeat
                     self.heartbeatIntervalID = setInterval(self.heartbeatCallback, ctx.state.session.heartbeatDuration/2);
                     ctx.stream.on('end', function(){clearInterval(self.heartbeatIntervalID);});
 
@@ -221,7 +210,7 @@ function sessionProcessor(isInitiator){
                         //ack logon
                         //ctx.state.session.outgoingSeqNum ++;
 
-                        ctx.sendPrev({data:fix, type:'data'});
+                        if(respondToLogon){ ctx.sendPrev({data:fix, type:'data'});}
                     }
                     
                     ctx.sendNext({data:"logon", type:'session'});
@@ -244,19 +233,19 @@ function sessionProcessor(isInitiator){
         var currentTime = new Date().getTime();
         
         if((currentTime - self.incomingCtx.state.session.timeOfLastOutgoing) >  self.incomingCtx.state.session.heartbeatDuration){
-            //self.incomingCtx.state.session.outgoingSeqNum ++;
-
-            self.incomingCtx.sendPrev({data:{'35':'0'}, type:'data'});
+            if(sendHeartbeats){
+                self.incomingCtx.sendPrev({data:{'35':'0'}, type:'data'});
+            }
         }
         
         if((currentTime - self.incomingCtx.state.session.timeOfLastIncoming) > self.incomingCtx.state.session.heartbeatDuration * 1.5){
-            //ctx.state.session.outgoingSeqNum ++;
-
-            self.incomingCtx.sendPrev({data:{'35':'1', '112':self.testRequestID++}, type:'data'});//112 = testrequestid
-            sys.log('Sending test request because last msg recvd at '+self.incomingCtx.state.session.timeOfLastIncoming
-                +', current time ' + currentTime
-                +', diff ' + (currentTime - self.incomingCtx.state.session.timeOfLastIncoming)
-                +', heartbeat '+self.incomingCtx.state.session.heartbeatDuration);
+            if(expectHeartbeats){
+                self.incomingCtx.sendPrev({data:{'35':'1', '112':self.testRequestID++}, type:'data'});//112 = testrequestid
+                sys.log('Sending test request because last msg recvd at '+self.incomingCtx.state.session.timeOfLastIncoming
+                    +', current time ' + currentTime
+                    +', diff ' + (currentTime - self.incomingCtx.state.session.timeOfLastIncoming)
+                    +', heartbeat '+self.incomingCtx.state.session.heartbeatDuration);
+            }
         }
     }
     
