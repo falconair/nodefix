@@ -47,14 +47,8 @@ function Server(func) {
             session.sessionEmitter.emit('connect');
             
             session.p = pipe.makePipe(stream);
-             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug1:'+event); ctx.sendNext(event); }});
-             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug2:'+event); ctx.sendNext(event); }});
-             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug2:'+event); ctx.sendNext(event); }});
             session.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
-             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug3:'+event); ctx.sendNext(event); }});
-             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug3:'+event); ctx.sendNext(event); }});
             session.p.addHandler({outgoing:function(ctx,event){ 
                 if(event.type==='data'){
                     var fixmap = convertToMap(event.data);
@@ -66,8 +60,6 @@ function Server(func) {
                 ctx.sendNext(event); 
             }});
             session.p.addHandler(require('./handlers/persister.js').newPersister(false));
-             //session.p.addHandler({incoming:function(ctx,event){ sys.log('indebug4:'+event); ctx.sendNext(event); }});
-             //session.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug4:'+event); ctx.sendNext(event); }});
 
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'data'){
@@ -80,6 +72,7 @@ function Server(func) {
                 ctx.sendNext(event);
             }});
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'session' && event.data === 'logon'){
                     session.senderCompID = ctx.state.session.senderCompID;
@@ -151,11 +144,7 @@ function Client(logonmsg, port, host, callback) {
     var stream = net.createConnection(port, host, callback);
 
     this.p = pipe.makePipe(stream);
-     //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug0:'+event); ctx.sendNext(event); }});
-     //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-     //this.p.addHandler({incoming:function(ctx,event){ sys.log('indebug1:'+event); ctx.sendNext(event); }});
-     //this.p.addHandler({outgoing:function(ctx,event){ sys.log('outdebug1:'+event); ctx.sendNext(event); }});
     this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
 
     this.p.addHandler({outgoing:function(ctx,event){ 
