@@ -20,23 +20,27 @@ msg = valid message arrives
 timeOfLastIn = now
 
 //first message must be logon
-if not isLoggedIn and msg is not [logon]
-    ignore msg
-    error "first message must be [logon]"
-    disconnect connection
-
-//process logon
-if not isLoggedIn and msg is [logon]
-    if <authenticated>
-        isLoggedIn = true;
-        sender = msg[senderCompID]
-        target = msg[targetCompID]
-        version = msg[version]
-        send [logon ack]
-    else
+if not isLoggedIn
+    if msg is not [logon]
         ignore msg
-        error "unknown connection"
+        error "first message must be [logon]"
         disconnect connection
+    else
+        isAuth = authenticate(msg,remoteIP) //potentially blocking
+        if <isAuth>
+            isLoggedIn = true;
+            sender = msg[senderCompID]
+            target = msg[targetCompID]
+            version = msg[version]
+            archiveMsgs = getOldSession(version,sender,target) //potenetially blocking
+            expectedInSeqnum = getExectedIn(archiveMsgs)
+            expectedOutSeqnum = getExectedOut(archiveMsgs)
+            send [logon ack]
+        else
+            ignore msg
+            error "unknown connection"
+            disconnect connection
+    
 
 //record msg (needed for resend request)
 record msg
@@ -113,4 +117,3 @@ if msg is [resend request]
         if msg is [logon, logout, resendreq, heartbeat, testreq, seqreset]
             send [seq-reset] with gap-fill Y
         send msg with posdup = Y
-
