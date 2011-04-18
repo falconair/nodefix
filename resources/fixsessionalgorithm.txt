@@ -43,7 +43,7 @@ if not isLoggedIn
 		        send [test request]
 		    if (now - timeOfLastIn) > (1.5 * heartBeantInt)
 		        error "no heartbeats from counter party, time to die"
-                disconnect session
+                        disconnect session
             }
             send [logon ack]
         else
