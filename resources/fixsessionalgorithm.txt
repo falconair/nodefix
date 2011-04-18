@@ -1,3 +1,4 @@
+
 //Shahbaz Chaudhary
 //shahbazc gmail com
 
@@ -35,6 +36,17 @@ if not isLoggedIn
             archiveMsgs = getOldSession(version,sender,target) //potenetially blocking
             expectedInSeqnum = getExectedIn(archiveMsgs)
             expectedOutSeqnum = getExectedOut(archiveMsgs)
+            scheduleTimer{
+            	if currentTime - timeOfLastOut > heartBeat
+            	    send heartbeat
+            	
+            	if currentTime - timeOfLastIn > heartBeat * 1.5
+            	    send test request
+            	
+            	if currentTime - timeOfLastIn > heartBeat * 2
+            	    error "no response to test request and no msgs from counter party in heartbeat * 2 seconds"
+            	    disconnect connection
+            }
             send [logon ack]
         else
             ignore msg
