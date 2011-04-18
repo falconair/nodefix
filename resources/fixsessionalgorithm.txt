@@ -29,12 +29,14 @@ if not isLoggedIn
         isAuth = authenticate(msg,remoteIP) //potentially blocking
         if <isAuth>
             isLoggedIn = true;
-            sender = msg[senderCompID]
-            target = msg[targetCompID]
-            version = msg[version]
-            archiveMsgs = getOldSession(version,sender,target) //potenetially blocking
-            expectedInSeqnum = getExectedIn(archiveMsgs)
-            expectedOutSeqnum = getExectedOut(archiveMsgs)
+            initSession{
+                sender = msg[senderCompID]
+                target = msg[targetCompID]
+                version = msg[version]
+                archiveMsgs = getOldSession(version,sender,target) //potenetially blocking
+                expectedInSeqnum = getExectedIn(archiveMsgs)
+                expectedOutSeqnum = getExectedOut(archiveMsgs)
+            }
             scheduleTimer{
             	every heartBeatInt seconds call
 		    if (now - timeOfLastOut) > heartBeatInt
