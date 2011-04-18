@@ -1,4 +1,3 @@
-
 //Shahbaz Chaudhary
 //shahbazc gmail com
 
@@ -37,15 +36,14 @@ if not isLoggedIn
             expectedInSeqnum = getExectedIn(archiveMsgs)
             expectedOutSeqnum = getExectedOut(archiveMsgs)
             scheduleTimer{
-            	if currentTime - timeOfLastOut > heartBeat
-            	    send heartbeat
-            	
-            	if currentTime - timeOfLastIn > heartBeat * 1.5
-            	    send test request
-            	
-            	if currentTime - timeOfLastIn > heartBeat * 2
-            	    error "no response to test request and no msgs from counter party in heartbeat * 2 seconds"
-            	    disconnect connection
+            	every heartBeatInt seconds call
+		    if (now - timeOfLastOut) > heartBeatInt
+		        send [heartbeat]
+		    if (now - timeOfLastIn) > heartBeatInt
+		        send [test request]
+		    if (now - timeOfLastIn) > (1.5 * heartBeantInt)
+		        error "no heartbeats from counter party, time to die"
+                disconnect session
             }
             send [logon ack]
         else
@@ -108,15 +106,6 @@ if sender, target or version don't match
 
 
 //real session logic
-if msg is [logon]
-    every heartBeatInt seconds call
-        if (now - timeOfLastOut) > heartBeatInt
-            send [heartbeat]
-        if (now - timeOfLastIn) > heartBeatInt
-            send [test request]
-        if (now - timeOfLastIn) > (1.5 * heartBeantInt)
-            error "no heartbeats from counter party, time to die"
-            disconnect session
 
 if msg is [logout]
     send [logout ack]
