@@ -19,7 +19,7 @@ version = nothing
 msg = valid message arrives
 timeOfLastIn = now
 
-//first message must be logon
+//first message must be logon [initiator and acceptor behave differently]
 if not isLoggedIn
     if msg is not [logon]
         ignore msg
@@ -109,6 +109,7 @@ if sender, target or version don't match
 
 //real session logic
 
+//[initiator and acceptor behave differently]
 if msg is [logout]
     send [logout ack]
 
