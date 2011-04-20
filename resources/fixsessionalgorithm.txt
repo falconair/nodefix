@@ -19,6 +19,7 @@ version = nothing
 msg = valid message arrives
 timeOfLastIn = now
 
+//==================INCOMING=============================
 //-------------FRAME DECODING & MSG VALIDATION-----------------------------
 decode frame
 if checksum not matches
@@ -130,3 +131,8 @@ if msg is [resend request]
         if msg is [logon, logout, resendreq, heartbeat, testreq, seqreset]
             send [seq-reset] with gap-fill Y
         send msg with posdup = Y
+
+//==================OUTGOING=============================
+fix-string = converToFIX(fix-map, version, sender, target, timestamp, seqnum)
+increment outgoing seqnum
+send fix-string
