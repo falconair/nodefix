@@ -27,7 +27,7 @@ if checksum not matches
     warn "corrupt msg, checksum didn't match"
 
 
-//-------------LOGON PROCSSING-----------------------------
+//-------------LOGON PROCSSING (acceptor)-----------------------------
 
 //first message must be logon [initiator and acceptor behave differently]
 if not isLoggedIn
@@ -35,33 +35,47 @@ if not isLoggedIn
         ignore msg
         error "first message must be [logon]"
         disconnect connection
-    else
-        isAuth = authenticate(msg,remoteIP) //potentially blocking
-        if <isAuth>
+    else msg is [logon]
+        if isAcceptor
+            isAuth = authenticate(msg,remoteIP) //potentially blocking
+            if <isAuth>
+                isLoggedIn = true;
+                initSession{
+                    sender = msg[senderCompID]
+                    target = msg[targetCompID]
+                    version = msg[version]
+                    archiveMsgs = getOldSession(version,sender,target) //potenetially blocking
+                    expectedInSeqnum = getExectedIn(archiveMsgs)
+                    expectedOutSeqnum = getExectedOut(archiveMsgs)
+                }
+                scheduleTimer{
+                	every heartBeatInt seconds call
+		        if (now - timeOfLastOut) > heartBeatInt
+		            send [heartbeat]
+		        if (now - timeOfLastIn) > heartBeatInt
+		            send [test request]
+		        if (now - timeOfLastIn) > (1.5 * heartBeantInt)
+		            error "no heartbeats from counter party, time to die"
+                            disconnect session
+                }
+                send [logon ack]
+            else <not Auth>
+                ignore msg
+                error "unknown connection"
+                disconnect connection
+        else isInitiator
             isLoggedIn = true;
-            initSession{
-                sender = msg[senderCompID]
-                target = msg[targetCompID]
-                version = msg[version]
-                archiveMsgs = getOldSession(version,sender,target) //potenetially blocking
-                expectedInSeqnum = getExectedIn(archiveMsgs)
-                expectedOutSeqnum = getExectedOut(archiveMsgs)
-            }
+            //initSession is done when logon msg is being sent
             scheduleTimer{
-            	every heartBeatInt seconds call
-		    if (now - timeOfLastOut) > heartBeatInt
-		        send [heartbeat]
-		    if (now - timeOfLastIn) > heartBeatInt
-		        send [test request]
-		    if (now - timeOfLastIn) > (1.5 * heartBeantInt)
-		        error "no heartbeats from counter party, time to die"
-                        disconnect session
-            }
-            send [logon ack]
-        else
-            ignore msg
-            error "unknown connection"
-            disconnect connection
+                	every heartBeatInt seconds call
+		        if (now - timeOfLastOut) > heartBeatInt
+		            send [heartbeat]
+		        if (now - timeOfLastIn) > heartBeatInt
+		            send [test request]
+		        if (now - timeOfLastIn) > (1.5 * heartBeantInt)
+		            error "no heartbeats from counter party, time to die"
+                            disconnect session
+                }
     
 //-------------COMMON SESSION PROCSSING-----------------------------
 //record msg (needed for resend request)

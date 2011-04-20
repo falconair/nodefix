@@ -58,7 +58,7 @@ function Server(func) {
                 }
                 ctx.sendNext(event); 
             }});
-            session.p.addHandler(require('./handlers/persister.js').newPersister(false));
+            session.p.addHandler(require('./handlers/logonProcessor.js').newlogonProcessor(false));
 
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'data'){
@@ -155,7 +155,7 @@ function Client(logonmsg, port, host, callback) {
         }
         ctx.sendNext(event);
     }});
-    this.p.addHandler(require('./handlers/persister.js').newPersister(true));
+    this.p.addHandler(require('./handlers/logonProcessor.js').newlogonProcessor(true));
 
     this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='data'){
@@ -205,8 +205,8 @@ function Client(logonmsg, port, host, callback) {
 }
 sys.inherits(Client, events.EventEmitter);
 
-//TODO refactor, this is alraedy implemented in persister.js
-//TODO refactor, this is already defined in persister.js
+//TODO refactor, this is alraedy implemented in logonProcessor.js
+//TODO refactor, this is already defined in logonProcessor.js
 var SOHCHAR = String.fromCharCode(1);
 function convertToMap(msg) {
     var fix = {};
