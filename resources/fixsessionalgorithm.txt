@@ -19,6 +19,15 @@ version = nothing
 msg = valid message arrives
 timeOfLastIn = now
 
+//-------------FRAME DECODING & MSG VALIDATION-----------------------------
+decode frame
+if checksum not matches
+    ignore msg
+    warn "corrupt msg, checksum didn't match"
+
+
+//-------------LOGON PROCSSING-----------------------------
+
 //first message must be logon [initiator and acceptor behave differently]
 if not isLoggedIn
     if msg is not [logon]
@@ -53,7 +62,7 @@ if not isLoggedIn
             error "unknown connection"
             disconnect connection
     
-
+//-------------COMMON SESSION PROCSSING-----------------------------
 //record msg (needed for resend request)
 record msg
 
