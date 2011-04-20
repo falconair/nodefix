@@ -48,7 +48,6 @@ function Server(func) {
             
             session.p = pipe.makePipe(stream);
             session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-            session.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
             session.p.addHandler({outgoing:function(ctx,event){ 
                 if(event.type==='data'){
                     var fixmap = convertToMap(event.data);
@@ -145,7 +144,6 @@ function Client(logonmsg, port, host, callback) {
 
     this.p = pipe.makePipe(stream);
     this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-    this.p.addHandler(require('./handlers/msgValidator.js').newMsgValidator());
 
     this.p.addHandler({outgoing:function(ctx,event){ 
         if(event.type==='data'){

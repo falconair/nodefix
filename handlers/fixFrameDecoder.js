@@ -82,6 +82,20 @@ function fixFrameDecoder(){
                 var remainingBuffer = self.buffer.substring(msgLength);
                 self.buffer = remainingBuffer;
             }
+            
+            //====================================Step 2: Validate message====================================
+
+            var calculatedChecksum = checksum(msg.substr(0, msg.length - 7));
+            var extractedChecksum = msg.substr(msg.length - 4, 3);
+
+            if (calculatedChecksum !== extractedChecksum) {
+                var error = '[WARNING] Discarding message because body length or checksum are wrong (expected checksum: '
+                    + calculatedChecksum + ', received checksum: ' + extractedChecksum + '): [' + msg + ']'
+                sys.log(error);
+                ctx.sendnext({data:error, type:'error'});
+                return;
+            }
+
 
             ctx.sendNext({data:msg, type:'data'});
         }
@@ -95,4 +109,26 @@ function fixFrameDecoder(){
         ctx.stream.write(event.data);
         ctx.sendNext(event);
     }
+}
+
+function checksum(str) {
+    var chksm = 0;
+    for (var i = 0; i < str.length; i++) {
+        chksm += str.charCodeAt(i);
+    }
+
+    chksm = chksm % 256;
+
+    var checksumstr = '';
+    if (chksm < 10) {
+        checksumstr = '00' + (chksm + '');
+    }
+    else if (chksm >= 10 && chksm < 100) {
+        checksumstr = '0' + (chksm + '');
+    }
+    else {
+        checksumstr = '' + (chksm + '');
+    }
+
+    return checksumstr;
 }
