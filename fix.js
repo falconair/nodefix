@@ -48,31 +48,12 @@ function Server(func) {
             
             session.p = pipe.makePipe(stream);
             session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-            session.p.addHandler({outgoing:function(ctx,event){ 
-                if(event.type==='data'){
-                    var fixmap = convertToMap(event.data);
-                    session.sessionEmitter.emit('outgoingmsg',fixmap[49], fixmap[56], fixmap);
-                }
-                else if(event.type==='resync'){
-                    session.sessionEmitter.emit('outgoingresync',event.data[49], event.data[56], event.data);
-                }
-                ctx.sendNext(event); 
-            }});
+            session.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
             session.p.addHandler(require('./handlers/logonProcessorAcceptor.js').newlogonProcessorAcceptor());
-
-            session.p.addHandler({incoming:function(ctx,event){
-                if(event.type === 'data'){
-                    session.sessionEmitter.emit('incomingmsg',event.data[49], event.data[56], event.data);
-                }
-                else if(event.type==='resync'){
-                    self.emit('incomingresync',event.data[49], event.data[56], event.data);
-                }
-
-                ctx.sendNext(event);
-            }});
+            session.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
             session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
 
-            session.p.addHandler({incoming:function(ctx,event){
+            /*session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'session' && event.data === 'logon'){
                     session.senderCompID = ctx.state.session.senderCompID;
                     session.targetCompID = ctx.state.session.targetCompID;
@@ -89,7 +70,7 @@ function Server(func) {
                 
                 ctx.sendNext(event);
 
-            }});
+            }});*/
             
         });
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
@@ -144,31 +125,12 @@ function Client(logonmsg, port, host, callback) {
 
     this.p = pipe.makePipe(stream);
     this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-
-    this.p.addHandler({outgoing:function(ctx,event){ 
-        if(event.type==='data'){
-            var fixmap = convertToMap(event.data);
-            self.emit('outgoingmsg', fixmap[49], fixmap[56],fixmap );
-        }
-        else if(event.type==='resync'){
-            self.emit('outgoingresync',event.data[49], event.data[56], event.data);
-        }
-        ctx.sendNext(event);
-    }});
+    this.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
     this.p.addHandler(require('./handlers/logonProcessorInitiator.js').newlogonProcessorInitiator());
-
-    this.p.addHandler({incoming:function(ctx,event){ 
-        if(event.type==='data'){
-            self.emit('incomingmsg',event.data[49], event.data[56], event.data);
-        }
-        else if(event.type==='resync'){
-            self.emit('incomingresync', event.data[49], event.data[56], event.data);
-        }
-        ctx.sendNext(event); 
-    }});
+    this.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
     this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
 
-    this.p.addHandler({incoming:function(ctx,event){ 
+    /*this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='session' && event.data==='logon'){
             self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
         }
@@ -179,7 +141,7 @@ function Client(logonmsg, port, host, callback) {
             self.emit('error', event.data);
         }
         ctx.sendNext(event); 
-    }});
+    }});*/
     
     stream.on('connect', function() {
         self.emit('connect');
@@ -205,16 +167,4 @@ function Client(logonmsg, port, host, callback) {
 }
 sys.inherits(Client, events.EventEmitter);
 
-//TODO refactor, this is alraedy implemented in logonProcessor.js
-//TODO refactor, this is already defined in logonProcessor.js
-var SOHCHAR = String.fromCharCode(1);
-function convertToMap(msg) {
-    var fix = {};
-    var keyvals = msg.split(SOHCHAR);
-    for (var kv in Object.keys(keyvals)) {
-        var kvpair = keyvals[kv].split('=');
-        fix[kvpair[0]] = kvpair[1];
-    }
-    return fix;
 
-}
