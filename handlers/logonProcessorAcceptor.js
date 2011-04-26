@@ -1,5 +1,5 @@
-exports.newlogonProcessor = function(isInitiator) {
-    return new logonProcessor(isInitiator);
+exports.newlogonProcessorAcceptor = function() {
+    return new logonProcessor(false);
 };
 
 var path = require('path');

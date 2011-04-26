@@ -58,7 +58,7 @@ function Server(func) {
                 }
                 ctx.sendNext(event); 
             }});
-            session.p.addHandler(require('./handlers/logonProcessor.js').newlogonProcessor(false));
+            session.p.addHandler(require('./handlers/logonProcessorAcceptor.js').newlogonProcessorAcceptor());
 
             session.p.addHandler({incoming:function(ctx,event){
                 if(event.type === 'data'){
@@ -155,7 +155,7 @@ function Client(logonmsg, port, host, callback) {
         }
         ctx.sendNext(event);
     }});
-    this.p.addHandler(require('./handlers/logonProcessor.js').newlogonProcessor(true));
+    this.p.addHandler(require('./handlers/logonProcessorInitiator.js').newlogonProcessorInitiator());
 
     this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='data'){
