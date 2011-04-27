@@ -1,5 +1,5 @@
 exports.newlogonProcessorInitiator = function() {
-    return new logonProcessor(true);
+    return new logonProcessorInitiator();
 };
 
 var path = require('path');
@@ -9,10 +9,9 @@ var sys = require('sys');
 //static vars
 var SOHCHAR = String.fromCharCode(1);
 
-function logonProcessor(isInitiator){
+function logonProcessorInitiator(){
 
     //this.fileStream = null;
-    var isAcceptor = !isInitiator;
     var self = this;
 
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||INCOMING
@@ -23,79 +22,13 @@ function logonProcessor(isInitiator){
             return;
         }
 
-        //====================================Step 3: Convert to map====================================
         var fix = convertToMap(event.data);
-
-        var raw = event.data;
-
-        //====================================Step 4: Create Data Store==========================
-        var msgType = fix['35'];
         
-        //If logon
-        if(msgType === 'A' && isAcceptor){
-            var fixVersion = fix['8'];
-            var senderCompID = fix['56'];
-            var targetCompID = fix['49'];
-                        
-            var incomingSeqNum = 1;
-            var outgoingSeqNum = 1;
+        
+        ctx.state.session.timeOfLastIncoming = new Date().getTime();
+        ctx.state.fileStream.write(event.data + '\n');
 
-            var heartbeatInMilliSeconds = fix[108] || '30';
-
-            ctx.state['session'] = {
-                'fixVersion':fixVersion, 
-                'senderCompID':senderCompID, 
-                'targetCompID':targetCompID,
-                'incomingSeqNum':incomingSeqNum,
-                'outgoingSeqNum':outgoingSeqNum,
-                'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
-                'testRequestID':1,
-                'isLoggedIn':false,
-                'isResendRequested':false,
-                //'timeOfLastOutgoing':null,
-                'isInitiator':isInitiator,
-                'remoteAddress':"N/A",
-                'timeOfLastIncoming':new Date().getTime()
-            };
-            
-            var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
-            sys.log('Attempting to read file '+fileName);
-
-            ctx.state.fileStream = fs.createWriteStream(fileName, {'flags':'a'});
-            fs.readFile(fileName, encoding='ascii', function(err,data){
-                if(err){
-                    //console.log('debug: file doesnt exist, but must due to createWriteStream call');
-                    //console.log('debug actual error:'+err);
-                }
-                else{
-                    var transactions = data.split('\n');
-                    for(var i=0; i<transactions.length; i++){
-                        var tmap = convertToMap(transactions[i]);
-
-                        if(tmap[49] === senderCompID){ //If msg senderCompID matches our senderCompID, then it is outgoing msg
-                            outgoingSeqNum = parseInt(tmap[34],10) +1;
-                            ctx.sendPrev({data:tmap, type:'resync'});
-                        }
-                        if(tmap[49] === targetCompID){ //incoming msg
-                            incomingSeqNum = parseInt(tmap[34],10) +1;
-                            ctx.sendNext({data:tmap, type:'resync'});
-                        }
-                    }
-
-                    ctx.state.session.incomingSeqNum = incomingSeqNum;
-                    ctx.state.session.outgoingSeqNum = outgoingSeqNum;
-
-                }
-
-                ctx.state.fileStream.write(raw + '\n');
-                ctx.sendNext({data:fix, type:'data'});
-            });
-        }
-        else /*if(ctx.state.session && ctx.state.session.isLoggedIn)*/{
-            ctx.state.session.timeOfLastIncoming = new Date().getTime();
-            ctx.state.fileStream.write(raw + '\n');
-            ctx.sendNext({data:fix, type:'data'});
-        }
+        ctx.sendNext({data:fix, type:'data'});
     }
     
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||OUTGOING
@@ -109,8 +42,7 @@ function logonProcessor(isInitiator){
         var fix = event.data;
         var msgType = fix['35'];
 
-        //if logon (which means this is an initiator session)
-        if(msgType === 'A' && isInitiator){
+        if(msgType === 'A'){
             var fixVersion = fix['8'];
             var senderCompID = fix['49'];
             var targetCompID = fix['56'];
@@ -120,21 +52,13 @@ function logonProcessor(isInitiator){
 
             var heartbeatInMilliSeconds = fix[108] || '30';
 
-            ctx.state['session'] = {
-                'fixVersion':fixVersion, 
-                'senderCompID':senderCompID, 
-                'targetCompID':targetCompID,
-                'incomingSeqNum':incomingSeqNum,
-                'outgoingSeqNum':outgoingSeqNum,
-                'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
-                'testRequestID':1,
-                'isLoggedIn':false,
-                'isResendRequested':false,
-                'timeOfLastOutgoing':new Date().getTime(),
-                'isInitiator':isInitiator,
-                'remoteAddress':"N/A"
-                //'timeOfLastIncoming':new Date().getTime()
-            };
+            self.state.session['incomingSeqNum'] = incomingSeqNum;
+            self.state.session['outgoingSeqNum'] = outgoingSeqNum;
+            self.state.session['heartbeatDuration'] = heartbeatDuration;
+            self.state.session['testRequestID'] = testRequestID;
+            self.state.session['isLoggedIn'] = isLoggedIn;
+            self.state.session['isResendRequested'] = isResendRequested;
+            self.state.session['timeOfLastOutgoing'] = timeOfLastOutgoing;
             
             var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
             
@@ -162,8 +86,8 @@ function logonProcessor(isInitiator){
 
                     //console.log('debug: after reading file, inseqnum:'+incomingSeqNum+', outseqnum:'+outgoingSeqNum);
                     
-                    ctx.state.session.incomingSeqNum = incomingSeqNum;
-                    ctx.state.session.outgoingSeqNum = outgoingSeqNum;
+                    ctx.state.session['incomingSeqNum'] = incomingSeqNum;
+                    ctx.state.session['outgoingSeqNum'] = outgoingSeqNum;
 
                 }
 

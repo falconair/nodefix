@@ -117,22 +117,25 @@ exports.createConnection = function(fixVersion, senderCompID, targetCompID) {
 function Client(fixVersion, senderCompID, targetCompID) {
     events.EventEmitter.call(this);
     
-    this.fixVersion = logonmsg.fixversion;
-    this.senderCompID = logonmsg.senderCompID;
-    this.targetCompID = logonmsg.targetCompID;
 
     this.session = null;
     var self = this;
 
     var stream = null;
 
-    this.p = pipe.makePipe(stream);
-    this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-    this.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
-    this.p.addHandler(require('./handlers/logonProcessorInitiator.js').newlogonProcessorInitiator());
-    this.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
-    this.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
+    self.p = pipe.makePipe(stream);
+    self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
+    self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
+    self.p.addHandler(require('./handlers/logonProcessorInitiator.js').newlogonProcessorInitiator());
+    self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
+    self.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
 
+    //Set pipeliene's constants. All outgoing messages are auto-filled with this information
+    self.state.session['fixVersion'] = fixVersion;
+    self.state.session['senderCompID'] = senderCompID;
+    self.state.session['targetCompID'] = targetCompID;
+    self.state.session['isInitiator'] = true;
+    
     /*this.p.addHandler({incoming:function(ctx,event){ 
         if(event.type==='session' && event.data==='logon'){
             self.emit('logon', ctx.state.session.senderCompID, ctx.state.session.targetCompID);
@@ -155,10 +158,12 @@ function Client(fixVersion, senderCompID, targetCompID) {
     //--CLIENT METHODS--
     this.write = function(data) { self.p.pushOutgoing(data); };
     this.createConnection(port, host, callback){
+    
+        self.state.session['remoteAddress'] = host;
         self.stream = net.createConnection(port, host, callback);
     }
     this.logon(){
-        self.write({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'});
+        self.write({'35': 'A', '90': '0', '108': '10'});
     }
     this.connectAndLogon(port, host, callback){
         self.createConnection(port, host, function(error, data){
