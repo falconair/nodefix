@@ -2,7 +2,14 @@ var sys = require('sys');
 var fix = require("./fix.js");
 
 var session = fix.createConnection("FIX.4.2", "initiator", "acceptor", 1234, "localhost");
-//session.logon();
+session.connectAndlogon(function(error, data){
+    if(error !== null){
+        console.log("ERROR: " + error);
+    }
+    else{
+        console.log("Connected!");
+    }
+});
 /*session.getMessages(function(err, msg){
     if(err){
         console.log('Err from data store: '+err);     

@@ -103,15 +103,16 @@ function Server(func) {
 sys.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
-exports.createConnection = function(fixVersion, senderCompID, targetCompID, port, host,callback) {
-    return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host, callback);
+exports.createConnection = function(fixVersion, senderCompID, targetCompID) {
+    //return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host, callback);
+    return new Client(fixVersion, senderCompID, targetCompID);
 };
 
-exports.createConnectionWithLogonMsg = function(logonmsg, port, host, callback) {
+/*exports.createConnectionWithLogonMsg = function(logonmsg, port, host, callback) {
     return new Client(logonmsg, port, host, callback);
-};
+};*/
 
-function Client(logonmsg, port, host, callback) {
+function Client(fixVersion, senderCompID, targetCompID) {
     events.EventEmitter.call(this);
     
     this.fixVersion = logonmsg.fixversion;
@@ -121,7 +122,7 @@ function Client(logonmsg, port, host, callback) {
     this.session = null;
     var self = this;
 
-    var stream = net.createConnection(port, host, callback);
+    var stream = null;
 
     this.p = pipe.makePipe(stream);
     this.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
@@ -149,8 +150,25 @@ function Client(logonmsg, port, host, callback) {
     });
     stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
 
+    //--CLIENT METHODS--
     this.write = function(data) { self.p.pushOutgoing(data); };
-    //this.logoon = function(){ self.p.pushOutgoing({data:logonmsg, type:'data'}); };
+    this.createConnection(port, host, callback){
+        self.stream = net.createConnection(port, host, callback);
+    }
+    this.logon(){
+        self.write({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'});
+    }
+    this.connectAndLogon(port, host, callback){
+        self.createConnection(port, host, function(error, data){
+            if(error === null){
+                self.logon();
+                callback(null, data);
+            }
+            else{
+                callback(error,data);
+            }
+        });
+    }
     this.logoff = function(logoffReason){ self.p.pushOutgoing({data:{35:5, 58:logoffReason}, type:'data'}) };
     /*this.getMessages = function(callback){
         var fileName = './traffic/' + self.fixVersion + '-' + self.senderCompID + '-' + self.targetCompID + '.log';
