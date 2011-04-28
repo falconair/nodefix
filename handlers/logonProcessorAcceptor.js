@@ -11,8 +11,8 @@ var SOHCHAR = String.fromCharCode(1);
 
 function logonProcessorAcceptor(){
 
-    //this.fileStream = null;
-    var isAcceptor = !isInitiator;
+    var isLoggedIn = false;
+
     var self = this;
 
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||INCOMING
@@ -42,21 +42,14 @@ function logonProcessorAcceptor(){
 
             var heartbeatInMilliSeconds = fix[108] || '30';
 
-            ctx.state['session'] = {
-                'fixVersion':fixVersion, 
-                'senderCompID':senderCompID, 
-                'targetCompID':targetCompID,
-                'incomingSeqNum':incomingSeqNum,
-                'outgoingSeqNum':outgoingSeqNum,
-                'heartbeatDuration':parseInt(heartbeatInMilliSeconds,10) * 1000,
-                'testRequestID':1,
-                'isLoggedIn':false,
-                'isResendRequested':false,
-                //'timeOfLastOutgoing':null,
-                'isInitiator':false,
-                'remoteAddress':ctx.stream.remoteAddress,
-                'timeOfLastIncoming':new Date().getTime()
-            };
+            ctx.state.session['fixVersion'] = fixVersion;
+            ctx.state.session['senderCompID'] = senderCompID;
+            ctx.state.session['targetCompID'] = targetCompID;
+            ctx.state.session['incomingSeqNum'] = incomingSeqNum;
+            ctx.state.session['outgoingSeqNum'] = outgoingSeqNum;
+            ctx.state.session['heartbeatDuration'] = parseInt(heartbeatInMilliSeconds,10) * 1000;
+            ctx.state.session['timeOfLastIncoming'] = new Date().getTime();
+
             
             var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
             sys.log('Attempting to read file '+fileName);

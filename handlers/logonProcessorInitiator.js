@@ -43,22 +43,16 @@ function logonProcessorInitiator(){
         var msgType = fix['35'];
 
         if(msgType === 'A'){
+        
+            //TODO do these comp ids match the session constants?
             var fixVersion = fix['8'];
             var senderCompID = fix['49'];
             var targetCompID = fix['56'];
                         
-            var incomingSeqNum = 1;
-            var outgoingSeqNum = 1;
-
             var heartbeatInMilliSeconds = fix[108] || '30';
 
-            self.state.session['incomingSeqNum'] = incomingSeqNum;
-            self.state.session['outgoingSeqNum'] = outgoingSeqNum;
-            self.state.session['heartbeatDuration'] = heartbeatDuration;
-            self.state.session['testRequestID'] = testRequestID;
-            self.state.session['isLoggedIn'] = isLoggedIn;
-            self.state.session['isResendRequested'] = isResendRequested;
-            self.state.session['timeOfLastOutgoing'] = timeOfLastOutgoing;
+            ctx.state.session['heartbeatDuration'] = heartbeatInMilliSeconds;
+            ctx.state.session['timeOfLastOutgoing'] = timeOfLastOutgoing;
             
             var fileName = './traffic/' + fixVersion + '-' + senderCompID + '-' + targetCompID + '.log';
             
