@@ -11,8 +11,6 @@ var SOHCHAR = String.fromCharCode(1);
 
 function logonProcessorAcceptor(){
 
-    var isLoggedIn = false;
-
     var self = this;
 
     //||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||INCOMING
