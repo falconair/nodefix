@@ -22,15 +22,22 @@ function logonProcessorAcceptor(){
         }
 
         //====================================Step 3: Convert to map====================================
-        var fix = convertToMap(event.data);
-
         var raw = event.data;
+        var fix = convertToMap(raw);
+
 
         //====================================Step 4: Create Data Store==========================
         var msgType = fix['35'];
         
-        //If logon
-        if(msgType === 'A'){
+        
+        if(ctx.state.session['isLoggedIn'] === false && msgType !== 'A'){
+            var error = '[ERROR] First message must be logon:'+JSON.stringify(fix);
+            sys.log(error);
+            ctx.stream.end();
+            ctx.sendNext({data:error, type:'error'});
+            return;
+        }
+        else if(ctx.state.session['isLoggedIn'] === false && msgType === 'A'){
             var fixVersion = fix['8'];
             var senderCompID = fix['56'];
             var targetCompID = fix['49'];
@@ -78,11 +85,13 @@ function logonProcessorAcceptor(){
 
                 }
 
+                ctx.state.session['isLoggedIn'] = true;
+                
                 ctx.state.fileStream.write(raw + '\n');
                 ctx.sendNext({data:fix, type:'data'});
             });
         }
-        else /*if(ctx.state.session && ctx.state.session.isLoggedIn)*/{
+        else{ // if isLoggedIn === true and mstType === anything
             ctx.state.session.timeOfLastIncoming = new Date().getTime();
             ctx.state.fileStream.write(raw + '\n');
             ctx.sendNext({data:fix, type:'data'});

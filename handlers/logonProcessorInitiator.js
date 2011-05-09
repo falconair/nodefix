@@ -22,11 +22,24 @@ function logonProcessorInitiator(){
             return;
         }
 
-        var fix = convertToMap(event.data);
+        var raw = event.data;
+        var fix = convertToMap(raw);
         
+        var msgType = fix['35'];
+        
+        if(ctx.state.session['isLoggedIn'] === false && msgType !== 'A'){
+            var error = '[ERROR] First message must be logon:'+JSON.stringify(fix);
+            sys.log(error);
+            ctx.stream.end();
+            ctx.sendNext({data:error, type:'error'});
+            return;
+        }
+        else if(ctx.state.session['isLoggedIn'] === false && msgType === 'A'){
+            ctx.state.session['isLoggedIn'] = true;
+        }
         
         ctx.state.session.timeOfLastIncoming = new Date().getTime();
-        ctx.state.fileStream.write(event.data + '\n');
+        ctx.state.fileStream.write(raw + '\n');
 
         ctx.sendNext({data:fix, type:'data'});
     }

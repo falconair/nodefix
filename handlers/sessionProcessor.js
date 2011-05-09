@@ -32,14 +32,14 @@ function sessionProcessor(isInitiator){
         var fix = event.data;
         
         //====================================Step 6: Confirm first msg is logon========================
-        var msgType = fix['35'];
+        /*var msgType = fix['35'];
         if(msgType !== 'A' && !ctx.state.session.isLoggedIn){
             var error = '[ERROR] First message must be logon:'+JSON.stringify(fix);
             sys.log(error);
             ctx.stream.end();
             ctx.sendNext({data:error, type:'error'});
             return;
-        }
+        }*/
 
         //====================================Step 7: Confirm incoming sequence numbers========================
         var _seqNum = parseInt(fix['34'], 10);
