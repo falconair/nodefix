@@ -1,0 +1,2 @@
+-move heartbeat and other logon logic to logon processor
+-continue to fix session logic according to the logon psuedo code
