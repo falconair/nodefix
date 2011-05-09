@@ -28,8 +28,8 @@ function logonProcessorAcceptor(){
 
         //====================================Step 4: Create Data Store==========================
         var msgType = fix['35'];
-        
-        
+
+
         if(ctx.state.session['isLoggedIn'] === false && msgType !== 'A'){
             var error = '[ERROR] First message must be logon:'+JSON.stringify(fix);
             sys.log(error);
