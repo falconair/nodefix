@@ -1,2 +1,3 @@
--keep the most basic logic in logonProcessor*, write the rest in sessionProcessor
+-keep seqnums for all sessions in memory, avoid reading files for every acceptor connection, avoid doing asyc stuff, keep all session logic together!
+-watch data directory, whenever a file changes, reload its seqnums
 -continue to fix session logic according to the logon psuedo code
