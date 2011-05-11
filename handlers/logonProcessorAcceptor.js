@@ -87,6 +87,7 @@ function logonProcessorAcceptor(){
 
                 ctx.state.session['isLoggedIn'] = true;
                 
+                
                 ctx.state.fileStream.write(raw + '\n');
                 ctx.sendNext({data:fix, type:'data'});
             });

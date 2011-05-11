@@ -1,2 +1,2 @@
--move heartbeat and other logon logic to logon processor
+-keep the most basic logic in logonProcessor*, write the rest in sessionProcessor
 -continue to fix session logic according to the logon psuedo code
