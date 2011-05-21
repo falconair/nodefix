@@ -81,7 +81,7 @@ if not isLoggedIn
 //record msg (needed for resend request)
 record msg
 
-//duplicate logon
+//duplicate logon (CORRECTION: check this in logon logic)
 if isLoggedIn and msg is [logon]
     ignore msg
     error "already logged in"
@@ -107,7 +107,7 @@ else if inSeqNum < expectedInSeqNum and posdup is undefined or N
     disconnect connection
 else if inSeqNum > expectedInSeqNum
     ignore msg
-    if msg is [resend-request]
+    if msg is [resend-request] (CONFUSION: check this against spec)
         for list of requested messages from record
             if msg is [logon, logout, resendreq, heartbeat, testreq, seqreset]
                 send [seq-reset] with gap-fill Y
