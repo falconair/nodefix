@@ -23,6 +23,8 @@ function sessionProcessor(isInitiator){
     var self = this;
     self.testRequestID = 1;
 
+    //||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING
+
     this.incoming = function(ctx, event){
         if(event.type !== 'data'){
             ctx.sendNext(event);
@@ -224,6 +226,8 @@ function sessionProcessor(isInitiator){
 
         ctx.sendNext({data:fix, type:'data'});
     }
+
+    //||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING
 
     this.outgoing = function(ctx, event){
         
