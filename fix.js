@@ -7,7 +7,8 @@ var pipe = require('pipe');
 
 //TODO
 //Improve 'error' events. If sender/target exist, add them
-//Clean up direct use of msg fields. Prefer the use of sender/target from context rather than trying to get fields directly (or do the opposite?)
+//Clean up direct use of msg fields. Prefer the use of sender/target from context rather 
+//than trying to get fields directly (or do the opposite?)
 //If no logon is established x seconds after connection, kill connection and notify client
 
 
