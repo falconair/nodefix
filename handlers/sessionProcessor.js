@@ -4,6 +4,7 @@ exports.newSessionProcessor = function(isInitiator) {
 
 var sys = require('sys');
 var fs = require('fs');
+var fixutil = require('./fixutils.js');
 
 //TODO refactor, this is already defined in persister.js
 var SOHCHAR = String.fromCharCode(1);
@@ -252,14 +253,3 @@ function sessionProcessor(isInitiator){
 }
 
 
-//TODO refactor, this is already defined in persister.js
-function convertToMap(msg) {
-    var fix = {};
-    var keyvals = msg.split(SOHCHAR);
-    for (var kv in Object.keys(keyvals)) {
-        var kvpair = keyvals[kv].split('=');
-        fix[kvpair[0]] = kvpair[1];
-    }
-    return fix;
-
-}
