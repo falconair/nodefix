@@ -104,6 +104,7 @@ else if inSeqNum < expectedInSeqNum and posdup is Y
 else if inSeqNum < expectedInSeqNum and posdup is undefined or N
     ignore msg
     error "manual intervention needed!"
+    send [logout] with error reason
     disconnect connection
 else if inSeqNum > expectedInSeqNum
     ignore msg

@@ -4,7 +4,7 @@ exports.newTemplate= function(isAcceptor,isDuplicate,isAuthentic,getSeqNums, rec
 
 var fixutil = require('./fixutils.js');
 
-
+//TODO make sure 'ignored' messages really are not forwarded to the next handler
 function template(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMsg){
 	var isInitiator = !isAcceptor;
 	
@@ -165,8 +165,50 @@ function template(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMsg){
         //greater than expected
         else{
             //is it resend request?
-            ...?
+            if(msgType === '2'){
+		//TODO get list of msgs from archive and send them out, but gap fill admin msgs
+	    }
+	    
+	    //did we already send a resend request?
+	    if(self.isResendRequested === false){
+		self.isResendRequested = true;
+		ctx.sendPrev({data:{'35':'2', '7':self.incomingSeqNum, '16':'0'}, type:'data'});
+	    }
+	    
+	    //send resend-request
         }
+	
+	//==Process sequence-reset with gap-fill
+	if(msgType === '4' && fix['123'] === 'Y'){
+	    var newSeqNoStr = fix['36'];
+	    var newSeqNo = parseInt(newSeqNoStr,10);
+	    
+	    if(newSeqNo >= self.incomingSeqNum){
+		self.incomingSeqNum = newSeqNo;
+	    }
+	    else{
+                    var error = '[ERROR] Seq-reset may not decrement sequence numbers: ' + raw;
+                    sys.log(error);
+                    ctx.stream.end();
+                    ctx.sendNext({data:error, type:'error'});
+                    return;
+	    }
+	}
+	
+	//==Check compids and version
+	//TODO
+	
+	//==Process test request
+	if(msgType === '1'){
+	    var testReqID = fix['112'];
+	    ctx.sendPrev({data:{'35':'0', '112':testReqID}, type:'data'});
+	}
+	
+	//==Process resend-request
+	//TODO
+	
+	//==Process logout
+	//TODO
         
     }
     
