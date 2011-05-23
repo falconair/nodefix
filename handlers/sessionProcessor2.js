@@ -1,5 +1,5 @@
-exports.newSessionProcessor= function(isAcceptor,isDuplicate,isAuthentic,getSeqNums, recordMsg) {
-    return new sessionProcessor(session);
+exports.newSessionProcessor= function(isAcceptor,options) {
+    return new sessionProcessor(isAcceptor, options);
 };
 
 var fixutil = require('../fixutils.js');
@@ -12,8 +12,15 @@ var fixutil = require('../fixutils.js');
 //--ds.hash.get(sender,target,callback)
 //TODO outgoing message handling
 //TODO Normalize input parameters
-function sessionProcessor(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMsg){
+function sessionProcessor(isAcceptor,options){
 	var isInitiator = !isAcceptor;
+	
+	
+	var opt = options || {};
+	var isDuplicateFunc = opt.isDuplicateFunc || function(){ return false; };
+	var isAuthenticFunc = opt.isAuthenticFunc || function(){ return true; };
+	var getSeqNums = opt.getSeqNums || function(){ return {'incomingSeqNum':1,'outgoingSeqNum':1}; };
+	var recordMsg = opt.recordMsg || function(){};
 	
 	var sendHeartbeats = true;
 	var expectHeartbeats = true;
@@ -21,7 +28,7 @@ function sessionProcessor(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMs
 	
     var isLoggedIn = false;
     var heartbeatIntervalID = "";
-    var timeOfLastIncoming=newDate().getTime();
+    var timeOfLastIncoming=new Date().getTime();
     var testRequestID = 1;
     var incomingSeqNum = 1;
     var outgoingSeqNum = 1;
@@ -62,7 +69,7 @@ function sessionProcessor(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMs
             //==Process acceptor specific logic
             if(isAcceptor){
                 //==Check duplicate connections
-                if(isDuplicate(senderCompID, targetCompID)){
+                if(isDuplicateFunc(senderCompID, targetCompID)){
                     var error = '[ERROR] Session already logged in:'+raw;
                     sys.log(error);
                     ctx.stream.end();
@@ -71,8 +78,8 @@ function sessionProcessor(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMs
             	}
 
                 //==Authenticate connection
-                if(isAuthentic(fix,ctx.stream.remoteAddress)){
-                	if(isDuplicate(senderCompID, targetCompID)){
+                if(isAuthenticFunc(fix,ctx.stream.remoteAddress)){
+                	if(isDuplicateFunc(senderCompID, targetCompID)){
                         var error = '[ERROR] Session not authentic:'+raw;
                         sys.log(error);
                         ctx.stream.end();

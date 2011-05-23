@@ -10,6 +10,7 @@
   "dependencies":{
     "pipe": "0.0.1",
     "underscore": "1.1.6"
+    "underscore.string": "1.1.4"
   },
   "main": "./fix",
   "engines": {
