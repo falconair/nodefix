@@ -1,8 +1,8 @@
-exports.newTemplate= function(isAcceptor,isDuplicate,isAuthentic,getSeqNums, recordMsg) {
-    return new template(session);
+exports.newSessionProcessor= function(isAcceptor,isDuplicate,isAuthentic,getSeqNums, recordMsg) {
+    return new sessionProcessor(session);
 };
 
-var fixutil = require('./fixutils.js');
+var fixutil = require('../fixutils.js');
 
 //TODO make sure 'ignored' messages really are not forwarded to the next handler
 //TODO instead of recordMsg function as param, expect a data structure which:
@@ -10,7 +10,9 @@ var fixutil = require('./fixutils.js');
 //--ds.hash.put(sender,target,value)
 //--ds.queue.get(sender,target,callback)
 //--ds.hash.get(sender,target,callback)
-function template(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMsg){
+//TODO outgoing message handling
+//TODO Normalize input parameters
+function sessionProcessor(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMsg){
 	var isInitiator = !isAcceptor;
 	
 	var sendHeartbeats = true;
