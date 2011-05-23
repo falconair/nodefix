@@ -5,6 +5,11 @@ exports.newTemplate= function(isAcceptor,isDuplicate,isAuthentic,getSeqNums, rec
 var fixutil = require('./fixutils.js');
 
 //TODO make sure 'ignored' messages really are not forwarded to the next handler
+//TODO instead of recordMsg function as param, expect a data structure which:
+//--ds.queue.add(sender,target,value)
+//--ds.hash.put(sender,target,value)
+//--ds.queue.get(sender,target,callback)
+//--ds.hash.get(sender,target,callback)
 function template(isAcceptor,isDuplicate,isAuthentic,getSeqNums,recordMsg){
 	var isInitiator = !isAcceptor;
 	
