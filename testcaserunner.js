@@ -20,7 +20,7 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
     _.each(d, function(str){
         var c = str.charAt(0);
         var v = _.trim(str.substr(1,str.length));
-        console.log(v);
+        //console.log(v);
 
         if(c=== '#'){ return ;}
         
