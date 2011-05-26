@@ -13,19 +13,19 @@ var fixutil = require('../fixutils.js');
 //TODO outgoing message handling
 //TODO Normalize input parameters
 function sessionProcessor(isAcceptor,options){
-	var isInitiator = !isAcceptor;
-	
-	
-	var opt = options || {};
-	var isDuplicateFunc = opt.isDuplicateFunc || function(){ return false; };
-	var isAuthenticFunc = opt.isAuthenticFunc || function(){ return true; };
-	var getSeqNums = opt.getSeqNums || function(){ return {'incomingSeqNum':1,'outgoingSeqNum':1}; };
-	var recordMsg = opt.recordMsg || function(){};
-	
-	var sendHeartbeats = true;
-	var expectHeartbeats = true;
-	var respondToLogon = true;
-	
+    var isInitiator = !isAcceptor;
+    
+    
+    var opt = options || {};
+    var isDuplicateFunc = opt.isDuplicateFunc || function(){ return false; };
+    var isAuthenticFunc = opt.isAuthenticFunc || function(){ return true; };
+    var getSeqNums = opt.getSeqNums || function(){ return {'incomingSeqNum':1,'outgoingSeqNum':1}; };
+    var recordMsg = opt.recordMsg || function(){};
+    
+    var sendHeartbeats = true;
+    var expectHeartbeats = true;
+    var respondToLogon = true;
+    
     var isLoggedIn = false;
     var heartbeatIntervalID = "";
     var timeOfLastIncoming=new Date().getTime();
@@ -75,17 +75,17 @@ function sessionProcessor(isAcceptor,options){
                     ctx.stream.end();
                     ctx.sendNext({data:error, type:'error'});
                     return;
-            	}
+                }
 
                 //==Authenticate connection
                 if(isAuthenticFunc(fix,ctx.stream.remoteAddress)){
-                	if(isDuplicateFunc(senderCompID, targetCompID)){
+                    if(isDuplicateFunc(senderCompID, targetCompID)){
                         var error = '[ERROR] Session not authentic:'+raw;
                         sys.log(error);
                         ctx.stream.end();
                         ctx.sendNext({data:error, type:'error'});
                         return;
-                	}
+                    }
 
                 }
             }//End Process acceptor specific logic==
@@ -180,49 +180,49 @@ function sessionProcessor(isAcceptor,options){
         else{
             //is it resend request?
             if(msgType === '2'){
-		//TODO get list of msgs from archive and send them out, but gap fill admin msgs
-	    }
-	    
-	    //did we already send a resend request?
-	    if(self.isResendRequested === false){
-		self.isResendRequested = true;
-		ctx.sendPrev({data:{'35':'2', '7':self.incomingSeqNum, '16':'0'}, type:'data'});
-	    }
-	    
-	    //send resend-request
+        //TODO get list of msgs from archive and send them out, but gap fill admin msgs
         }
-	
-	//==Process sequence-reset with gap-fill
-	if(msgType === '4' && fix['123'] === 'Y'){
-	    var newSeqNoStr = fix['36'];
-	    var newSeqNo = parseInt(newSeqNoStr,10);
-	    
-	    if(newSeqNo >= self.incomingSeqNum){
-		self.incomingSeqNum = newSeqNo;
-	    }
-	    else{
+        
+        //did we already send a resend request?
+        if(self.isResendRequested === false){
+        self.isResendRequested = true;
+        ctx.sendPrev({data:{'35':'2', '7':self.incomingSeqNum, '16':'0'}, type:'data'});
+        }
+        
+        //send resend-request
+        }
+    
+    //==Process sequence-reset with gap-fill
+    if(msgType === '4' && fix['123'] === 'Y'){
+        var newSeqNoStr = fix['36'];
+        var newSeqNo = parseInt(newSeqNoStr,10);
+        
+        if(newSeqNo >= self.incomingSeqNum){
+        self.incomingSeqNum = newSeqNo;
+        }
+        else{
                     var error = '[ERROR] Seq-reset may not decrement sequence numbers: ' + raw;
                     sys.log(error);
                     ctx.stream.end();
                     ctx.sendNext({data:error, type:'error'});
                     return;
-	    }
-	}
-	
-	//==Check compids and version
-	//TODO
-	
-	//==Process test request
-	if(msgType === '1'){
-	    var testReqID = fix['112'];
-	    ctx.sendPrev({data:{'35':'0', '112':testReqID}, type:'data'});
-	}
-	
-	//==Process resend-request
-	//TODO
-	
-	//==Process logout
-	//TODO
+        }
+    }
+    
+    //==Check compids and version
+    //TODO
+    
+    //==Process test request
+    if(msgType === '1'){
+        var testReqID = fix['112'];
+        ctx.sendPrev({data:{'35':'0', '112':testReqID}, type:'data'});
+    }
+    
+    //==Process resend-request
+    //TODO
+    
+    //==Process logout
+    //TODO
         
     }
     
