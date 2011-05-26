@@ -34,6 +34,7 @@ function sessionProcessor(isAcceptor,options){
     var incomingSeqNum = 1;
     var outgoingSeqNum = 1;
     var isResendRequested = false;
+    var isLogoutRequested = false;
     
     var file = null;
     
@@ -265,7 +266,13 @@ function sessionProcessor(isAcceptor,options){
 
     
     //==Process logout
-    //TODO
+    if(msgType === '5'){
+        if(self.isLogoutRequested){
+            ctx.stream.end();
+        }
+        else{
+            ctx.sendPrev(fix);
+        }
         
     }
     
