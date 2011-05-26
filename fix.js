@@ -109,7 +109,7 @@ function Client(fixVersion, senderCompID, targetCompID) {
     self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
     self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
     self.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(false));
-   self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
+    self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
  
     
     stream.on('connect', function() {

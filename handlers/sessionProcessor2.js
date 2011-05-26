@@ -142,7 +142,6 @@ function sessionProcessor(isAcceptor,options){
         }// End Process logon==
         
         //==Record message
-        //datastore.getList(senderCompID+"->"+targetCompID).push(raw);
         if(file === null){
             file= fs.createWriteStream('./data/'+senderCompID+'->'+targetCompID+'log', {'flags': 'a'});
         }
@@ -213,10 +212,7 @@ function sessionProcessor(isAcceptor,options){
                 ctx.sendPrev({data:{'35':'2', '7':self.incomingSeqNum, '16':'0'}, type:'data'});
             }
         }
-        
-        
-        }
-    
+            
     //==Process sequence-reset with gap-fill
     if(msgType === '4' && fix['123'] === 'Y'){
         var newSeqNoStr = fix['36'];

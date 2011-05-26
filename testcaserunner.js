@@ -28,6 +28,8 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
         if(c === 'i'){
             
         }
+        
+        console.log(str);
         p.pushIncoming(str);
     });
 });
