@@ -2,10 +2,11 @@ exports.newSessionProcessor= function(isAcceptor,options) {
     return new sessionProcessor(isAcceptor, options);
 };
 
+var fs = require('fs');
 var fixutil = require('../fixutils.js');
 
 //TODO make sure 'ignored' messages really are not forwarded to the next handler
-//TODO instead of recordMsg function as param, expect a data structure which:
+//TODO instead of datastore function as param, expect a data structure which:
 //--ds.queue.add(sender,target,value)
 //--ds.hash.put(sender,target,value)
 //--ds.queue.get(sender,target,callback)
@@ -20,7 +21,7 @@ function sessionProcessor(isAcceptor,options){
     var isDuplicateFunc = opt.isDuplicateFunc || function(){ return false; };
     var isAuthenticFunc = opt.isAuthenticFunc || function(){ return true; };
     var getSeqNums = opt.getSeqNums || function(){ return {'incomingSeqNum':1,'outgoingSeqNum':1}; };
-    var recordMsg = opt.recordMsg || function(){};
+    var datastore = opt.datastore || function(){};
     
     var sendHeartbeats = true;
     var expectHeartbeats = true;
@@ -33,6 +34,8 @@ function sessionProcessor(isAcceptor,options){
     var incomingSeqNum = 1;
     var outgoingSeqNum = 1;
     var isResendRequested = false;
+    
+    var file = null;
     
     var self = this;
 
@@ -138,7 +141,11 @@ function sessionProcessor(isAcceptor,options){
         }// End Process logon==
         
         //==Record message
-        recordMsg(senderCompID, targetCompID, raw);
+        //datastore.getList(senderCompID+"->"+targetCompID).push(raw);
+        if(file === null){
+            file= fs.createWriteStream('./data/'+senderCompID+'->'+targetCompID+'log', {'flags': 'a'});
+        }
+        file.write(raw);
         
         //==Process seq-reset (no gap-fill)
         if(msgType === '4' && fix['123'] ===  undefined  || fix['123'] === 'N'){
@@ -180,16 +187,33 @@ function sessionProcessor(isAcceptor,options){
         else{
             //is it resend request?
             if(msgType === '2'){
-        //TODO get list of msgs from archive and send them out, but gap fill admin msgs
+                //TODO remove duplication in resend processor
+                //get list of msgs from archive and send them out, but gap fill admin msgs
+                var reader = fs.createReadStream(filename, { 'flags': 'r', 'encoding': 'binary', 'mode': 0666, 'bufferSize': 4 * 1024})
+                //TODO full lines may not be read
+                reader.addListener( "data", function(chunk) {
+                    var _fix = fixutil.converToMap(chunk);
+                    var _msgType = _fix[35];
+                    var _seqNo = _fix[34];
+                    if(_.include(['A','5','2','0','1','4'], _msgType)){
+                        //send seq-reset with gap-fill Y
+                    ctx.sendPrev({data:{'35':'4', '123':'Y', '36':_seqNo}, type:'data'});
+                    }
+                    else{
+                        //send msg w/ posdup Y
+                        ctx.sendPrev(_.extend(_fix,{'43':'Y'}));
+                    }
+                });
+            }
+            //did we already send a resend request?
+            if(self.isResendRequested === false){
+                self.isResendRequested = true;
+                //send resend-request
+                ctx.sendPrev({data:{'35':'2', '7':self.incomingSeqNum, '16':'0'}, type:'data'});
+            }
         }
         
-        //did we already send a resend request?
-        if(self.isResendRequested === false){
-        self.isResendRequested = true;
-        ctx.sendPrev({data:{'35':'2', '7':self.incomingSeqNum, '16':'0'}, type:'data'});
-        }
         
-        //send resend-request
         }
     
     //==Process sequence-reset with gap-fill
@@ -219,7 +243,26 @@ function sessionProcessor(isAcceptor,options){
     }
     
     //==Process resend-request
-    //TODO
+    if(msgType === '2'){
+        //TODO remove duplication in resend processor
+        //get list of msgs from archive and send them out, but gap fill admin msgs
+        var reader = fs.createReadStream(filename, { 'flags': 'r', 'encoding': 'binary', 'mode': 0666, 'bufferSize': 4 * 1024})
+        //TODO full lines may not be read
+        reader.addListener( "data", function(chunk) {
+            var _fix = fixutil.converToMap(chunk);
+            var _msgType = _fix[35];
+            var _seqNo = _fix[34];
+            if(_.include(['A','5','2','0','1','4'], _msgType)){
+                //send seq-reset with gap-fill Y
+                ctx.sendPrev({data:{'35':'4', '123':'Y', '36':_seqNo}, type:'data'});
+            }
+            else{
+                //send msg w/ posdup Y
+                ctx.sendPrev(_.extend(_fix,{'43':'Y'}));
+            }
+        });
+    }
+
     
     //==Process logout
     //TODO

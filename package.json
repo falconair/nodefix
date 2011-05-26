@@ -4,18 +4,16 @@
   "version": "0.0.3",
   "homepage": "https://github.com/falconair/nodefix",
   "author": "Shahbaz Chaudhary <shahbazc@gmail.com>",
+  "main": "fix",
   "directories": {
     "handlers": "./handlers",
   },
   "dependencies":{
     "pipe": "0.0.1",
-    "underscore": "1.1.6"
+    "underscore": "1.1.6",
     "underscore.string": "1.1.4"
   },
-  "main": "./fix",
-  "engines": {
-    "node": ">=0.4.0"
-  },
+  "engines": { "node": ">=0.4.0"},
   "repository": {
     "type": "git",
     "url": "git://github.com/falconair/nodefix.git"
