@@ -191,15 +191,15 @@ function Client(fixVersion, senderCompID, targetCompID) {
 
     //--CLIENT METHODS--
     this.write = function(data) { self.p.pushOutgoing(data); };
-    this.createConnection(port, host, callback){
+    this.createConnection = function(port, host, callback){
     
         self.p.state.session['remoteAddress'] = host;
         self.stream = net.createConnection(port, host, callback);
     }
-    this.logon(){
+    this.logon = function(){
         self.write({'35': 'A', '90': '0', '108': '10'});
     }
-    this.connectAndLogon(port, host, callback){
+    this.connectAndLogon = function(port, host, callback){
         self.createConnection(port, host, function(error, data){
             if(error === null){
                 self.logon();
