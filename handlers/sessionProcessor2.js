@@ -363,6 +363,8 @@ function sessionProcessor(isAcceptor, options) {
             }
 
         }
+        
+        ctx.sendNext({data:fix, type:'data'});
     }
 
         //||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||

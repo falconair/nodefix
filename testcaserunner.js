@@ -26,11 +26,10 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
         
         
         if(c === 'i'){
-            
+            p.pushIncoming(str);            
         }
         
-        console.log(str);
-        p.pushIncoming(str);
+        
     });
 });
 
