@@ -45,6 +45,7 @@ function sessionProcessor(isAcceptor, options) {
     var isLoggedIn = false;
     var heartbeatIntervalID = "";
     var timeOfLastIncoming = new Date().getTime();
+    var timeOfLastOutgoing = new Date().getTime();
     var testRequestID = 1;
     var incomingSeqNum = 1;
     var outgoingSeqNum = 1;
@@ -62,7 +63,7 @@ function sessionProcessor(isAcceptor, options) {
             return;
         }
 
-        timeOfLastIncoming = new Date().getTime();
+        self.timeOfLastIncoming = new Date().getTime();
 
         //==Convert to key/val map==
         var raw = event.data;
@@ -104,17 +105,14 @@ function sessionProcessor(isAcceptor, options) {
 
                 //==Authenticate connection
                 if (isAuthenticFunc(fix, ctx.stream.remoteAddress)) {
-                    if (isDuplicateFunc(senderCompID, targetCompID)) {
-                        var error = '[ERROR] Session not authentic:' + raw;
-                        sys.log(error);
-                        ctx.stream.end();
-                        ctx.sendNext({
-                            data: error,
-                            type: 'error'
-                        });
-                        return;
-                    }
-
+                    var error = '[ERROR] Session not authentic:' + raw;
+                    sys.log(error);
+                    ctx.stream.end();
+                    ctx.sendNext({
+                        data: error,
+                        type: 'error'
+                    });
+                    return;
                 }
             } //End Process acceptor specific logic==
             //==Sync sequence numbers from data store
@@ -132,7 +130,7 @@ function sessionProcessor(isAcceptor, options) {
 
                 //==send heartbeats
                 if (currentTime - self.timeOfLastOutgoing > heartbeatInMilliSeconds && self.sendHeartbeats) {
-                    ctx.sendPrev({
+                    sendMsg(ctx.sendPrev,{
                         data: {
                             '35': '0'
                         },
@@ -142,7 +140,7 @@ function sessionProcessor(isAcceptor, options) {
 
                 //==ask counter party to wake up
                 if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds && self.expectHeartbeats) {
-                    ctx.sendPrev({
+                    sendMsg(ctx.sendPrev,{
                         data: {
                             '35': '1',
                             '112': self.testRequestID++
@@ -175,7 +173,7 @@ function sessionProcessor(isAcceptor, options) {
             //==Logon ack (acceptor)
             if (isAcceptor && respondToLogon) {
                 if (respondToLogon) {
-                    ctx.sendPrev({
+                    sendMsg(ctx.sendPrev,{
                         data: fix,
                         type: 'data'
                     });
@@ -183,13 +181,14 @@ function sessionProcessor(isAcceptor, options) {
             }
 
         } // End Process logon==
-        //==Record message
-        if (file === null) {
-            file = fs.createWriteStream('./data/' + senderCompID + '->' + targetCompID + 'log', {
+        
+        //==Record message--TODO duplicate logic (n outgoing as well)
+        if (self.file === null) {
+            self.file = fs.createWriteStream('./data/' + senderCompID + '->' + targetCompID + 'log', {
                 'flags': 'a'
             });
         }
-        file.write(raw);
+        self.file.write(raw);
 
         //==Process seq-reset (no gap-fill)
         if (msgType === '4' && fix['123'] === undefined || fix['123'] === 'N') {
@@ -255,7 +254,7 @@ function sessionProcessor(isAcceptor, options) {
                     var _seqNo = _fix[34];
                     if (_.include(['A', '5', '2', '0', '1', '4'], _msgType)) {
                         //send seq-reset with gap-fill Y
-                        ctx.sendPrev({
+                        sendMsg(ctx.sendPrev,{
                             data: {
                                 '35': '4',
                                 '123': 'Y',
@@ -265,7 +264,7 @@ function sessionProcessor(isAcceptor, options) {
                         });
                     } else {
                         //send msg w/ posdup Y
-                        ctx.sendPrev(_.extend(_fix, {
+                        sendMsg(ctx.sendPrev,_.extend(_fix, {
                             '43': 'Y'
                         }));
                     }
@@ -275,7 +274,7 @@ function sessionProcessor(isAcceptor, options) {
             if (self.isResendRequested === false) {
                 self.isResendRequested = true;
                 //send resend-request
-                ctx.sendPrev({
+                sendMsg(ctx.sendPrev,{
                     data: {
                         '35': '2',
                         '7': self.incomingSeqNum,
@@ -310,7 +309,7 @@ function sessionProcessor(isAcceptor, options) {
         //==Process test request
         if (msgType === '1') {
             var testReqID = fix['112'];
-            ctx.sendPrev({
+            sendMsg(ctx.sendPrev,{
                 data: {
                     '35': '0',
                     '112': testReqID
@@ -336,7 +335,7 @@ function sessionProcessor(isAcceptor, options) {
                 var _seqNo = _fix[34];
                 if (_.include(['A', '5', '2', '0', '1', '4'], _msgType)) {
                     //send seq-reset with gap-fill Y
-                    ctx.sendPrev({
+                    sendMsg(ctx.sendPrev,{
                         data: {
                             '35': '4',
                             '123': 'Y',
@@ -346,7 +345,7 @@ function sessionProcessor(isAcceptor, options) {
                     });
                 } else {
                     //send msg w/ posdup Y
-                    ctx.sendPrev(_.extend(_fix, {
+                    sendMsg(ctx.sendPrev,_.extend(_fix, {
                         '43': 'Y'
                     }));
                 }
@@ -359,7 +358,7 @@ function sessionProcessor(isAcceptor, options) {
             if (self.isLogoutRequested) {
                 ctx.stream.end();
             } else {
-                ctx.sendPrev(fix);
+                sendMsg(ctx.sendPrev,fix);
             }
 
         }
@@ -369,7 +368,33 @@ function sessionProcessor(isAcceptor, options) {
 
         //||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||OUTGOING||||||||||
         this.outgoing = function (ctx, event) {
-            ctx.sendNext(event);
+            
+            if(event.type !== 'data'){
+                ctx.sendNext(event);
+                return;
+            }
+            
+            sendMsg(ctx.sendNext, fix);
+        }
+        
+        
+        //||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTIILTY||||||||||
+        var sendMsg = function(senderFunc, msg){
+            var outmsg = convertToFIX(msg, self.fixVersion,  getUTCTimeStamp(new Date()),
+                self.senderCompID,  self.targetCompID,  self.outgoingSeqNum);
+    
+            self.outgoingSeqNum ++;
+            self.timeOfLastOutgoing = new Date().getTime();
+        
+            //==Record message--TODO duplicate logic (n incoming as well)
+            if (self.file === null) {
+                self.file = fs.createWriteStream('./data/' + senderCompID + '->' + targetCompID + 'log', {
+                    'flags': 'a'
+                });
+            }
+            self.file.write(outmsg);
+
+            senderFunc({data:outmsg, type:'data'});
         }
 
 }
