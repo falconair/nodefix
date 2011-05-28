@@ -99,45 +99,40 @@ exports.createConnection = function(fixVersion, senderCompID, targetCompID) {
 function Client(fixVersion, senderCompID, targetCompID) {
     events.EventEmitter.call(this);
     
-
-    this.session = null;
-    var self = this;
-
     var stream = null;
+    var self = this;
 
     self.p = pipe.makePipe(stream);
     self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-    self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
+    self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor({'sessionEmitter':self}));
     self.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(false));
-    self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
+    self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
  
     
-    stream.on('connect', function() {
-        self.emit('connect');
-        self.p.pushOutgoing({data:logonmsg, type:'data'});
-    });
-    stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
 
     //--CLIENT METHODS--
     this.write = function(data) { self.p.pushOutgoing(data); };
-    this.createConnection = function(port, host, callback){
+    this.createConnection = function(port, host){
     
-        self.p.state.session['remoteAddress'] = host;
-        self.stream = net.createConnection(port, host, callback);
+        //self.p.state.session['remoteAddress'] = host;
+        self.stream = net.createConnection(port, host);
+        self.stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
     }
-    this.logon = function(){
-        self.write({'35': 'A', '90': '0', '108': '10'});
+    this.logon = function(logonmsg){
+        logonmsg = logonmsg || {'35': 'A', '90': '0', '108': '10'};
+        if(self.stream === null){
+            stream.on('connect', function() {
+                self.emit('connect');
+                self.p.pushOutgoing({data:logonmsg, type:'data'});
+            });
+        }
+        else{
+            self.write(logonmsg);            
+        }
     }
-    this.connectAndLogon = function(port, host, callback){
-        self.createConnection(port, host, function(error, data){
-            if(error === null){
-                self.logon();
-                callback(null, data);
-            }
-            else{
-                callback(error,data);
-            }
-        });
+    this.connectAndLogon = function(port, host){
+        self.createConnection(port, host);
+        self.on('connect', function(){ self.logon(); });
     }
     this.logoff = function(logoffReason){ self.p.pushOutgoing({data:{35:5, 58:logoffReason}, type:'data'}) };
     /*this.getMessages = function(callback){

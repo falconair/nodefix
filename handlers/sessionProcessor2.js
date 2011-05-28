@@ -380,7 +380,7 @@ function sessionProcessor(isAcceptor, options) {
         
         //||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTIILTY||||||||||
         var sendMsg = function(senderFunc, msg){
-            var outmsg = convertToFIX(msg, self.fixVersion,  getUTCTimeStamp(new Date()),
+            var outmsg = fixutil.convertToFIX(msg, self.fixVersion,  getUTCTimeStamp(new Date()),
                 self.senderCompID,  self.targetCompID,  self.outgoingSeqNum);
     
             self.outgoingSeqNum ++;
