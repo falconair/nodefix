@@ -1,8 +1,8 @@
-exports.SOHCHAR = String.fromCharCode(1);
+var SOHCHAR = exports.SOHCHAR = String.fromCharCode(1);
 
 exports.getCurrentUTCTimeStamp = function(){ return getUTCTimeStamp(new Date()); }
 
-exports.getUTCTimeStamp = function(datetime){
+var getUTCTimeStamp = exports.getUTCTimeStamp = function(datetime){
     var timestamp = datetime || new Date();
 
     var year = timestamp.getUTCFullYear();
@@ -36,7 +36,7 @@ exports.getUTCTimeStamp = function(datetime){
     return ts;
 }
 
-exports.checksum = function(str){
+var checksum = exports.checksum = function(str){
     var chksm = 0;
     for (var i = 0; i < str.length; i++) {
         chksm += str.charCodeAt(i);
@@ -58,7 +58,7 @@ exports.checksum = function(str){
     return checksumstr;
 }
 
-exports.convertToFIX = function(msgraw, fixVersion, timeStamp, senderCompID, targetCompID, outgoingSeqNum){
+var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp, senderCompID, targetCompID, outgoingSeqNum){
     //sys.log('c2F:'+JSON.stringify(msgraw));
     //defensive copy
     var msg = {};
@@ -119,7 +119,7 @@ exports.convertToFIX = function(msgraw, fixVersion, timeStamp, senderCompID, tar
 
 }
 
-exports.convertToMap = function(msg) {
+var convertToMap = exports.convertToMap = function(msg) {
     var fix = {};
     var keyvals = msg.split(SOHCHAR);
     for (var kv in Object.keys(keyvals)) {

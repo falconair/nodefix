@@ -16,45 +16,49 @@ var fixutil = require('../fixutils.js');
 
 
 function sessionProcessor(isAcceptor, options) {
-    var isInitiator = !isAcceptor;
+    var self = this;
+
+    this.isInitiator = !isAcceptor;
 
 
-    var opt = options || {};
-    var isDuplicateFunc = opt.isDuplicateFunc ||
+    this.opt = options || {};
+    this.isDuplicateFunc = self.opt.isDuplicateFunc ||
     function () {
         return false;
     };
-    var isAuthenticFunc = opt.isAuthenticFunc ||
+    this.isAuthenticFunc = self.opt.isAuthenticFunc ||
     function () {
         return true;
     };
-    var getSeqNums = opt.getSeqNums ||
+    this.getSeqNums = self.opt.getSeqNums ||
     function () {
         return {
             'incomingSeqNum': 1,
             'outgoingSeqNum': 1
         };
     };
-    var datastore = opt.datastore ||
-    function () {};
+    this.datastore = self.opt.datastore || function () {};
+    
+    this.fixVersion = null;
+    this.senderCompID = null;
+    this.targetCompID = null;
 
-    var sendHeartbeats = true;
-    var expectHeartbeats = true;
-    var respondToLogon = true;
+    this.sendHeartbeats = true;
+    this.expectHeartbeats = true;
+    this.respondToLogon = true;
 
-    var isLoggedIn = false;
-    var heartbeatIntervalID = "";
-    var timeOfLastIncoming = new Date().getTime();
-    var timeOfLastOutgoing = new Date().getTime();
-    var testRequestID = 1;
-    var incomingSeqNum = 1;
-    var outgoingSeqNum = 1;
-    var isResendRequested = false;
-    var isLogoutRequested = false;
+    this.isLoggedIn = false;
+    this.heartbeatIntervalID = "";
+    this.timeOfLastIncoming = new Date().getTime();
+    this.timeOfLastOutgoing = new Date().getTime();
+    this.testRequestID = 1;
+    this.incomingSeqNum = 1;
+    this.outgoingSeqNum = 1;
+    this.isResendRequested = false;
+    this.isLogoutRequested = false;
 
-    var file = null;
+    this.file = null;
 
-    var self = this;
 
     //||||||||||INCOMING||||||||||INCMOING||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING||||||||||INCOMING||||||||||
     this.incoming = function (ctx, event) {
@@ -67,12 +71,12 @@ function sessionProcessor(isAcceptor, options) {
 
         //==Convert to key/val map==
         var raw = event.data;
-        var fix = fixutil.converToMap(raw);
+        var fix = fixutil.convertToMap(raw);
 
         var msgType = fix['35'];
 
         //==Confirm first msg is logon==
-        if (isLoggedIn === false && msgType !== 'A') {
+        if (self.isLoggedIn === false && msgType !== 'A') {
             var error = '[ERROR] First message must be logon:' + raw;
             sys.log(error);
             ctx.stream.end();
@@ -84,15 +88,15 @@ function sessionProcessor(isAcceptor, options) {
         }
 
         //==Process logon 
-        else if (isLoggedIn === false && msgType === 'A') {
-            var fixVersion = fix['8'];
-            var senderCompID = fix['56'];
-            var targetCompID = fix['49'];
+        else if (self.isLoggedIn === false && msgType === 'A') {
+            self.fixVersion = fix['8'];
+            self.senderCompID = fix['56'];
+            self.targetCompID = fix['49'];
 
             //==Process acceptor specific logic
-            if (isAcceptor) {
+            if (self.isAcceptor) {
                 //==Check duplicate connections
-                if (isDuplicateFunc(senderCompID, targetCompID)) {
+                if (self.isDuplicateFunc(senderCompID, targetCompID)) {
                     var error = '[ERROR] Session already logged in:' + raw;
                     sys.log(error);
                     ctx.stream.end();
@@ -104,7 +108,7 @@ function sessionProcessor(isAcceptor, options) {
                 }
 
                 //==Authenticate connection
-                if (isAuthenticFunc(fix, ctx.stream.remoteAddress)) {
+                if (self.isAuthenticFunc(fix, ctx.stream.remoteAddress)) {
                     var error = '[ERROR] Session not authentic:' + raw;
                     sys.log(error);
                     ctx.stream.end();
@@ -116,7 +120,7 @@ function sessionProcessor(isAcceptor, options) {
                 }
             } //End Process acceptor specific logic==
             //==Sync sequence numbers from data store
-            var seqnums = getSeqNums(senderCompID, targetCompID);
+            var seqnums = self.getSeqNums(self.senderCompID, self.targetCompID);
             self.incomingSeqNum = seqnums.incomingSeqNum;
             self.outgoingSeqNum = seqnums.outgoingSeqNum;
 
@@ -130,7 +134,7 @@ function sessionProcessor(isAcceptor, options) {
 
                 //==send heartbeats
                 if (currentTime - self.timeOfLastOutgoing > heartbeatInMilliSeconds && self.sendHeartbeats) {
-                    sendMsg(ctx.sendPrev,{
+                    self.sendMsg(ctx.sendPrev,{
                         data: {
                             '35': '0'
                         },
@@ -140,7 +144,7 @@ function sessionProcessor(isAcceptor, options) {
 
                 //==ask counter party to wake up
                 if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds && self.expectHeartbeats) {
-                    sendMsg(ctx.sendPrev,{
+                    self.sendMsg(ctx.sendPrev,{
                         data: {
                             '35': '1',
                             '112': self.testRequestID++
@@ -168,12 +172,12 @@ function sessionProcessor(isAcceptor, options) {
             });
 
             //==Logon successful
-            isLoggedIn = true;
+            self.isLoggedIn = true;
 
             //==Logon ack (acceptor)
-            if (isAcceptor && respondToLogon) {
-                if (respondToLogon) {
-                    sendMsg(ctx.sendPrev,{
+            if (self.isAcceptor && self.respondToLogon) {
+                if (self.respondToLogon) {
+                    self.sendMsg(ctx.sendPrev,{
                         data: fix,
                         type: 'data'
                     });
@@ -183,12 +187,13 @@ function sessionProcessor(isAcceptor, options) {
         } // End Process logon==
         
         //==Record message--TODO duplicate logic (n outgoing as well)
-        if (self.file === null) {
-            self.file = fs.createWriteStream('./data/' + senderCompID + '->' + targetCompID + 'log', {
-                'flags': 'a'
-            });
-        }
-        self.file.write(raw);
+            if (self.file === null) {
+                var filename = './traffic/' + self.senderCompID + '->' + self.targetCompID + '.log';
+                console.log("About to create file "+filename);
+                self.file = fs.createWriteStream(filename, { 'flags': 'a+' });
+                self.file.on('error', function(err){ console.log(err); });//todo print good log, end session
+            }
+        self.file.write(raw+'\n');
 
         //==Process seq-reset (no gap-fill)
         if (msgType === '4' && fix['123'] === undefined || fix['123'] === 'N') {
@@ -254,7 +259,7 @@ function sessionProcessor(isAcceptor, options) {
                     var _seqNo = _fix[34];
                     if (_.include(['A', '5', '2', '0', '1', '4'], _msgType)) {
                         //send seq-reset with gap-fill Y
-                        sendMsg(ctx.sendPrev,{
+                        self.sendMsg(ctx.sendPrev,{
                             data: {
                                 '35': '4',
                                 '123': 'Y',
@@ -264,7 +269,7 @@ function sessionProcessor(isAcceptor, options) {
                         });
                     } else {
                         //send msg w/ posdup Y
-                        sendMsg(ctx.sendPrev,_.extend(_fix, {
+                        self.sendMsg(ctx.sendPrev,_.extend(_fix, {
                             '43': 'Y'
                         }));
                     }
@@ -274,7 +279,7 @@ function sessionProcessor(isAcceptor, options) {
             if (self.isResendRequested === false) {
                 self.isResendRequested = true;
                 //send resend-request
-                sendMsg(ctx.sendPrev,{
+                self.sendMsg(ctx.sendPrev,{
                     data: {
                         '35': '2',
                         '7': self.incomingSeqNum,
@@ -309,7 +314,7 @@ function sessionProcessor(isAcceptor, options) {
         //==Process test request
         if (msgType === '1') {
             var testReqID = fix['112'];
-            sendMsg(ctx.sendPrev,{
+            self.sendMsg(ctx.sendPrev,{
                 data: {
                     '35': '0',
                     '112': testReqID
@@ -335,7 +340,7 @@ function sessionProcessor(isAcceptor, options) {
                 var _seqNo = _fix[34];
                 if (_.include(['A', '5', '2', '0', '1', '4'], _msgType)) {
                     //send seq-reset with gap-fill Y
-                    sendMsg(ctx.sendPrev,{
+                    self.sendMsg(ctx.sendPrev,{
                         data: {
                             '35': '4',
                             '123': 'Y',
@@ -345,7 +350,7 @@ function sessionProcessor(isAcceptor, options) {
                     });
                 } else {
                     //send msg w/ posdup Y
-                    sendMsg(ctx.sendPrev,_.extend(_fix, {
+                    self.sendMsg(ctx.sendPrev,_.extend(_fix, {
                         '43': 'Y'
                     }));
                 }
@@ -358,7 +363,7 @@ function sessionProcessor(isAcceptor, options) {
             if (self.isLogoutRequested) {
                 ctx.stream.end();
             } else {
-                sendMsg(ctx.sendPrev,fix);
+                self.sendMsg(ctx.sendPrev,fix);
             }
 
         }
@@ -374,13 +379,26 @@ function sessionProcessor(isAcceptor, options) {
                 return;
             }
             
-            sendMsg(ctx.sendNext, fix);
+            var fix = event.data;
+            console.log("sessionproc2: outgiong :"+JSON.stringify(fix));//debug
+            console.log("isLoggedIn:" + self.isLoggedIn);//debug
+
+            var msgType = fix['35'];
+
+            if(self.isLoggedIn === false && msgType === "A"){
+                self.fixVersion = fix['8'];
+                self.senderCompID = fix['56'];
+                self.targetCompID = fix['49'];
+                console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");//debug
+            }
+            
+            self.sendMsg(ctx.sendNext, fix);
         }
         
         
         //||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTILITY||||||||||UTIILTY||||||||||
-        var sendMsg = function(senderFunc, msg){
-            var outmsg = fixutil.convertToFIX(msg, self.fixVersion,  getUTCTimeStamp(new Date()),
+        this.sendMsg = function(senderFunc, msg){
+            var outmsg = fixutil.convertToFIX(msg, self.fixVersion,  fixutil.getUTCTimeStamp(new Date()),
                 self.senderCompID,  self.targetCompID,  self.outgoingSeqNum);
     
             self.outgoingSeqNum ++;
@@ -388,11 +406,12 @@ function sessionProcessor(isAcceptor, options) {
         
             //==Record message--TODO duplicate logic (n incoming as well)
             if (self.file === null) {
-                self.file = fs.createWriteStream('./data/' + senderCompID + '->' + targetCompID + 'log', {
-                    'flags': 'a'
-                });
+                var filename = './traffic/' + self.senderCompID + '->' + self.targetCompID + '.log';
+                console.log("About to create file "+filename);
+                self.file = fs.createWriteStream(filename, { 'flags': 'a+' });
+                self.file.on('error', function(err){ console.log(err); });//todo print good log, end session
             }
-            self.file.write(outmsg);
+        self.file.write(outmsg+'\n');
 
             senderFunc({data:outmsg, type:'data'});
         }

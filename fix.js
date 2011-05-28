@@ -58,6 +58,7 @@ function Server(func) {
         });
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
         stream.on('timeout', function(){ stream.end(); });
+        stream.on('end', function(){ session.sessionEmitter.emit('end');})
         
         func(session.sessionEmitter);
 
@@ -100,15 +101,8 @@ function Client(fixVersion, senderCompID, targetCompID) {
     events.EventEmitter.call(this);
     
     var stream = null;
-    var self = this;
+    var self = this; 
 
-    self.p = pipe.makePipe(stream);
-    self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-    self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor({'sessionEmitter':self}));
-    self.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(false));
-    self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
- 
-    
 
     //--CLIENT METHODS--
     this.write = function(data) { self.p.pushOutgoing(data); };
@@ -117,18 +111,19 @@ function Client(fixVersion, senderCompID, targetCompID) {
         //self.p.state.session['remoteAddress'] = host;
         self.stream = net.createConnection(port, host);
         self.stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
+        self.stream.on('connect', function(){ self.emit('connect');});
+        self.stream.on('end', function(){ self.emit('end');});
+
+        self.p = pipe.makePipe(self.stream);
+        self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
+        self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor({'sessionEmitter':self}));
+        self.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(false));
+        self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
+        
     }
     this.logon = function(logonmsg){
-        logonmsg = logonmsg || {'35': 'A', '90': '0', '108': '10'};
-        if(self.stream === null){
-            stream.on('connect', function() {
-                self.emit('connect');
-                self.p.pushOutgoing({data:logonmsg, type:'data'});
-            });
-        }
-        else{
-            self.write(logonmsg);            
-        }
+        logonmsg = logonmsg || {'8':fixVersion, '49':senderCompID, '56': targetCompID, '35': 'A', '90': '0', '108': '10'};
+        self.p.pushOutgoing({data:logonmsg, type:'data'});
     }
     this.connectAndLogon = function(port, host){
         self.createConnection(port, host);
