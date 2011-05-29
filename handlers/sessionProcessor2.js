@@ -189,7 +189,6 @@ function sessionProcessor(isAcceptor, options) {
         //==Record message--TODO duplicate logic (n outgoing as well)
             if (self.file === null) {
                 var filename = './traffic/' + self.senderCompID + '->' + self.targetCompID + '.log';
-                console.log("About to create file "+filename);
                 self.file = fs.createWriteStream(filename, { 'flags': 'a+' });
                 self.file.on('error', function(err){ console.log(err); });//todo print good log, end session
             }
@@ -380,8 +379,6 @@ function sessionProcessor(isAcceptor, options) {
             }
             
             var fix = event.data;
-            console.log("sessionproc2: outgiong :"+JSON.stringify(fix));//debug
-            console.log("isLoggedIn:" + self.isLoggedIn);//debug
 
             var msgType = fix['35'];
 
@@ -389,7 +386,6 @@ function sessionProcessor(isAcceptor, options) {
                 self.fixVersion = fix['8'];
                 self.senderCompID = fix['56'];
                 self.targetCompID = fix['49'];
-                console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");//debug
             }
             
             self.sendMsg(ctx.sendNext, fix);
@@ -407,11 +403,10 @@ function sessionProcessor(isAcceptor, options) {
             //==Record message--TODO duplicate logic (n incoming as well)
             if (self.file === null) {
                 var filename = './traffic/' + self.senderCompID + '->' + self.targetCompID + '.log';
-                console.log("About to create file "+filename);
                 self.file = fs.createWriteStream(filename, { 'flags': 'a+' });
                 self.file.on('error', function(err){ console.log(err); });//todo print good log, end session
             }
-        self.file.write(outmsg+'\n');
+            self.file.write(outmsg+'\n');
 
             senderFunc({data:outmsg, type:'data'});
         }
