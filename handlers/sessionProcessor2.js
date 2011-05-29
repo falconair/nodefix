@@ -2,6 +2,7 @@ exports.newSessionProcessor = function (isAcceptor, options) {
     return new sessionProcessor(isAcceptor, options);
 };
 
+var sys = require('sys');
 var fs = require('fs');
 var fixutil = require('../fixutils.js');
 
@@ -126,31 +127,27 @@ function sessionProcessor(isAcceptor, options) {
 
 
             var heartbeatInMilliSecondsStr = fix[108] || '30';
-            var heartbeatInMilliSeconds = parseInt(heartbeatInMilliSeconds, 10) * 1000;
+            var heartbeatInMilliSeconds = parseInt(heartbeatInMilliSecondsStr, 10) * 1000;
+            //console.log("heartbeatInMilliSeconds="+heartbeatInMilliSeconds);//debug
 
             //==Set heartbeat mechanism
             self.heartbeatIntervalID = setInterval(function () {
                 var currentTime = new Date().getTime();
+                //console.log("heartbtinms="+heartbeatInMilliSeconds+", currentTime="+currentTime+", timeOfLastOutgoing="+self.timeOfLastOutgoing+", timeOfLastIncoming="+self.timeOfLastIncoming);//debug
 
                 //==send heartbeats
                 if (currentTime - self.timeOfLastOutgoing > heartbeatInMilliSeconds && self.sendHeartbeats) {
                     self.sendMsg(ctx.sendPrev,{
-                        data: {
                             '35': '0'
-                        },
-                        type: 'data'
-                    }); //heartbeat
+                        }); //heartbeat
                 }
 
                 //==ask counter party to wake up
                 if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds && self.expectHeartbeats) {
                     self.sendMsg(ctx.sendPrev,{
-                        data: {
                             '35': '1',
                             '112': self.testRequestID++
-                        },
-                        type: 'data'
-                    }); //test req id
+                        }); //test req id
                 }
 
                 //==counter party might be dead, kill connection
@@ -177,10 +174,7 @@ function sessionProcessor(isAcceptor, options) {
             //==Logon ack (acceptor)
             if (self.isAcceptor && self.respondToLogon) {
                 if (self.respondToLogon) {
-                    self.sendMsg(ctx.sendPrev,{
-                        data: fix,
-                        type: 'data'
-                    });
+                    self.sendMsg(ctx.sendPrev,fix);
                 }
             }
 
@@ -259,13 +253,10 @@ function sessionProcessor(isAcceptor, options) {
                     if (_.include(['A', '5', '2', '0', '1', '4'], _msgType)) {
                         //send seq-reset with gap-fill Y
                         self.sendMsg(ctx.sendPrev,{
-                            data: {
                                 '35': '4',
                                 '123': 'Y',
                                 '36': _seqNo
-                            },
-                            type: 'data'
-                        });
+                            });
                     } else {
                         //send msg w/ posdup Y
                         self.sendMsg(ctx.sendPrev,_.extend(_fix, {
@@ -279,13 +270,10 @@ function sessionProcessor(isAcceptor, options) {
                 self.isResendRequested = true;
                 //send resend-request
                 self.sendMsg(ctx.sendPrev,{
-                    data: {
                         '35': '2',
                         '7': self.incomingSeqNum,
                         '16': '0'
-                    },
-                    type: 'data'
-                });
+                    });
             }
         }
 
@@ -314,12 +302,9 @@ function sessionProcessor(isAcceptor, options) {
         if (msgType === '1') {
             var testReqID = fix['112'];
             self.sendMsg(ctx.sendPrev,{
-                data: {
                     '35': '0',
                     '112': testReqID
-                },
-                type: 'data'
-            });
+                });
         }
 
         //==Process resend-request
@@ -340,13 +325,10 @@ function sessionProcessor(isAcceptor, options) {
                 if (_.include(['A', '5', '2', '0', '1', '4'], _msgType)) {
                     //send seq-reset with gap-fill Y
                     self.sendMsg(ctx.sendPrev,{
-                        data: {
                             '35': '4',
                             '123': 'Y',
                             '36': _seqNo
-                        },
-                        type: 'data'
-                    });
+                        });
                 } else {
                     //send msg w/ posdup Y
                     self.sendMsg(ctx.sendPrev,_.extend(_fix, {
