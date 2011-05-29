@@ -2,6 +2,8 @@ exports.newFixFrameDecoder = function() {
     return new fixFrameDecoder();
 };
 
+var sys = require('sys');
+
 //static vars
 var SOHCHAR = String.fromCharCode(1);
 var ENDOFTAG8 = 10;
@@ -16,6 +18,8 @@ function fixFrameDecoder(){
             ctx.sendNext(event);
             return;
         }
+        
+        var stream = ctx.stream;
         self.buffer = self.buffer + event.data;
         while (self.buffer.length > 0) {
             //====================================Step 1: Extract complete FIX message====================================
@@ -106,7 +110,8 @@ function fixFrameDecoder(){
             ctx.sendNext(event);
             return;
         }
-        ctx.stream.write(event.data);
+        
+        if(ctx.stream.writable){ ctx.stream.write(event.data); }
         ctx.sendNext(event);
     }
 }

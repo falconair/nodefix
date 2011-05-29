@@ -19,6 +19,7 @@ var fixutil = require('../fixutils.js');
 function sessionProcessor(isAcceptor, options) {
     var self = this;
 
+    this.isAcceptor = isAcceptor;
     this.isInitiator = !isAcceptor;
 
 
@@ -97,7 +98,7 @@ function sessionProcessor(isAcceptor, options) {
             //==Process acceptor specific logic
             if (self.isAcceptor) {
                 //==Check duplicate connections
-                if (self.isDuplicateFunc(senderCompID, targetCompID)) {
+                if (self.isDuplicateFunc(self.senderCompID, self.targetCompID)) {
                     var error = '[ERROR] Session already logged in:' + raw;
                     sys.log(error);
                     ctx.stream.end();
@@ -109,7 +110,7 @@ function sessionProcessor(isAcceptor, options) {
                 }
 
                 //==Authenticate connection
-                if (self.isAuthenticFunc(fix, ctx.stream.remoteAddress)) {
+                if (!self.isAuthenticFunc(fix, ctx.stream.remoteAddress)) {
                     var error = '[ERROR] Session not authentic:' + raw;
                     sys.log(error);
                     ctx.stream.end();
@@ -143,7 +144,7 @@ function sessionProcessor(isAcceptor, options) {
                 }
 
                 //==ask counter party to wake up
-                if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds && self.expectHeartbeats) {
+                if (currentTime - self.timeOfLastIncoming > (heartbeatInMilliSeconds * 1.5)&& self.expectHeartbeats) {
                     self.sendMsg(ctx.sendPrev,{
                             '35': '1',
                             '112': self.testRequestID++
@@ -151,7 +152,7 @@ function sessionProcessor(isAcceptor, options) {
                 }
 
                 //==counter party might be dead, kill connection
-                if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds * 1.5 && self.expectHeartbeats) {
+                if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds * 2 && self.expectHeartbeats) {
                     var error = '[ERROR] No heartbeat from counter party in milliseconds ' + heartbeatInMilliSeconds * 1.5;
                     sys.log(error);
                     ctx.stream.end();
@@ -173,9 +174,7 @@ function sessionProcessor(isAcceptor, options) {
 
             //==Logon ack (acceptor)
             if (self.isAcceptor && self.respondToLogon) {
-                if (self.respondToLogon) {
-                    self.sendMsg(ctx.sendPrev,fix);
-                }
+                self.sendMsg(ctx.sendPrev,fix);
             }
 
         } // End Process logon==
@@ -223,7 +222,7 @@ function sessionProcessor(isAcceptor, options) {
             }
             //if not posdup, error
             else {
-                var error = '[ERROR] Incoming sequence number lower than expected (' + msgSeqNum + ') : ' + raw;
+                var error = '[ERROR] Incoming sequence number ('+msgSeqNum+') lower than expected (' + self.incomingSeqNum+ ') : ' + raw;
                 sys.log(error);
                 ctx.stream.end();
                 ctx.sendNext({
@@ -380,6 +379,7 @@ function sessionProcessor(isAcceptor, options) {
                 self.senderCompID,  self.targetCompID,  self.outgoingSeqNum);
     
             self.outgoingSeqNum ++;
+            sys.log("updated outgoing seq num to "+self.outgoingSeqNum);//debug
             self.timeOfLastOutgoing = new Date().getTime();
         
             //==Record message--TODO duplicate logic (n incoming as well)
