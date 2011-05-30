@@ -6,7 +6,7 @@
   "author": "Shahbaz Chaudhary <shahbazc@gmail.com>",
   "main": "fix",
   "directories": {
-    "handlers": "./handlers",
+    "handlers": "./handlers"
   },
   "dependencies":{
     "pipe": "0.0.1",
