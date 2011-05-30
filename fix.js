@@ -49,7 +49,7 @@ function Server(func) {
         session.p = pipe.makePipe(stream);
         session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
         session.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
-        session.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(true));
+        session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
         session.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
 
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
@@ -110,7 +110,7 @@ function Client(fixVersion, senderCompID, targetCompID) {
         self.p = pipe.makePipe(self.stream);
         self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
         self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor({'sessionEmitter':self}));
-        self.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(false));
+        self.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
         self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
         
         self.stream.on('connect', function(){ self.emit('connect');});
