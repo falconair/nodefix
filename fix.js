@@ -44,18 +44,14 @@ function Server(func) {
 
         this.sessionEmitter = new SessionEmitterObj();
 
+        session.sessionEmitter.emit('connect');
+        
+        session.p = pipe.makePipe(stream);
+        session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
+        session.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
+        session.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(true));
+        session.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
 
-        stream.on('connect', function() {
-            session.sessionEmitter.emit('connect');
-            
-            session.p = pipe.makePipe(stream);
-            session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
-            session.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
-            session.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(true));
-            session.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
-            
-            
-        });
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
         stream.on('timeout', function(){ stream.end(); });
         stream.on('end', function(){ session.sessionEmitter.emit('end');})
@@ -110,9 +106,6 @@ function Client(fixVersion, senderCompID, targetCompID) {
     
         //self.p.state.session['remoteAddress'] = host;
         self.stream = net.createConnection(port, host);
-        self.stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
-        self.stream.on('connect', function(){ self.emit('connect');});
-        self.stream.on('end', function(){ self.emit('end');});
 
         self.p = pipe.makePipe(self.stream);
         self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
@@ -120,6 +113,9 @@ function Client(fixVersion, senderCompID, targetCompID) {
         self.p.addHandler(require('./handlers/sessionProcessor2.js').newSessionProcessor(false));
         self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
         
+        self.stream.on('connect', function(){ self.emit('connect');});
+        self.stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
+        self.stream.on('end', function(){ self.emit('end');});
     }
     this.logon = function(logonmsg){
         logonmsg = logonmsg || {'8':fixVersion, '49':senderCompID, '56': targetCompID, '35': 'A', '90': '0', '108': '10'};

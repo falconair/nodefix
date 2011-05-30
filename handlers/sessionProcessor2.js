@@ -120,11 +120,13 @@ function sessionProcessor(isAcceptor, options) {
                     });
                     return;
                 }
+                
+                //==Sync sequence numbers from data store
+                var seqnums = self.getSeqNums(self.senderCompID, self.targetCompID);
+                self.incomingSeqNum = seqnums.incomingSeqNum;
+                self.outgoingSeqNum = seqnums.outgoingSeqNum;
+
             } //End Process acceptor specific logic==
-            //==Sync sequence numbers from data store
-            var seqnums = self.getSeqNums(self.senderCompID, self.targetCompID);
-            self.incomingSeqNum = seqnums.incomingSeqNum;
-            self.outgoingSeqNum = seqnums.outgoingSeqNum;
 
 
             var heartbeatInMilliSecondsStr = fix[108] || '30';
@@ -367,6 +369,11 @@ function sessionProcessor(isAcceptor, options) {
                 self.fixVersion = fix['8'];
                 self.senderCompID = fix['56'];
                 self.targetCompID = fix['49'];
+                
+                //==Sync sequence numbers from data store
+                var seqnums = self.getSeqNums(self.senderCompID, self.targetCompID);
+                self.incomingSeqNum = seqnums.incomingSeqNum;
+                self.outgoingSeqNum = seqnums.outgoingSeqNum;
             }
             
             self.sendMsg(ctx.sendNext, fix);
@@ -377,9 +384,8 @@ function sessionProcessor(isAcceptor, options) {
         this.sendMsg = function(senderFunc, msg){
             var outmsg = fixutil.convertToFIX(msg, self.fixVersion,  fixutil.getUTCTimeStamp(new Date()),
                 self.senderCompID,  self.targetCompID,  self.outgoingSeqNum);
-    
-            self.outgoingSeqNum ++;
-            sys.log("updated outgoing seq num to "+self.outgoingSeqNum);//debug
+
+            self.outgoingSeqNum = self.outgoingSeqNum + 1;
             self.timeOfLastOutgoing = new Date().getTime();
         
             //==Record message--TODO duplicate logic (n incoming as well)
