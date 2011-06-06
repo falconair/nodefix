@@ -23,6 +23,7 @@ function Server(func) {
      events.EventEmitter.call(this);
 
      this.sessions = {};
+     this.port = null;
 
      var self = this;
 
@@ -44,7 +45,7 @@ function Server(func) {
 
         this.sessionEmitter = new SessionEmitterObj();
 
-        session.sessionEmitter.emit('connect');
+        session.sessionEmitter.emit('connect', stream.remoteAddress, self.port, 'acceptor');
         
         session.p = pipe.makePipe(stream);
         session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
@@ -62,7 +63,10 @@ function Server(func) {
      
      self.server.on('error', function(err){ self.emit('error', err); });
 
-     this.listen = function(port, host, callback) { self.server.listen(port, host, callback); };
+     this.listen = function(port, host, callback) {
+        self.port = port;
+        self.server.listen(port, host, callback);
+    };
      this.write = function(targetCompID, data) { self.sessions[targetCompID].write({data:data, type:'data'}); };
      this.logoff = function(targetCompID, logoffReason) { self.sessions[targetCompID].write({data:{35:5, 58:logoffReason}, type:'data'}); };
      this.kill = function(targetCompID, reason){ self.sessions[targetCompID].end(); };
@@ -97,6 +101,9 @@ function Client(fixVersion, senderCompID, targetCompID) {
     events.EventEmitter.call(this);
     
     var stream = null;
+    this.port = null;
+    this.host = null;
+    
     var self = this; 
 
 
@@ -113,15 +120,18 @@ function Client(fixVersion, senderCompID, targetCompID) {
         self.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
         self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
         
-        self.stream.on('connect', function(){ self.emit('connect');});
+        self.stream.on('connect', function(){ self.emit('connect', self.host, self.port, 'initiator');});
         self.stream.on('data', function(data) { self.p.pushIncoming({data:data, type:'data'}); });
         self.stream.on('end', function(){ self.emit('end');});
+        self.stream.on('error', function(err){ self.emit('error',err);});
     }
     this.logon = function(logonmsg){
         logonmsg = logonmsg || {'8':fixVersion, '49':senderCompID, '56': targetCompID, '35': 'A', '90': '0', '108': '10'};
         self.p.pushOutgoing({data:logonmsg, type:'data'});
     }
     this.connectAndLogon = function(port, host){
+        self.port = port;
+        self.host = host;
         self.createConnection(port, host);
         self.on('connect', function(){ self.logon(); });
     }
@@ -141,4 +151,28 @@ function Client(fixVersion, senderCompID, targetCompID) {
 }
 sys.inherits(Client, events.EventEmitter);
 
+//Documenation
+//Server:
+//  startServer(port,callback)
+//      -newacceptor(port)
+//
+//Client:
+//  startClient(version,sender,target,port,host)
+//      -newclient(version, sender, target, port, host)
+//
+//Common:
+//      -connect(host, port, 'initiator' or 'acceptor')
+//      -error(err)
+//      -logon(sender,target)
+//      -logoff(sender,target)
+//      -incomingmsg(sender,target,msg)
+//      -outgoingmsg(sender,target,msg)
+//      -incomingresync(sender,target,msg)
+//      -outgoingresync(sender,target,msg)
+//      -end(sender,target)
+//  write(sessionID, data)
+//  logoff(sessionID, reason)
+//  kill(sessionID, reason)
+//  clearSessionFile(fixVersion,senderCompID, targetCompID, callback)
+//  getSessionFiles(callback)
 
