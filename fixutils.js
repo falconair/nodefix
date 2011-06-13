@@ -6,7 +6,7 @@ var getUTCTimeStamp = exports.getUTCTimeStamp = function(datetime){
     var timestamp = datetime || new Date();
 
     var year = timestamp.getUTCFullYear();
-    var month = timestamp.getUTCMonth();
+    var month = timestamp.getUTCMonth() +1;
     var day = timestamp.getUTCDate();
     var hours = timestamp.getUTCHours();
     var minutes = timestamp.getUTCMinutes();
