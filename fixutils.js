@@ -82,6 +82,7 @@ var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp
     msg['34'] = outgoingSeqNum; //seqnum
 
 
+    headermsgarr.push('35=' + msg['35'] , SOHCHAR);
     headermsgarr.push('52=' + msg['52'] , SOHCHAR);
     headermsgarr.push('49=' + msg['49'] , SOHCHAR);
     headermsgarr.push('56=' + msg['56'] , SOHCHAR);
@@ -92,11 +93,13 @@ var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp
         if (msg.hasOwnProperty(tag)
             && tag !== 8
             && tag !== 9
+            && tag !== 35
             && tag !== 10
             && tag !== 52
             && tag !== 49
             && tag !== 56
             && tag !== 34
+            && tag !== ""
             ) bodymsgarr.push(tag, '=' , msg[tag] , SOHCHAR);
     }
 
