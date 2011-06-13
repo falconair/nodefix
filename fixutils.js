@@ -75,30 +75,30 @@ var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp
     var bodymsgarr = [];
     var trailermsgarr = [];
 
-    msg['8'] = fixVersion; //fixversion
-    msg['52'] = timeStamp; //timestamp
-    msg['49'] = senderCompID; //sendercompid
-    msg['56'] = targetCompID; //targetcompid
-    msg['34'] = outgoingSeqNum; //seqnum
+    //msg['8'] = fixVersion; //fixversion
+    //msg['52'] = timeStamp; //timestamp
+    //msg['49'] = senderCompID; //sendercompid
+    //msg['56'] = targetCompID; //targetcompid
+    //msg['34'] = outgoingSeqNum; //seqnum
 
 
     headermsgarr.push('35=' + msg['35'] , SOHCHAR);
-    headermsgarr.push('52=' + msg['52'] , SOHCHAR);
-    headermsgarr.push('49=' + msg['49'] , SOHCHAR);
-    headermsgarr.push('56=' + msg['56'] , SOHCHAR);
-    headermsgarr.push('34=' + msg['34'] , SOHCHAR);
+    headermsgarr.push('52=' + timeStamp , SOHCHAR);
+    headermsgarr.push('49=' + senderCompID , SOHCHAR);
+    headermsgarr.push('56=' + targetCompID , SOHCHAR);
+    headermsgarr.push('34=' + outgoingSeqNum , SOHCHAR);
 
 
     for (var tag in msg) {
         if (msg.hasOwnProperty(tag)
-            && tag !== 8
-            && tag !== 9
-            && tag !== 35
-            && tag !== 10
-            && tag !== 52
-            && tag !== 49
-            && tag !== 56
-            && tag !== 34
+            && tag !== '8'
+            && tag !== '9'
+            && tag !== '35'
+            && tag !== '10'
+            && tag !== '52'
+            && tag !== '49'
+            && tag !== '56'
+            && tag !== '34'
             && tag !== ""
             ) bodymsgarr.push(tag, '=' , msg[tag] , SOHCHAR);
     }
@@ -108,7 +108,7 @@ var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp
     var bodymsg = bodymsgarr.join('');
 
     var outmsgarr = [];
-    outmsgarr.push('8=' , msg['8'] , SOHCHAR);
+    outmsgarr.push('8=' , fixVersion , SOHCHAR);
     outmsgarr.push('9=' , (headermsg.length + bodymsg.length + trailermsg.length) , SOHCHAR);
     outmsgarr.push(headermsg);
     outmsgarr.push(bodymsg);
