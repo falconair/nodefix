@@ -1,7 +1,7 @@
 var sys = require('sys');
 var fix = require('./fix.js');
 
-fix.createServer(function(session){
+fix.createServer({},function(session){
     console.log("EVENT connect");
     session.on("end", function(sender,target){ console.log("EVENT end"); });
     session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });

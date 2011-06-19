@@ -1,7 +1,7 @@
 
 An implementation of the [FIX (Financial Information Exchange) protocol](http://en.wikipedia.org/wiki/Financial_Information_eXchange).
 
-Currently the implementation is pre-alpha. It is not even close to working.
+Currently the implementation is pre-beta. It is close to working.
 
 ### Test {Server,Client}:
 

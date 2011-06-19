@@ -27,7 +27,7 @@ function Server(func) {
 
      var self = this;
 
-     this.server = net.createServer(function(stream) {
+     this.server = net.createServer(opt,function(stream) {
 
         stream.setTimeout(2 * 60 * 1000);//if no traffic for two minutes, kill connection!
         var session = this;
@@ -50,7 +50,7 @@ function Server(func) {
         session.p = pipe.makePipe(stream);
         session.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
         session.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor(session));
-        session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
+        session.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true,opt));
         session.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor(session));
 
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
