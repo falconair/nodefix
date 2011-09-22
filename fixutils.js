@@ -58,6 +58,10 @@ var checksum = exports.checksum = function(str){
     return checksumstr;
 }
 
+var convertRawToFIX = exports.convertRawToFIX = function(map){
+    return convertToFIX(map, map[8], map[52], map[49], map[56], map[34]);
+}
+
 var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp, senderCompID, targetCompID, outgoingSeqNum){
     //sys.log('c2F:'+JSON.stringify(msgraw));
     //defensive copy
@@ -69,8 +73,8 @@ var convertToFIX = exports.convertToFIX = function(msgraw, fixVersion, timeStamp
     delete msg['9']; //bodylength
     delete msg['10']; //checksum
 
-
-    var timestamp = new Date();
+    //TODO why is there a timestamp when a timeStamp is passed in?
+    //var timestamp = new Date();
     var headermsgarr = [];
     var bodymsgarr = [];
     var trailermsgarr = [];
