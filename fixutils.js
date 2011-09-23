@@ -58,6 +58,7 @@ var checksum = exports.checksum = function(str){
     return checksumstr;
 }
 
+//TODO change name to converMapToFIX
 var convertRawToFIX = exports.convertRawToFIX = function(map){
     return convertToFIX(map, map[8], map[52], map[49], map[56], map[34]);
 }

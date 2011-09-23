@@ -11,22 +11,34 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
     var self  = this;
     
     var lines = data.split('\n');
+    var commandStack = [];
   
-    var stream = null;
-    var p = pipe.makePipe({end:function(){}, on:function(){}});
+    var p = pipe.makePipe({end:function(){console.log("Stream ended");self.expected = "eDISCONNECT";}, on:function(){}});
     p.addHandler({'outgoing':function(ctx, evt){
         self.expected = evt.data;
         //console.log("outgoing:"+ evt.type+":"+ evt.data);
+        var str = commandStack.pop();
+        processCommand(str);
     }});
     p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
     p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(true));
-    /*p.addHandler({'incoming':function(ctx, evt){
-        console.log("incoming:"+ evt.type+":"+ JSON.stringify(evt.data));
-    }});*/
+
     
-    //TODO: for each line (at a time), submit events and expect answers
+    _.each(lines,function(str){
+        var c = str.charAt(0);
+        if(/*c==='i' || c==='e' ||*/ c==='I' || c==='E'){
+            //console.log("Adding to stack: "+str);
+            commandStack.push(str);
+        }
+    });
     
-    _.each(lines, function(str){
+    commandStack.reverse();
+    
+    var str = commandStack.pop();
+    processCommand(str);
+    
+    function processCommand(str){
+        console.log("Processing "+str);
         var direction = str.charAt(0);
         var msg = _.trim(str.substr(1,str.length));
         var map = fixutil.convertToMap(msg);
@@ -68,14 +80,10 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                 _.each(map, function(val, tag){
                     var tagmatches = expectedmap[tag] === val;
                     if(!tagmatches){
-                        console.log("Tag "+tag+" expecte value "+val+" but received "+expectedmap[tag]);
+                        console.log(" Tag "+tag+" expecte value "+val+" but received "+expectedmap[tag]);
                     }
                 });
             }
-            //console.log("Comparison successful? "+ isequal);
         }
-        
-        
-    });
+    };
 });
-
