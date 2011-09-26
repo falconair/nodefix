@@ -27,7 +27,7 @@ function Server(func) {
 
      var self = this;
 
-     this.server = net.createServer(opt,function(stream) {
+     this.server = net.createServer(function(stream) {
 
         stream.setTimeout(2 * 60 * 1000);//if no traffic for two minutes, kill connection!
         var session = this;
@@ -56,6 +56,7 @@ function Server(func) {
         stream.on('data', function(data) { session.p.pushIncoming({data:data, type:'data'}); });
         stream.on('timeout', function(){ stream.end(); });
         stream.on('end', function(){ session.sessionEmitter.emit('end');})
+        //stream.on('connect', function(){ session.sessionEmitter.emit('connect');})
         
         func(session.sessionEmitter);
 
