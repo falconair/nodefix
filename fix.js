@@ -13,13 +13,13 @@ var pipe = require('pipe');
 
 
 //-----------------------------Expose server API-----------------------------
-exports.createServer = function(func ) {
-    var server = new Server(func);
+exports.createServer = function(opt, func) {
+    var server = new Server(opt, func);
     return server;
 };
 
 //TODO: handle error event, for example, when the listening port is already being used
-function Server(func) {
+function Server(opt, func) {
      events.EventEmitter.call(this);
 
      this.sessions = {};
