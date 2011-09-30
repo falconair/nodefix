@@ -43,7 +43,7 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                 console.log("EVENT connect");
                 //session.on("end", function(sender,target){ console.log("EVENT end"); });
                 //session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
-                session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
+                //session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
                 //session.on("outgoingmsg", function(sender,target,msg){ console.log("EVENT outgoingmsg: "+ JSON.stringify(msg)); });
                            
             });
@@ -60,7 +60,23 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
 
                 });
                  self.fixClient.on("incomingmsg", function(sender, target,msg){
-                    console.log("Client incomingmsg:"+JSON.stringify(msg));
+                    //console.log("Client incomingmsg:"+JSON.stringify(msg));
+                    var expected = commandQ.dequeue();
+                    if(!_.startsWith(expected,"E")){
+                        console.log("ERROR: expected an 'E' command but received: "+expected);
+                        return;//throw error
+                    }
+                    
+                    var expectedMap = fixutil.convertToMap(expected);
+                    var errorlist = compareMapFIX(msg, expectedMap);
+                    
+                    if(errorlist.length > 0){
+                        console.log("ERROR: "+JSON.stringify(errorlist));
+                        return;//throw error
+                    }
+                    //if(!_.startsWith(commandQ.peek(), "E")){
+                    //    processCommand(commandQ.dequeue());
+                    //}
                 });
 
             });
@@ -92,12 +108,14 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
 });
 
 //compare FIX messages
-function compareFIX(fixActual, fixExpected){
-    var errors = new Queue();
-    
+function compareStringFIX(fixActual, fixExpected){
     var actual = fixutil.convertToMap(fixActual);
     var expected = fixutil.convertToMap(fixExpected);
-    
+    compareMapFIX(actual, expected);
+}
+function compareMapFIX(actual, expected){
+    var errorlist = new Queue();
+        
     //remove time sensitive keys
     delete actual[9];
     delete actual[10];
@@ -106,19 +124,19 @@ function compareFIX(fixActual, fixExpected){
     delete expected[10];
     delete expected[52];
     
-    var isequal = _.isEqual(map,expectedmap);
+    var isequal = _.isEqual(actual,expected);
     if(!isequal){
-        console.log("Errors found:\n Expected msg:"+msg+"\n Actual msg  :"+self.expected);
-        _.each(map, function(val, tag){
-            var tagmatches = expectedmap[tag] === val;
+        console.log("errors found:\n Expected msg:"+JSON.stringify(expected)+"\n Actual msg  :"+JSON.stringify(actual));
+        _.each(actual, function(val, tag){
+            var tagmatches = expected[tag] === val;
             if(!tagmatches){
-                console.log(" Tag "+tag+" expecte value "+val+" but received "+expectedmap[tag]);
-                var errobj = {actualMsg:fixActual, expectedMsg:fixExpected, tag:tag, actualTagVal:val, expectedTagVal:expected[tag]};
-                errors.queue(errorobj);
+                console.log(" Tag "+tag+" expecte value "+val+" but received "+expected[tag]);
+                var errorobj = {actualMsg:actual, expectedMsg:expected, tag:tag, actualTagVal:val, expectedTagVal:expected[tag]};
+                errorlist.queue(errorobj);
             }
         });
     }
-    return errors;
+    return errorlist;
 }
 
 //Queue data structure from wikipedia
