@@ -109,11 +109,12 @@ function Client(fixVersion, senderCompID, targetCompID) {
 
 
     //--CLIENT METHODS--
-    this.write = function(data) { self.p.pushOutgoing(data); };
-    this.createConnection = function(port, host){
+    //this.write = function(data) { self.p.pushOutgoing(data); };
+    this.write = function(data) { self.p.pushOutgoing({data:data, type:'data'}); };
+    this.createConnection = function(port, host, callback){
     
         //self.p.state.session['remoteAddress'] = host;
-        self.stream = net.createConnection(port, host);
+        self.stream = net.createConnection(port, host, callback);
 
         self.p = pipe.makePipe(self.stream);
         self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());

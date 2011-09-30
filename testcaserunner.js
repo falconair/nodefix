@@ -15,7 +15,7 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
     var commandQ = new Queue();
     
     var fixServer = null;
-    var tcpClient = null;
+    var fixClient = null;
   
     
     _.each(lines,function(str){
@@ -43,30 +43,45 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                 console.log("EVENT connect");
                 //session.on("end", function(sender,target){ console.log("EVENT end"); });
                 //session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
-                //session.on("incomingmsg", function(sender,target,msg){ console.log("EVENT incomingmsg: "+ JSON.stringify(msg)); });
+                session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
                 //session.on("outgoingmsg", function(sender,target,msg){ console.log("EVENT outgoingmsg: "+ JSON.stringify(msg)); });
-
-                //start client
-               self.tcpClient = net.createConnection(1234,"localhost");
-               self.tcpClient.on('connect', function(){
-                    console.log("connected");
-                    processCommand(commandQ.dequeue());
-               });
                            
             });
-            self.fixServer.listen(1234, "localhost");
+            self.fixServer.listen(1234, "localhost", function(){
+                 //'listen' callback
+                 //start fix client
+                 self.fixClient = fix.createConnection("FIX.4.2", "initiator", "acceptor");
+                 self.fixClient.createConnection(1234,"localhost");
+                 self.fixClient.on("connect", function(){
+                     console.log("Client connected");
+                    if(!_.startsWith(commandQ.peek(), "E")){
+                        processCommand(commandQ.dequeue());
+                    }
+
+                });
+                 self.fixClient.on("incomingmsg", function(sender, target,msg){
+                    console.log("Client incomingmsg:"+JSON.stringify(msg));
+                });
+
+            });
+
         }
 
         //expected disconnect
         if(direction=== 'e'){
-            self.fixServer = null;
+            self.fixClient.logoff();
+            self.fixServer.logoff();
         }
 
         //msgs sent to fix engine
         if(direction === 'I'){
             var map = fixutil.convertToMap(msg);
-            var fixmap = fixutil.convertRawToFIX(map);
-            self.tcpClient.write(fixmap);     
+            //var fixmap = fixutil.convertRawToFIX(map);
+            self.fixClient.write(map);
+            
+            if(!_.startsWith(commandQ.peek(), "E")){
+                    processCommand(commandQ.dequeue());
+            }
         }
 
         //msgs expected from fix engine
