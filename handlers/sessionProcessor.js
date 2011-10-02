@@ -5,6 +5,8 @@ exports.newSessionProcessor = function (isAcceptor, options) {
 var sys = require('sys');
 var fs = require('fs');
 var fixutil = require('../fixutils.js');
+var _  = require('underscore');
+
 
 //TODO make sure 'ignored' messages really are not forwarded to the next handler
 //TODO instead of datastore function as param, expect a data structure which:
@@ -92,6 +94,8 @@ function sessionProcessor(isAcceptor, options) {
         //==Process logon 
         else if (self.isLoggedIn === false && msgType === 'A') {
             self.fixVersion = fix['8'];
+            //incoming sender and target are swapped because we want sender/comp
+            //from our perspective, not the counter party's
             self.senderCompID = fix['56'];
             self.targetCompID = fix['49'];
 
@@ -176,6 +180,10 @@ function sessionProcessor(isAcceptor, options) {
 
             //==Logon ack (acceptor)
             if (self.isAcceptor && self.respondToLogon) {
+                /*var loginack = _.clone(fix);
+                loginack[49] = fix[56];
+                loginack[56] = fix[49];
+                self.sendMsg(ctx.sendPrev,loginack);*/
                 self.sendMsg(ctx.sendPrev,fix);
             }
 
@@ -367,8 +375,8 @@ function sessionProcessor(isAcceptor, options) {
 
             if(self.isLoggedIn === false && msgType === "A"){
                 self.fixVersion = fix['8'];
-                self.senderCompID = fix['56'];
-                self.targetCompID = fix['49'];
+                self.senderCompID = fix['49'];
+                self.targetCompID = fix['56'];
                 
                 //==Sync sequence numbers from data store
                 var seqnums = self.getSeqNums(self.senderCompID, self.targetCompID);

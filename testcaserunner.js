@@ -43,8 +43,8 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                 console.log("EVENT connect");
                 //session.on("end", function(sender,target){ console.log("EVENT end"); });
                 //session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
-                //session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
-                //session.on("outgoingmsg", function(sender,target,msg){ console.log("EVENT outgoingmsg: "+ JSON.stringify(msg)); });
+                session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
+                session.on("outgoingmsg", function(sender,target,msg){ console.log("Server outgoingmsg: "+ JSON.stringify(msg)); });
                            
             });
             self.fixServer.listen(1234, "localhost", function(){
@@ -61,11 +61,13 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                 });
                  self.fixClient.on("incomingmsg", function(sender, target,msg){
                     //console.log("Client incomingmsg:"+JSON.stringify(msg));
-                    var expected = commandQ.dequeue();
-                    if(!_.startsWith(expected,"E")){
-                        console.log("ERROR: expected an 'E' command but received: "+expected);
+                    var expectedRaw = commandQ.dequeue();
+                    if(!_.startsWith(expectedRaw,"E")){
+                        console.log("ERROR: expected an 'E' command but received: "+expectedRaw);
                         return;//throw error
                     }
+                    
+                    var expected = _.trim(expectedRaw.substr(1,expectedRaw.length));
                     
                     var expectedMap = fixutil.convertToMap(expected);
                     var errorlist = compareMapFIX(msg, expectedMap);
