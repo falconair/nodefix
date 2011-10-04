@@ -62,6 +62,7 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                  self.fixClient.on("incomingmsg", function(sender, target,msg){
                     //console.log("Client incomingmsg:"+JSON.stringify(msg));
                     var expectedRaw = commandQ.dequeue();
+                    console.log("Processing "+expectedRaw);
                     if(!_.startsWith(expectedRaw,"E")){
                         console.log("ERROR: expected an 'E' command but received: "+expectedRaw);
                         return;//throw error
