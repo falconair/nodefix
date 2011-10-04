@@ -40,17 +40,17 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
         if(direction=== 'i'){
             self.fixServer = fix.createServer({},function(session){
                 
-                console.log("EVENT connect");
+                //console.log("EVENT connect");
                 //session.on("end", function(sender,target){ console.log("EVENT end"); });
                 //session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
-                session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
-                session.on("outgoingmsg", function(sender,target,msg){ console.log("Server outgoingmsg: "+ JSON.stringify(msg)); });
+                //session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
+                //session.on("outgoingmsg", function(sender,target,msg){ console.log("Server outgoingmsg: "+ JSON.stringify(msg)); });
                            
             });
             self.fixServer.listen(1234, "localhost", function(){
                  //'listen' callback
                  //start fix client
-                 self.fixClient = fix.createConnection("FIX.4.2", "initiator", "acceptor");
+                 self.fixClient = fix.createConnection("FIX.4.2", "initiator", "acceptor",{sendHeartbeats:false});
                  self.fixClient.createConnection(1234,"localhost");
                  self.fixClient.on("connect", function(){
                      console.log("Client connected");
@@ -76,9 +76,9 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
                         console.log("ERROR: "+JSON.stringify(errorlist));
                         return;//throw error
                     }
-                    //if(!_.startsWith(commandQ.peek(), "E")){
-                    //    processCommand(commandQ.dequeue());
-                    //}
+                    if(!_.startsWith(commandQ.peek(), "E")){
+                        processCommand(commandQ.dequeue());
+                    }
                 });
 
             });

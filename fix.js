@@ -4,6 +4,8 @@ var net = require('net');
 var events = require('events');
 var path = require('path');
 var pipe = require('pipe');
+var _  = require('underscore');
+
 
 //TODO
 //Improve 'error' events. If sender/target exist, add them
@@ -89,16 +91,16 @@ function Server(opt, func) {
 sys.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
-exports.createConnection = function(fixVersion, senderCompID, targetCompID) {
+exports.createConnection = function(fixVersion, senderCompID, targetCompID, opt) {
     //return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host, callback);
-    return new Client(fixVersion, senderCompID, targetCompID);
+    return new Client(fixVersion, senderCompID, targetCompID, opt);
 };
 
 /*exports.createConnectionWithLogonMsg = function(logonmsg, port, host, callback) {
     return new Client(logonmsg, port, host, callback);
 };*/
 
-function Client(fixVersion, senderCompID, targetCompID) {
+function Client(fixVersion, senderCompID, targetCompID, opt) {
     events.EventEmitter.call(this);
     
     var stream = null;
@@ -119,7 +121,7 @@ function Client(fixVersion, senderCompID, targetCompID) {
         self.p = pipe.makePipe(self.stream);
         self.p.addHandler(require('./handlers/fixFrameDecoder.js').newFixFrameDecoder());
         self.p.addHandler(require('./handlers/outMsgEvtInterceptor.js').newOutMsgEvtInterceptor({'sessionEmitter':self}));
-        self.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false));
+        self.p.addHandler(require('./handlers/sessionProcessor.js').newSessionProcessor(false, opt));
         self.p.addHandler(require('./handlers/inMsgEvtInterceptor.js').newInMsgEvtInterceptor({'sessionEmitter':self}));
         
         self.stream.on('connect', function(){ self.emit('connect', self.host, self.port, 'initiator');});
@@ -128,7 +130,7 @@ function Client(fixVersion, senderCompID, targetCompID) {
         self.stream.on('error', function(err){ self.emit('error',err);});
     }
     this.logon = function(logonmsg){
-        logonmsg = logonmsg || {'8':fixVersion, '49':senderCompID, '56': targetCompID, '35': 'A', '90': '0', '108': '10'};
+        logonmsg = _.isUndefined(logonmsg)? {'8':fixVersion, '49':senderCompID, '56': targetCompID, '35': 'A', '90': '0', '108': '10'} : logonmsg;
         self.p.pushOutgoing({data:logonmsg, type:'data'});
     }
     this.connectAndLogon = function(port, host){

@@ -19,37 +19,24 @@ var _  = require('underscore');
 
 
 function sessionProcessor(isAcceptor, options) {
+    
     var self = this;
 
     this.isAcceptor = isAcceptor;
     this.isInitiator = !isAcceptor;
 
-
-    this.opt = options || {};
-    this.isDuplicateFunc = self.opt.isDuplicateFunc ||
-    function () {
-        return false;
-    };
-    this.isAuthenticFunc = self.opt.isAuthenticFunc ||
-    function () {
-        return true;
-    };
-    this.getSeqNums = self.opt.getSeqNums ||
-    function () {
-        return {
-            'incomingSeqNum': 1,
-            'outgoingSeqNum': 1
-        };
-    };
-    this.datastore = self.opt.datastore || function () {};
+    this.isDuplicateFunc = _.isUndefined(options.isDuplicateFunc)? function () {return false;} : options.isDuplicateFunc;
+    this.isAuthenticFunc = _.isUndefined(options.isAuthenticFunc)? function () {return true;} : options.isAuthenticFunc;
+    this.getSeqNums = _.isUndefined(options.getSeqNums)? function () { return {'incomingSeqNum': 1, 'outgoingSeqNum': 1 }; } : options.getSeqNums;
+    this.datastore = _.isUndefined(options.datastore)? function () {} : options.datastore ;
     
     this.fixVersion = null;
     this.senderCompID = null;
     this.targetCompID = null;
 
-    this.sendHeartbeats = true;
-    this.expectHeartbeats = true;
-    this.respondToLogon = true;
+    this.sendHeartbeats = _.isUndefined(options.sendHeartbeats)? true : options.sendHeartbeats;
+    this.expectHeartbeats = _.isUndefined(options.expectHeartbeats)? true : options.expectHeartbeats ;
+    this.respondToLogon = _.isUndefined(options.respondToLogon)? true : options.respondToLogon;
 
     this.isLoggedIn = false;
     this.heartbeatIntervalID = "";
@@ -133,14 +120,13 @@ function sessionProcessor(isAcceptor, options) {
             } //End Process acceptor specific logic==
 
 
-            var heartbeatInMilliSecondsStr = fix[108] || '30';
+            var heartbeatInMilliSecondsStr = _.isUndefined(fix[108] )? '10' : fix[108];
             var heartbeatInMilliSeconds = parseInt(heartbeatInMilliSecondsStr, 10) * 1000;
             //console.log("heartbeatInMilliSeconds="+heartbeatInMilliSeconds);//debug
 
             //==Set heartbeat mechanism
             self.heartbeatIntervalID = setInterval(function () {
                 var currentTime = new Date().getTime();
-                //console.log("heartbtinms="+heartbeatInMilliSeconds+", currentTime="+currentTime+", timeOfLastOutgoing="+self.timeOfLastOutgoing+", timeOfLastIncoming="+self.timeOfLastIncoming);//debug
 
                 //==send heartbeats
                 if (currentTime - self.timeOfLastOutgoing > heartbeatInMilliSeconds && self.sendHeartbeats) {
