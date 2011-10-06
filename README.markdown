@@ -44,6 +44,28 @@ var server = fix.createServer(opt, function(session){
 server.listen(1234, "localhost", function(){});
 ```
 
+Server events:
+<dl>
+<dt>connect (host, port, 'initiator' or 'acceptor'</dt>
+<dd>Triggered on new connections </dd>
+
+<dt>logon (sender, target)</dt>
+<dd>Triggered when new client completes logon</dd>
+
+<dt>incomingmsg (sender, target, msg)</dt>
+<dd>Triggered on messages coming over the network</dd>
+
+<dt>outgoingmsg (sender, target, msg)</dt>
+<dd>Triggered on messages going out to the network</dd>
+
+<dt>incomingresync (sender, target, msg)</dt>
+<dd>Triggered on messages coming over the network, which may have already been processed. Should not matter other than on re-connections</dd>
+
+<dt>outgoingresync (sender, target, msg)</dt>
+<dd>Triggered on messages going out to the network, which may have already been processed. Should not matter other than on re-connections</dd>
+
+</dl>
+
 ###Client:
 ```javascript
 var fix = require('fix');
