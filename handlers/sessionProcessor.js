@@ -34,6 +34,8 @@ function sessionProcessor(isAcceptor, options) {
     this.senderCompID = null;
     this.targetCompID = null;
 
+    this.defaultHeartbeatSeconds = _.isUndefined(options.defaultHeartbeatSeconds)? "10" : options.defaultHeartbeatSeconds;
+
     this.sendHeartbeats = _.isUndefined(options.sendHeartbeats)? true : options.sendHeartbeats;
     this.expectHeartbeats = _.isUndefined(options.expectHeartbeats)? true : options.expectHeartbeats ;
     this.respondToLogon = _.isUndefined(options.respondToLogon)? true : options.respondToLogon;
@@ -120,7 +122,7 @@ function sessionProcessor(isAcceptor, options) {
             } //End Process acceptor specific logic==
 
 
-            var heartbeatInMilliSecondsStr = _.isUndefined(fix[108] )? '10' : fix[108];
+            var heartbeatInMilliSecondsStr = _.isUndefined(fix[108] )? self.defaultHeartbeatSeconds : fix[108];
             var heartbeatInMilliSeconds = parseInt(heartbeatInMilliSecondsStr, 10) * 1000;
             //console.log("heartbeatInMilliSeconds="+heartbeatInMilliSeconds);//debug
 

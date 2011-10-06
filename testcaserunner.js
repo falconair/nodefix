@@ -133,7 +133,7 @@ function compareMapFIX(actual, expected){
         _.each(actual, function(val, tag){
             var tagmatches = expected[tag] === val;
             if(!tagmatches){
-                console.log(" Tag "+tag+" expecte value "+val+" but received "+expected[tag]);
+                console.log(" Tag "+tag+" expected value "+expected[tag]+" but received "+val);
                 var errorobj = {actualMsg:actual, expectedMsg:expected, tag:tag, actualTagVal:val, expectedTagVal:expected[tag]};
                 errorlist.queue(errorobj);
             }
