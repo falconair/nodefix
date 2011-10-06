@@ -31,19 +31,35 @@ API
 
 ###Server:
 ```javascript
-var fix = require('nodefix');
+var fix = require('fix');
 
 var opt = {};
-fix.createServer(opt, function(session){
+var server = fix.createServer(opt, function(session){
 
     session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
     session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
     session.on("outgoingmsg", function(sender,target,msg){ console.log("Server outgoingmsg: "+ JSON.stringify(msg)); });
 
-}).listen(1234, "localhost", function(){});
+});
+server.listen(1234, "localhost", function(){});
 ```
 
 ###Client:
+```javascript
+var fix = require('fix');
+
+var opt = {};
+var client = fix.createClient("FIX.4.2", "initiator", "acceptor",opt);
+client.connectAndLogon(1234,"localhost");
+
+client.on("connect", function(){ console.log("EVENT connect"); });
+client.on("end", function(){ console.log("EVENT end"); });
+client.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
+client.on("logoff", function(sender, target){ console.log("EVENT logoff: "+ sender + ", " + target); });
+client.on("incomingmsg", function(sender,target,msg){ console.log("EVENT incomingmsg: "+ JSON.stringify(msg)); });
+client.on("outgoingmsg", function(sender,target,msg){ console.log("EVENT outgoingmsg: "+ JSON.stringify(msg)); });
+
+```
 //  startClient(version,sender,target,port,host)
 //      -newclient(version, sender, target, port, host)
 //
