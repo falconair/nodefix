@@ -30,11 +30,20 @@ API
 ===
 
 ###Server:
+```javascript
+var fix = require('nodefix');
 
-startServer(port,callback)
-//      -newacceptor(port)
-//
-//Client:
+var opt = {};
+fix.createServer(opt, function(session){
+
+    session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
+    session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
+    session.on("outgoingmsg", function(sender,target,msg){ console.log("Server outgoingmsg: "+ JSON.stringify(msg)); });
+
+}).listen(1234, "localhost", function(){});
+```
+
+###Client:
 //  startClient(version,sender,target,port,host)
 //      -newclient(version, sender, target, port, host)
 //
