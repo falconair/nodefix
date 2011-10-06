@@ -84,6 +84,20 @@ Client events:
 <dd>Triggered on new connections to servers</dd>
 </dl>
 
+
+Client methods:
+<dl>
+<dt>write(data)</dt>
+<dd>Converts an associative array to a FIX message and sends it to the counter party</dd>
+
+<dt>logoff(reason)</dt>
+<dd>Logs off connection</dd>
+
+<dt>kill(reason)</dt>
+<dd>Ends connection without logging off</dd>
+</dl>
+
+
 ###Common:
 Events commons to servers and clients:
 <dl>
@@ -110,18 +124,6 @@ Events commons to servers and clients:
 
 <dt>outgoingresync (sender, target, msg)</dt>
 <dd>Triggered on messages going out to the network, which may have already been processed. Should not matter other than on re-connections</dd>
-</dl>
-
-Client methods:
-<dl>
-<dt>write(data)</dt>
-<dd>Converts an associative array to a FIX message and sends it to the counter party</dd>
-
-<dt>logoff(reason)</dt>
-<dd>Logs off connection</dd>
-
-<dt>kill(reason)</dt>
-<dd>Ends connection without logging off</dd>
 </dl>
 
 
