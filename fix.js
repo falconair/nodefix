@@ -155,28 +155,3 @@ function Client(fixVersion, senderCompID, targetCompID, opt) {
 }
 sys.inherits(Client, events.EventEmitter);
 
-//Documenation
-//Server:
-//  startServer(port,callback)
-//      -newacceptor(port)
-//
-//Client:
-//  startClient(version,sender,target,port,host)
-//      -newclient(version, sender, target, port, host)
-//
-//Common:
-//      -connect(host, port, 'initiator' or 'acceptor')
-//      -error(err)
-//      -logon(sender,target)
-//      -logoff(sender,target)
-//      -incomingmsg(sender,target,msg)
-//      -outgoingmsg(sender,target,msg)
-//      -incomingresync(sender,target,msg)
-//      -outgoingresync(sender,target,msg)
-//      -end(sender,target)
-//  write(sessionID, data)
-//  logoff(sessionID, reason)
-//  kill(sessionID, reason)
-//  clearSessionFile(fixVersion,senderCompID, targetCompID, callback)
-//  getSessionFiles(callback)
-
