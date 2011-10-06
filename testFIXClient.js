@@ -1,7 +1,7 @@
 var sys = require('sys');
 var fix = require("./fix.js");
 
-var session = fix.createConnection("FIX.4.2", "initiator", "acceptor", 1234, "localhost");
+var session = fix.createClient("FIX.4.2", "initiator", "acceptor", 1234, "localhost");
 session.connectAndLogon(1234,'localhost');
 /*session.getMessages(function(err, msg){
     if(err){

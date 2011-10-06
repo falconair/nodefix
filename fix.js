@@ -91,7 +91,7 @@ function Server(opt, func) {
 sys.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
-exports.createConnection = function(fixVersion, senderCompID, targetCompID, opt) {
+exports.createClient = function(fixVersion, senderCompID, targetCompID, opt) {
     //return new Client({'8': fixVersion, '56': targetCompID, '49': senderCompID, '35': 'A', '90': '0', '108': '10'}, port, host, callback);
     return new Client(fixVersion, senderCompID, targetCompID, opt);
 };
@@ -113,7 +113,7 @@ function Client(fixVersion, senderCompID, targetCompID, opt) {
     //--CLIENT METHODS--
     //this.write = function(data) { self.p.pushOutgoing(data); };
     this.write = function(data) { self.p.pushOutgoing({data:data, type:'data'}); };
-    this.createConnection = function(port, host, callback){
+    this.connect = function(port, host, callback){
     
         //self.p.state.session['remoteAddress'] = host;
         self.stream = net.createConnection(port, host, callback);
@@ -136,7 +136,7 @@ function Client(fixVersion, senderCompID, targetCompID, opt) {
     this.connectAndLogon = function(port, host){
         self.port = port;
         self.host = host;
-        self.createConnection(port, host);
+        self.connect(port, host);
         self.on('connect', function(){ self.logon(); });
     }
     this.logoff = function(logoffReason){ self.p.pushOutgoing({data:{35:5, 58:logoffReason}, type:'data'}) };

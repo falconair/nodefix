@@ -50,8 +50,8 @@ fs.readFile(file,encoding='UTF8', function (err, data) {
             self.fixServer.listen(1234, "localhost", function(){
                  //'listen' callback
                  //start fix client
-                 self.fixClient = fix.createConnection("FIX.4.2", "initiator", "acceptor",{sendHeartbeats:false});
-                 self.fixClient.createConnection(1234,"localhost");
+                 self.fixClient = fix.createClient("FIX.4.2", "initiator", "acceptor",{sendHeartbeats:false});
+                 self.fixClient.connect(1234,"localhost");
                  self.fixClient.on("connect", function(){
                      console.log("Client connected");
                     if(!_.startsWith(commandQ.peek(), "E")){
