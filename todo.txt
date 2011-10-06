@@ -2,4 +2,3 @@
 -watch data directory, whenever a file changes, reload its seqnums
 -continue to fix session logic according to the logon psuedo code
 -nodepipe uses keyword 'eventType' while this project uses 'type'
--fix client should not have two 'createConnection' methods doing completely different things!
