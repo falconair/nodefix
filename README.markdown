@@ -132,6 +132,12 @@ Not yet supported
 * Groups
 * Encryption
 
+
+Known errors
+===========
+
+* Make sure ./traffic directory exists
+
 License
 =======
 Copyright (C) 2011 by Shahbaz Chaudhary
