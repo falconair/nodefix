@@ -2,7 +2,7 @@ exports.newSessionProcessor = function (isAcceptor, options) {
     return new sessionProcessor(isAcceptor, options);
 };
 
-var sys = require('sys');
+var util = require('util');
 var fs = require('fs');
 var fixutil = require('../fixutils.js');
 var _  = require('underscore');
@@ -71,7 +71,7 @@ function sessionProcessor(isAcceptor, options) {
         //==Confirm first msg is logon==
         if (self.isLoggedIn === false && msgType !== 'A') {
             var error = '[ERROR] First message must be logon:' + raw;
-            sys.log(error);
+            util.log(error);
             ctx.stream.end();
             ctx.sendNext({
                 data: error,
@@ -93,7 +93,7 @@ function sessionProcessor(isAcceptor, options) {
                 //==Check duplicate connections
                 if (self.isDuplicateFunc(self.senderCompID, self.targetCompID)) {
                     var error = '[ERROR] Session already logged in:' + raw;
-                    sys.log(error);
+                    util.log(error);
                     ctx.stream.end();
                     ctx.sendNext({
                         data: error,
@@ -105,7 +105,7 @@ function sessionProcessor(isAcceptor, options) {
                 //==Authenticate connection
                 if (!self.isAuthenticFunc(fix, ctx.stream.remoteAddress)) {
                     var error = '[ERROR] Session not authentic:' + raw;
-                    sys.log(error);
+                    util.log(error);
                     ctx.stream.end();
                     ctx.sendNext({
                         data: error,
@@ -148,7 +148,7 @@ function sessionProcessor(isAcceptor, options) {
                 //==counter party might be dead, kill connection
                 if (currentTime - self.timeOfLastIncoming > heartbeatInMilliSeconds * 2 && self.expectHeartbeats) {
                     var error = '[ERROR] No heartbeat from counter party in milliseconds ' + heartbeatInMilliSeconds * 1.5;
-                    sys.log(error);
+                    util.log(error);
                     ctx.stream.end();
                     ctx.sendNext({
                         data: error,
@@ -193,7 +193,7 @@ function sessionProcessor(isAcceptor, options) {
                 self.incomingSeqNum = resetseqno
             } else {
                 var error = '[ERROR] Seq-reset may not decrement sequence numbers: ' + raw;
-                sys.log(error);
+                util.log(error);
                 ctx.stream.end();
                 ctx.sendNext({
                     data: error,
@@ -221,7 +221,7 @@ function sessionProcessor(isAcceptor, options) {
             //if not posdup, error
             else {
                 var error = '[ERROR] Incoming sequence number ('+msgSeqNum+') lower than expected (' + self.incomingSeqNum+ ') : ' + raw;
-                sys.log(error);
+                util.log(error);
                 ctx.stream.end();
                 ctx.sendNext({
                     data: error,
@@ -283,7 +283,7 @@ function sessionProcessor(isAcceptor, options) {
                 self.incomingSeqNum = newSeqNo;
             } else {
                 var error = '[ERROR] Seq-reset may not decrement sequence numbers: ' + raw;
-                sys.log(error);
+                util.log(error);
                 ctx.stream.end();
                 ctx.sendNext({
                     data: error,

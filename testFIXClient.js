@@ -1,4 +1,3 @@
-var sys = require('sys');
 var fix = require("./fix.js");
 
 var session = fix.createClient("FIX.4.2", "initiator", "acceptor", 1234, "localhost");

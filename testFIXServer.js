@@ -1,4 +1,3 @@
-var sys = require('sys');
 var fix = require('./fix.js');
 
 fix.createServer({},function(session){

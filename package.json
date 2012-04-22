@@ -1,7 +1,7 @@
 {
   "name": "fix",
   "description": "FIX Protocol library",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "homepage": "https://github.com/falconair/nodefix",
   "author": "Shahbaz Chaudhary <shahbazc@gmail.com>",
   "main": "fix",

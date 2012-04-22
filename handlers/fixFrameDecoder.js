@@ -2,7 +2,7 @@ exports.newFixFrameDecoder = function() {
     return new fixFrameDecoder();
 };
 
-var sys = require('sys');
+var util = require('util');
 
 //static vars
 var SOHCHAR = String.fromCharCode(1);
@@ -35,7 +35,7 @@ function fixFrameDecoder(){
             if (isNaN(idxOfEndOfTag9)) {
                 var error = '[ERROR] Unable to find the location of the end of tag 9. Message probably malformed: '
                     + self.buffer.toString();
-                sys.log(error);
+                util.log(error);
                 stream.end();
                 ctx.sendNext({data:error, type:'error'});
                 return;
@@ -47,7 +47,7 @@ function fixFrameDecoder(){
             if (idxOfEndOfTag9 < 0 && self.buffer.length > 100) {
                 var error ='[ERROR] Over 100 character received but body length still not extractable.  Message malformed: '
                     + databuffer.toString();
-                sys.log(error);
+                util.log(error);
                 stream.end();
                 ctx.sendNext({data:error, type:'error'});
                 return;
@@ -64,7 +64,7 @@ function fixFrameDecoder(){
             if (isNaN(bodyLength)) {
                 var error = "[ERROR] Unable to parse bodyLength field. Message probably malformed: bodyLength='"
                     + _bodyLengthStr + "', msg=" + self.buffer.toString()
-                sys.log(error);
+                util.log(error);
                 stream.end();
                 ctx.sendNext({data:error, type:'error'});
                 return;
@@ -95,7 +95,7 @@ function fixFrameDecoder(){
             if (calculatedChecksum !== extractedChecksum) {
                 var error = '[WARNING] Discarding message because body length or checksum are wrong (expected checksum: '
                     + calculatedChecksum + ', received checksum: ' + extractedChecksum + '): [' + msg + ']'
-                sys.log(error);
+                util.log(error);
                 ctx.sendnext({data:error, type:'error'});
                 return;
             }

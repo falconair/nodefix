@@ -1,4 +1,4 @@
-var sys = require('sys');
+var util = require('util');
 var fs = require('fs');
 var net = require('net');
 var events = require('events');
@@ -43,7 +43,7 @@ function Server(opt, func) {
             events.EventEmitter.call(this);
             this.write = function(data){session.p.pushOutgoing({data:data, type:'data'});};
         }
-        sys.inherits(SessionEmitterObj,events.EventEmitter);
+        util.inherits(SessionEmitterObj,events.EventEmitter);
 
         this.sessionEmitter = new SessionEmitterObj();
 
@@ -88,7 +88,7 @@ function Server(opt, func) {
 
 
 }
-sys.inherits(Server, events.EventEmitter);
+util.inherits(Server, events.EventEmitter);
 
 //-----------------------------Expose client API-----------------------------
 exports.createClient = function(fixVersion, senderCompID, targetCompID, opt) {
@@ -153,5 +153,5 @@ function Client(fixVersion, senderCompID, targetCompID, opt) {
         });
     };*/
 }
-sys.inherits(Client, events.EventEmitter);
+util.inherits(Client, events.EventEmitter);
 
