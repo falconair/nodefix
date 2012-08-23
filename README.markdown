@@ -1,3 +1,4 @@
+[![build status](https://secure.travis-ci.org/falconair/nodefix.png)](http://travis-ci.org/falconair/nodefix)
 An implementation of the [FIX protocol (Financial Information Exchange)](http://en.wikipedia.org/wiki/Financial_Information_eXchange).
 
 Currently the implementation is pre-beta.
