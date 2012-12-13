@@ -2,6 +2,13 @@ An implementation of the [FIX protocol (Financial Information Exchange)](http://
 
 Currently the implementation is pre-beta.
 
+New development
+====
+New development is being done on https://github.com/falconair/fix.js.
+This codebase turned out to be over-engineered. fix.js is much simpler, but its infrastructure is not as developed (package file, 'npm install ...' system, tests, etc.)
+
+Some code from fix.js (similar to this project) is also driving fixsanity.targetcompid.com
+
 Install
 ====
 
