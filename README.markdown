@@ -7,7 +7,7 @@ New development
 New development is being done on https://github.com/falconair/fix.js.
 This codebase turned out to be over-engineered. fix.js is much simpler, but its infrastructure is not as developed (package file, 'npm install ...' system, tests, etc.)
 
-Some code from fix.js (similar to this project) is also driving a web app to [parse fix protocol messages](http://fixsanity.targetcompid.com) at http://fixsanity.targetcompid.com
+Some code from fix.js (similar to this project) is also driving a web app to [parse fix protocol messages](http://fixparser.targetcompid.com) at http://fixsanity.targetcompid.com
 
 Install
 ====
