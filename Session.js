@@ -29,23 +29,24 @@ function Session(settings) {
     this.testRequestID = 1;
     this.incomingSeqNum = 1;
     this.outgoingSeqNum = 1;
-    this.isResendRequested = false;
-    this.isLogoutRequested = false;
 
-    this.file = null;
 }
 
 Session.prototype = new events.EventEmitter();
 
 Session.prototype.outgoing = function (message) {
+    if (message.getType() === "Logout") {
+        this.isLogoutRequested = true;
+    }
     this.sendMessage(message);
 };
 
 Session.prototype.incoming = function (message) {
 
-    var messageType = message.getType();
+    var messageType = message.getType(),
+        now = new Date();
 
-    this.timeOfLastIncoming = new Date().getTime();
+    this.timeOfLastIncoming = now.getTime();
 
     if (this.isLoggedIn === false) {
         // Confirm first message is logon
@@ -59,7 +60,7 @@ Session.prototype.incoming = function (message) {
         }
     }
 
-    this.logMessage(this.timeOfLastIncoming, message);
+    this.logMessage(now, message);
 
     // Process seq-reset (no gap-fill)
     if (messageType === "Sequence Reset" && typeof message.get("GapFillFlag") === "undefined" || message.get("GapFillFlag") === "N") {
@@ -90,6 +91,13 @@ Session.prototype.incoming = function (message) {
         return;
     }
 
+    if (messageType === "UserResponse") {
+        if (message.get("UserStatus") === "Not Logged In") {
+            console.log("[ERROR] Login failed!", message.get("UserStatus"), message.get("UserStatusText"));
+        }
+        return;
+    }
+
     // Check compids and version
     // TODO
     // Process test request
@@ -112,7 +120,7 @@ Session.prototype.incoming = function (message) {
         if (this.isLogoutRequested) {
             this.emit("fatal");
         } else {
-            this.sendMessage(message);
+            console.log("[ERROR] Unexpected server logout:", message.get("Text"));
         }
     }
 };
@@ -245,7 +253,7 @@ Session.prototype.prepareMessageForSend = function (message, time) {
 };
 
 Session.prototype.logMessage = function (time, message) {
-    if (this.file === null) {
+    if (!this.file) {
         var filename = "./traffic/" + this.senderCompID + "->" + this.targetCompID + ".log";
         this.file = fs.createWriteStream(filename, {
             flags: "a+"
@@ -254,7 +262,7 @@ Session.prototype.logMessage = function (time, message) {
             console.log(error);
         });
     }
-    this.file.write(time.toString() + " " + message.getFIX() + "\n");
+    this.file.write(time.toString() + " " + message.getFIX() + "\n\n");
 };
 
 module.exports = Session;

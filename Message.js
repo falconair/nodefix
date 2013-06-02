@@ -28,7 +28,6 @@ Message.prototype.get = function (field) {
     }
 };
 
-// Returns field value, or array of repeating group field values
 Message.prototype.getKey = function (field) {
 
     // TODO for performance could include logic to quickly return value if known not to be a repeating group field (header, etc)
@@ -79,5 +78,6 @@ Message.prototype.getRepeating = function (keyField, fields) {
 Message.prototype.getFIX = function () {
     return this.raw;
 };
+
 
 module.exports = Message;

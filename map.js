@@ -1009,6 +1009,21 @@ var fields = exports.fields = {
     "9018": "FXCMParamValue",
     "9019": "FXCMServerTimeZone",
     "9020": "FXCMContinuousFlag",
+    "9021": "FXCMNoSnapshot",
+    "9022": "FXCMPageID",
+    "9023": "FXCMPageviewID",
+    "9024": "FXCMPageviewLifetime",
+    "9025": "FXCMRequestRejectReason",
+    "9026": "FXCMPageIDNo",
+    "9027": "FXCMClientExtra",
+    "9028": "FXCMCommandID",
+    "9029": "FXCMErrorDetails",
+    "9030": "FXCMServerTimeZoneName",
+    "9031": "FXCMSessionManagerID",
+    "9032": "FXCMTopicID1",
+    "9033": "FXCMTopicID2",
+    "9034": "FXCMTopicID3",
+    "9035": "FXCMTopicID4",
     "9036": "FXCMEMBMSG",
     "9037": "FXCMTopicID5",
     "9038": "FXCMUsedMargin",
@@ -2084,5 +2099,16 @@ var values = exports.values = {
         "7": "Trading Session High Price",
         "8": "Trading Session Low Price",
         "9": "Trading Session VWAP Price"
-    }
+    },
+    // 926
+    "UserStatus": {
+        "1": "Logged In",
+        "2": "Not Logged In",
+        "3": "User Not Recognised",
+        "4": "Password Incorrect",
+        "5": "Password Changed",
+        "6": "Other",
+        "7": "Forced user logout by Exchange",
+        "8": "Session shutdown warning"
+    },
 };

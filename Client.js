@@ -25,6 +25,7 @@ var Session = require("./Session");
  * @fires error
  * @fires end
  */
+
 function Client(settings) {
     this.settings = settings;
     this.connect();
@@ -32,6 +33,9 @@ function Client(settings) {
 
 Client.prototype = new events.EventEmitter();
 
+/**
+ * @public
+ */
 Client.prototype.connect = function () {
     this.stream = net.createConnection(this.settings.port, this.settings.host);
     this.buffer = new Buffer();
@@ -50,6 +54,11 @@ Client.prototype.connect = function () {
     this.session.on("fatal", this._onFatal.bind(this));
 };
 
+/**
+ * @public
+ * @param  {[type]} username
+ * @param  {[type]} password
+ */
 Client.prototype.logon = function (username, password) {
     this.send("Logon", [
         ["EncryptMethod", "0"],
@@ -64,11 +73,20 @@ Client.prototype.logon = function (username, password) {
     ]);
 };
 
+/**
+ * @public
+ * @param  {string} messageType
+ * @param  {array}  data
+ */
 Client.prototype.send = function (messageType, data) {
     var message = new OutgoingMessage(messageType, data);
     this.session.outgoing(message);
 };
 
+/**
+ * @public
+ * @param  {string} reason
+ */
 Client.prototype.logoff = function (reason) {
     this.send("Logout", [
         ["Text", reason]
