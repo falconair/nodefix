@@ -2,141 +2,81 @@ An implementation of the [FIX protocol (Financial Information Exchange)](http://
 
 Currently the implementation is pre-beta.
 
-New development
-====
-New development is being done on https://github.com/falconair/fix.js.
-This codebase turned out to be over-engineered. fix.js is much simpler, but its infrastructure is not as developed (package file, 'npm install ...' system, tests, etc.)
-
-Some code from fix.js (similar to this project) is also driving a web app to [parse fix protocol messages](http://fixparser.targetcompid.com) at http://fixparser.targetcompid.com
 
 Install
 ====
 
     npm install nodefix
 
-Test {Server,Client}
-============
-
-You can run a test server:
-
-<pre>
-node testFIXServer.js
-</pre>
-
-then a test client, too:
-
-<pre>
-node testFIXClient.js
-</pre>
-
-Both programs should start communicating with each other.  Wait a few seconds to see
-heart-beat messages fly by.
-
 API
 ===
 
-###Server:
-```javascript
-var fix = require('fix');
-
-var opt = {};
-var server = fix.createServer(opt, function(session){
-
-    session.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
-    session.on("incomingmsg", function(sender,target,msg){ console.log("Server incomingmsg: "+ JSON.stringify(msg)); });
-    session.on("outgoingmsg", function(sender,target,msg){ console.log("Server outgoingmsg: "+ JSON.stringify(msg)); });
-
-});
-server.listen(1234, "localhost", function(){});
-```
-
-Server events:
-<dl>
-<dt>newacceptor (port)</dt>
-<dd>Triggered on new connections from clients</dd>
-</dl>
-
-Server methods:
-<dl>
-<dt>write(sessionID, data)</dt>
-<dd>Converts an associative array to a FIX message and sends it to the counter party with given comp ID</dd>
-
-<dt>logoff(sessionID, reason)</dt>
-<dd>Logs off a given comp ID</dd>
-
-<dt>kill(sessionID, reason)</dt>
-<dd>Ends connection of a given comp ID, without logging off</dd>
-</dl>
-
 ###Client:
 ```javascript
-var fix = require('fix');
 
-var opt = {};
-var client = fix.createClient("FIX.4.2", "initiator", "acceptor",opt);
-client.connectAndLogon(1234,"localhost");
+var client = new nodefix.Client({
+    host: "demo.host.com",
+    port: 80,
+    fixVersion: "FIX.4.4",
+    senderCompID: "**senderId**",
+    targetCompID: "**targetId**",
+    targetSubID: "**targetSubId**"
+});
 
-client.on("connect", function(){ console.log("EVENT connect"); });
-client.on("end", function(){ console.log("EVENT end"); });
-client.on("logon", function(sender, target){ console.log("EVENT logon: "+ sender + ", " + target); });
-client.on("logoff", function(sender, target){ console.log("EVENT logoff: "+ sender + ", " + target); });
-client.on("incomingmsg", function(sender,target,msg){ console.log("EVENT incomingmsg: "+ JSON.stringify(msg)); });
-client.on("outgoingmsg", function(sender,target,msg){ console.log("EVENT outgoingmsg: "+ JSON.stringify(msg)); });
+client.on("connect", function () {
+    console.log("EVENT connect");
+    client.logon("**username**", "**password**");
+});
+
+client.on("end", function () {
+    console.log("EVENT end");
+});
+
+client.on("logon", function () {
+    client.send("Market Data Request", [
+        ["MDReqID", "EUR/USD please"],
+        ["SubscriptionRequestType", "1"],
+        ["MarketDepth", "1"],
+        ["NoMDEntryTypes", "4"],
+        ["MDEntryType", "0"],
+        ["MDEntryType", "1"],
+        ["MDEntryType", "7"],
+        ["MDEntryType", "8"],
+        ["NoRelatedSym", "4"],
+        ["Symbol", "EUR/USD"],
+        ["Symbol", "GBP/CAD"],
+        ["Symbol", "GBP/JPY"],
+        ["Symbol", "GBP/CHF"]
+    ]);
+    console.log("EVENT logon");
+});
+
+client.on("logoff", function () {
+    console.log("EVENT logoff");
+});
+
+client.on("incoming", function (message) {
+    console.log("IN", message.getFIX());
+    console.log("IN", message.getType(), message.data);
+
+    if (message.getType() === "Market Data-Snapshot/Full Refresh") {
+        var price = message.getRepeating("MDEntryType", "MDEntryPx");
+        console.log(message.get("Symbol"), "BID", price.Bid, "ASK", price.Offer);
+    }
+});
+
+client.on("outgoing", function (message) {
+    console.log("OUT", message.getFIX());
+    console.log("OUT", message.getType(), message.data);
+});
 
 ```
-Client events:
-<dl>
-<dt>newclient (version, sender, target, port, host)</dt>
-<dd>Triggered on new connections to servers</dd>
-</dl>
 
-
-Client methods:
-<dl>
-<dt>write(data)</dt>
-<dd>Converts an associative array to a FIX message and sends it to the counter party</dd>
-
-<dt>logoff(reason)</dt>
-<dd>Logs off connection</dd>
-
-<dt>kill(reason)</dt>
-<dd>Ends connection without logging off</dd>
-</dl>
-
-
-###Common:
-Events commons to servers and clients:
-<dl>
-<dt>connect (host, port, 'initiator' or 'acceptor')</dt>
-<dd>Triggered on new connections </dd>
-
-<dt>end (sender, target)</dt>
-<dd>Triggered when connections end</dd>
-
-<dt>error (err)</dt>
-<dd>Triggered on error</dd>
-
-<dt>logon (sender, target)</dt>
-<dd>Triggered when new client completes logon</dd>
-
-<dt>incomingmsg (sender, target, msg)</dt>
-<dd>Triggered on messages coming over the network</dd>
-
-<dt>outgoingmsg (sender, target, msg)</dt>
-<dd>Triggered on messages going out to the network</dd>
-
-<dt>incomingresync (sender, target, msg)</dt>
-<dd>Triggered on messages coming over the network, which may have already been processed. Should not matter other than on re-connections</dd>
-
-<dt>outgoingresync (sender, target, msg)</dt>
-<dd>Triggered on messages going out to the network, which may have already been processed. Should not matter other than on re-connections</dd>
-</dl>
 
 
 Not yet supported
 ===========
 
-* Groups
 * Encryption
 
 
