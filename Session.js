@@ -193,7 +193,7 @@ Session.prototype.checkIncomingSequenceNumber = function (message) {
 
         //is it resend request?
         if (message.getType() === "Resend Request") {
-            this.resendLastMessage(message);
+            this.resendLastMessage();
         }
         //did we already send a resend request?
         if (this.isResendRequested === false) {
@@ -209,37 +209,19 @@ Session.prototype.checkIncomingSequenceNumber = function (message) {
 };
 
 Session.prototype.resendLastMessage = function () {
-
-    var filename = "./traffic/" + this.senderCompID + "->" + this.targetCompID + ".log";
-
-    //get list of msgs from archive and send them out, but gap fill admin msgs
-    var reader = fs.createReadStream(filename, {
-        flags: "r",
-        encoding: "binary",
-        mode: 0666,
-        bufferSize: 4 * 1024
-    });
-
-    //TODO full lines may not be read
-    reader.addListener("data", function (chunk) {
-        console.log("chunk", chunk)
-        var _fix = fixutil.converToMap(chunk);
-        var _messageType = _fix[35];
-        var _seqNo = _fix[34];
-        if (_.contains(["A", "5", "2", "0", "1", "4"], _messageType)) {
-            //send seq-reset with gap-fill Y
-            this.sendMessage(new OutgoingMessage([
-                ["MsgType", "4"],
-                ["GapFillFlag", "Y"],
-                ["NewSeqNo", _seqNo]
-            ]));
-        } else {
-            //send msg w/ posdup Y
-            this.sendMessage(_.extend(_fix, {
-                "PossDupFlag": "Y" /////////////////////////////////// TODO
-            }));
-        }
-    });
+    if (_.contains(["Logon", "Logout", "Resend Request", "Heartbeat", "Test Request", "Sequence Reset"], this.lastOutgoingMessage.getType())) {
+        this.outgoingSeqNum--;
+        // send Sequence Reset with GapFillFlag Y
+        this.sendMessage(new OutgoingMessage("Sequence Reset", [
+            ["GapFillFlag", "Y"],
+            ["NewSeqNo", this.outgoingSeqNum]
+        ]));
+    } else {
+        // send last message with PossDupFlag Y
+        var message = new OutgoingMessage(this.lastOutgoingMessage.getType(), this.lastOutgoingMessage.data.concat([
+            ["PossDupFlag", "Y"]
+        ]));
+    }
 };
 
 Session.prototype.sendMessage = function (message) {
@@ -247,6 +229,7 @@ Session.prototype.sendMessage = function (message) {
     this.timeOfLastOutgoing = now.getTime();
     this.prepareMessageForSend(message, now);
     this.outgoingSeqNum++;
+    this.lastOutgoingMessage = message;
     this.logMessage(now, message);
     this.emit("send", message);
 };
