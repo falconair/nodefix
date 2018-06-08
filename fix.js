@@ -32,20 +32,20 @@ function Server(opt, func) {
      this.server = net.createServer(function(stream) {
 
         stream.setTimeout(2 * 60 * 1000);//if no traffic for two minutes, kill connection!
-        var session = this;
+        var session = {};
 
-        this.senderCompID = null;
-        this.targetCompID = null;
-        this.fixVersion = null;
+        session.senderCompID = null;
+        session.targetCompID = null;
+        session.fixVersion = null;
         
-        this.p = null;
+        session.p = null;
         function SessionEmitterObj(){
             events.EventEmitter.call(this);
             this.write = function(data){session.p.pushOutgoing({data:data, type:'data'});};
         }
         util.inherits(SessionEmitterObj,events.EventEmitter);
 
-        this.sessionEmitter = new SessionEmitterObj();
+        session.sessionEmitter = new SessionEmitterObj();
 
         session.sessionEmitter.emit('connect', stream.remoteAddress, self.port, 'acceptor');
         
